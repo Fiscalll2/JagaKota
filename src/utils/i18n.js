@@ -3,8 +3,8 @@
  */
 const dictionaryId = {
   // Navigation & Header
-  appName: 'Sekitarku',
-  appTitle: 'Sekitarku',
+  appName: 'JagaKota',
+  appTitle: 'JagoKota',
   appSubtitle: 'Pantauan Lingkungan Hidup & Mitigasi Bencana Real-Time',
   appTagline: 'Pantauan Lingkungan & Mitigasi Bencana Real-Time',
   liveBadge: 'DATA REAL-TIME',
