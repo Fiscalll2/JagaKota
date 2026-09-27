@@ -18,7 +18,7 @@ export function Footer({ onOpenWidget }) {
       {/* Traktir Kopi Support Button */}
       <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'center' }}>
         <a
-          href="https://sociabuzz.com/1rengblox/tribe"
+          href=""
           target="_blank"
           rel="noopener noreferrer"
           style={{
@@ -45,7 +45,7 @@ export function Footer({ onOpenWidget }) {
       {/* Footer Navigation Links: Row 1 (App & Dev Actions) */}
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1.25rem', marginTop: '1.25rem', fontSize: '0.825rem', flexWrap: 'wrap' }}>
         <a
-          href="https://github.com/anasysuf/sekitarku"
+          href="hhttps://github.com/Fiscalll2"
           target="_blank"
           rel="noopener noreferrer"
           style={{ color: 'var(--color-primary)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontWeight: '700' }}
