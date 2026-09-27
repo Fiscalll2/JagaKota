@@ -13,7 +13,7 @@
 
 ---
 
-## 📖 Tentang Sekitarku
+## 📖 Tentang JagaKota
 
 **JagaKota** adalah platform web progresif (*Progressive Web App*) karya anak bangsa yang dirancang untuk mendemokratisasi akses data lingkungan hidup dan mitigasi bencana di Indonesia. Mengintegrasikan berbagai API data terbuka resmi dari:
 - **BMKG (Badan Meteorologi, Klimatologi, dan Geofisika)**: Parameter cuaca, prakiraan 7 hari, FDRS bahaya kebakaran hutan, dan *InaTEWS* sistem peringatan gempa & tsunami.
