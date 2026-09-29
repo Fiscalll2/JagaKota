@@ -34,7 +34,7 @@ export default function handler(request) {
   else if (aqiNum > 50) aqiColor = '#d97706'; // Sedang
 
   // Hitung lebar dinamis tiap segmen badge
-  const brandText = '🌿 Sekitarku';
+  const brandText = '🌿 JagoKota';
   const cityText = `${city} (${temp}°C)`;
   const statusText = `AQI ${aqiNum} • ${aqiStatus}`;
 

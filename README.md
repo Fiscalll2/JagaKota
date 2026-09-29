@@ -21,7 +21,7 @@
 - **KLHK SiPongi+ & NASA FIRMS**: Data satelit titik panas kebakaran hutan dan lahan (*NRT VIIRS 375m & MODIS*) mencakup 38 provinsi di seluruh Nusantara.
 - **Open-Meteo & Copernicus Atmosphere Service**: Indeks Kualitas Udara (ISPU & US-EPA AQI), spektrum polutan partikulat mikro (PM2.5, PM10, CO, NO2, SO2, O3), dan radiasi ultraviolet (UV).
 
-Sekitarku menyajikan gambaran menyeluruh kondisi ekologis di lebih dari 500 kota dan kabupaten di seluruh Indonesia. Dirancang dengan prinsip desain antarmuka modern yang bersih (*clean flat aesthetic*), kontras tinggi, navigasi intuitif, serta arsitektur data instan (**Zero-Latency SWR Cache & Infallible Fallback**), pengguna dapat memantau kesehatan lingkungan di sekitar mereka secara akurat kapan pun dan di mana pun.
+JagaKota menyajikan gambaran menyeluruh kondisi ekologis di lebih dari 500 kota dan kabupaten di seluruh Indonesia. Dirancang dengan prinsip desain antarmuka modern yang bersih (*clean flat aesthetic*), kontras tinggi, navigasi intuitif, serta arsitektur data instan (**Zero-Latency SWR Cache & Infallible Fallback**), pengguna dapat memantau kesehatan lingkungan di sekitar mereka secara akurat kapan pun dan di mana pun.
 
 ---
 
@@ -162,7 +162,7 @@ flowchart TD
 
 ## ⚡ Rekayasa Kinerja & Optimasi (Performance Engineering)
 
-Sistem Sekitarku dirancang dengan standar performa tinggi untuk menjamin kecepatan akses:
+Sistem JagaKota dirancang dengan standar performa tinggi untuk menjamin kecepatan akses:
 
 | Aspek Optimasi | Implementasi Teknis | Dampak Kinerja |
 | :--- | :--- | :--- |

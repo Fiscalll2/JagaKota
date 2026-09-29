@@ -59,7 +59,7 @@ export function ShareCardModal({ isOpen, onClose, location, airQualityData, weat
   const fireProximityText = nearestFire ? ` (Titik Api Terdekat: ${nearestFire.regency}, ${nearestFire.distanceKm} km)` : '';
   const quakeText = latestEarthquake ? `• Gempa Terkini: M ${latestEarthquake.magnitude} (${latestEarthquake.wilayah})\n` : '';
   const cigsCount = health.cigs ?? health.cigarettesEquivalent ?? 0;
-  const shareText = `📍 Laporan Lingkungan & Cuaca Real-Time: ${locationName}\n🌱 Kualitas Udara: AQI ${aqi} (${health.category})\n🚬 Paparan Rokok: ${cigsCount} btg/hari\n🌡️ Cuaca: ${temp}°C • ${weatherVisual.label || 'Cerah'}\n⚠️ Status Asap: ${hazeStatusText}${fireProximityText}\n${quakeText}\nPantau selengkapnya di Sekitarku: https://sekitarku.vercel.app`;
+  const shareText = `📍 Laporan Lingkungan & Cuaca Real-Time: ${locationName}\n🌱 Kualitas Udara: AQI ${aqi} (${health.category})\n🚬 Paparan Rokok: ${cigsCount} btg/hari\n🌡️ Cuaca: ${temp}°C • ${weatherVisual.label || 'Cerah'}\n⚠️ Status Asap: ${hazeStatusText}${fireProximityText}\n${quakeText}\nPantau selengkapnya di JagaKota: https://jagakota.vercel.app/`;
 
   // Draw 9:16 high quality story infographic on HTML5 canvas (1080 x 1920) with mathematically guaranteed bounds
   const generateCanvasImage = () => {
@@ -128,7 +128,7 @@ export function ShareCardModal({ isOpen, onClose, location, airQualityData, weat
       // Infographic Header
       ctx.fillStyle = '#0F172A';
       ctx.font = '800 60px "Outfit", sans-serif';
-      ctx.fillText('Sekitarku', 80, 115);
+      ctx.fillText('JagaKota', 80, 115);
 
       ctx.fillStyle = '#64748B';
       ctx.font = '700 26px "Outfit", sans-serif';
@@ -345,14 +345,14 @@ export function ShareCardModal({ isOpen, onClose, location, airQualityData, weat
 
         ctx.fillStyle = '#64748B';
         ctx.font = '600 21px "Outfit", sans-serif';
-        ctx.fillText('Tetap pantau pembaruan berkala dari BMKG, KLHK SiPongi+ & Sekitarku.', 120, 1550);
+        ctx.fillText('Tetap pantau pembaruan berkala dari BMKG, KLHK SiPongi+ & JagaKota.', 120, 1550);
       }
 
       // 6. Footer Branding & Attribution (Y=1710 onwards)
       ctx.fillStyle = '#0F172A';
       ctx.font = '800 32px "Outfit", sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('sekitarku.vercel.app', 540, 1735);
+      ctx.fillText('jagakota.vercel.app', 540, 1735);
 
       ctx.fillStyle = '#64748B';
       ctx.font = '600 23px "Outfit", sans-serif';
@@ -371,17 +371,17 @@ export function ShareCardModal({ isOpen, onClose, location, airQualityData, weat
       const res = await fetch(dataUrl);
       const blob = await res.blob();
       const safeCityName = String(locationName).toLowerCase().replace(/[^a-z0-9]+/g, '-');
-      const file = new File([blob], `sekitarku-${safeCityName}.png`, { type: 'image/png' });
+      const file = new File([blob], `jagakota-${safeCityName}.png`, { type: 'image/png' });
 
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
           files: [file],
-          title: `${locationName} - Sekitarku`,
+          title: `${locationName} - JagaKota`,
           text: shareText
         });
       } else if (navigator.share) {
         await navigator.share({
-          title: `${locationName} - Sekitarku`,
+          title: `${locationName} - JagaKota`,
           text: shareText,
           url: window.location.href
         });
@@ -404,7 +404,7 @@ export function ShareCardModal({ isOpen, onClose, location, airQualityData, weat
       const dataUrl = await generateCanvasImage();
       const safeCityName = String(locationName).toLowerCase().replace(/[^a-z0-9]+/g, '-');
       const link = document.createElement('a');
-      link.download = `sekitarku-${safeCityName}-${Date.now()}.png`;
+      link.download = `jagakota-${safeCityName}-${Date.now()}.png`;
       link.href = dataUrl;
       link.click();
     } catch (err) {
@@ -513,7 +513,7 @@ export function ShareCardModal({ isOpen, onClose, location, airQualityData, weat
               {/* Infographic Header */}
               <div style={{ marginBottom: '0.85rem' }}>
                 <h4 style={{ fontSize: '1.25rem', fontWeight: '900', color: '#0F172A', margin: 0, lineHeight: 1.15, fontFamily: 'Outfit, sans-serif' }}>
-                  Sekitarku
+                  JagaKota
                 </h4>
                 <p style={{ fontSize: '0.75rem', color: '#64748B', margin: '2px 0 0 0', fontWeight: '700', fontFamily: 'Outfit, sans-serif' }}>
                   Laporan Lingkungan & Cuaca Real-Time
@@ -752,7 +752,7 @@ export function ShareCardModal({ isOpen, onClose, location, airQualityData, weat
                     Tidak ada peringatan bencana kritis saat ini.
                   </div>
                   <div style={{ fontSize: '0.68rem', color: '#64748B', fontWeight: '600', fontFamily: 'Outfit, sans-serif' }}>
-                    Tetap pantau pembaruan berkala dari BMKG, KLHK SiPongi+ & Sekitarku.
+                    Tetap pantau pembaruan berkala dari BMKG, KLHK SiPongi+ & JagaKota.
                   </div>
                 </div>
               )}
@@ -760,7 +760,7 @@ export function ShareCardModal({ isOpen, onClose, location, airQualityData, weat
               {/* 6. Footer Branding */}
               <div style={{ textAlign: 'center', paddingTop: '0.25rem' }}>
                 <div style={{ fontSize: '0.825rem', fontWeight: '900', color: '#0F172A', fontFamily: 'Outfit, sans-serif' }}>
-                  sekitarku.vercel.app
+                  jagakota.vercel.app
                 </div>
                 <div style={{ fontSize: '0.65rem', color: '#64748B', fontWeight: '600', marginTop: '1px', fontFamily: 'Outfit, sans-serif' }}>
                   Data Resmi BMKG, PVMBG, NASA & SiPongi+ • Dipantau Secara Real-Time

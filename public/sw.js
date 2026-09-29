@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sekitarku-v112-fix-search';
+const CACHE_NAME = 'jagakota-v112-fix-search';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -124,7 +124,7 @@ async function updateWidgetData(widget) {
     const template = await (await fetch('/widget.json')).text();
     const data = await (await fetch('/api/widget')).text();
     if (self.widgets && self.widgets.updateByTag) {
-      await self.widgets.updateByTag('sekitarku-widget', { template, data });
+      await self.widgets.updateByTag('jagakota-widget', { template, data });
     }
   } catch (e) {
     console.log('[SW] Widget update notice:', e);

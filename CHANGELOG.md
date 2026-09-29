@@ -1,4 +1,4 @@
-# Changelog — Sekitarku
+# Changelog — JagaKota
 
 Semua perubahan signifikan dan riwayat rilis pada platform **JagaKota** didokumentasikan dalam berkas ini mengikuti format [Keep a Changelog](https://keepachangelog.com/id/1.0.0/) dan [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 

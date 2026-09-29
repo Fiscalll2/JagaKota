@@ -1,5 +1,5 @@
 /**
- * Sekitarku - Kamus Bahasa Indonesia Lengkap & Mandiri
+ *JagaKota - Kamus Bahasa Indonesia Lengkap & Mandiri
  */
 const dictionaryId = {
   // Navigation & Header
@@ -185,7 +185,7 @@ const dictionaryId = {
   shareStoryText: 'Bagikan ringkasan visual kualitas udara, cuaca, gempa, dan karhutla terkini.',
 
   // Footer & Common
-  footerTitle: 'Sekitarku: Pantauan Lingkungan Hidup & Mitigasi Bencana Real-Time',
+  footerTitle: 'JagaKota: Pantauan Lingkungan Hidup & Mitigasi Bencana Real-Time',
   footerSources: 'Sumber Data Resmi: BMKG (Meteorologi, Klimatologi & Geofisika), PVMBG / Magma Indonesia (Aktivitas Gunung Api), KLHK SiPongi+ & NASA FIRMS (Satelit Titik Panas Karhutla), serta Open-Meteo / Copernicus Atmosphere (Kualitas Udara ISPU & AQI).',
   treatCoffee: 'Traktir Kopi',
   embedWidget: 'Pasang Widget',
