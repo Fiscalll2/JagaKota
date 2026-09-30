@@ -14,32 +14,33 @@ import { getEarthquakeColor } from "../../utils/aqi";
 import { calculateDistance } from "../../utils/geo";
 import { translations } from "../../utils/i18n";
 
-export function EarthquakeCard({
-	earthquake,
-	recentQuakes = [],
-	onFocusQuake,
-	userLocation,
-}) {
-	const [showList, setShowList] = useState(false);
-	const t = translations;
+export function EarthquakeCard({ earthquake, recentQuakes = [], onFocusQuake, userLocation, isRefreshing }) {
+  const [showList, setShowList] = useState(false);
+  const t = translations;
 
-	if (!earthquake) {
-		return (
-			<div className="flat-card p-6">
-				<div className="mb-4 flex items-center gap-2">
-					<div className="flex h-8 w-8 items-center justify-center rounded-(--radius-full) bg-secondary text-white">
-						<Activity size={18} strokeWidth={2.5} />
-					</div>
-					<h3 className="m-0 text-[1.05rem] font-extrabold">
-						{t.quakeTitle}
-					</h3>
-				</div>
-				<p className="text-[0.85rem] font-medium text-(--text-muted)">
-					Tidak ada gempa signifikan saat ini.
-				</p>
-			</div>
-		);
-	}
+  if (isRefreshing) {
+    return (
+      <div className="flat-card animate-pulse" style={{ padding: '1.5rem', minHeight: '220px' }}>
+        <div style={{ height: '24px', width: '45%', backgroundColor: 'var(--bg-muted)', borderRadius: '4px', marginBottom: '1rem' }} />
+        <div style={{ height: '54px', width: '30%', backgroundColor: 'var(--bg-muted)', borderRadius: '6px', marginBottom: '0.85rem' }} />
+        <div style={{ height: '70px', backgroundColor: 'var(--bg-muted)', borderRadius: '8px' }} />
+      </div>
+    );
+  }
+
+  if (!earthquake) {
+    return (
+      <div className="flat-card" style={{ padding: '1.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+          <div style={{ width: '32px', height: '32px', borderRadius: 'var(--radius-full)', backgroundColor: 'var(--color-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+            <Activity size={18} strokeWidth={2.5} />
+          </div>
+          <h3 style={{ fontSize: '1.05rem', fontWeight: '800', margin: 0 }}>{t.quakeTitle}</h3>
+        </div>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: '500' }}>Tidak ada gempa signifikan saat ini.</p>
+      </div>
+    );
+  }
 
 	const magColor = getEarthquakeColor(earthquake.magnitude);
 	const isMajor = earthquake.magnitude >= 5.0;

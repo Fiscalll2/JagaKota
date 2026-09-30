@@ -1,26 +1,26 @@
-import React, { useState, useEffect, lazy, Suspense } from "react";
-import { Analytics } from "@vercel/analytics/react";
-import { Header } from "./components/common/Header";
-import { EcoHealthCard } from "./components/cards/EcoHealthCard";
-import { AqiCard } from "./components/cards/AqiCard";
-import { WeatherCard } from "./components/cards/WeatherCard";
-import { EarthquakeCard } from "./components/cards/EarthquakeCard";
-import { UvCard } from "./components/cards/UvCard";
-import { VolcanoCard } from "./components/cards/VolcanoCard";
-import { KarhutlaCard } from "./components/cards/KarhutlaCard";
-import { fetchKarhutlaData } from "./services/karhutla";
-import { Footer } from "./components/common/Footer";
-import { WidgetEmbedView } from "./components/embed/WidgetEmbedView";
-import { INDONESIA_CITIES } from "./utils/cities";
-import { apiCache } from "./utils/apiCache";
-import { useGeolocation } from "./hooks/useGeolocation";
-import { useDarkMode } from "./hooks/useDarkMode";
-import { triggerHaptic } from "./utils/haptics";
-import { fetchWeatherData, getDefaultWeather } from "./services/weather";
-import { fetchAirQualityData } from "./services/airQuality";
-import { fetchLatestEarthquake, fetchRecentEarthquakes } from "./services/bmkg";
-import { i18n } from "./utils/i18n";
-import { Download, AlertTriangle, X, Loader2, WifiOff } from "lucide-react";
+import React, { useState, useEffect, lazy, Suspense } from 'react';
+import { Analytics } from '@vercel/analytics/react';
+import { Header } from './components/common/Header';
+import { EcoHealthCard } from './components/cards/EcoHealthCard';
+import { AqiCard } from './components/cards/AqiCard';
+import { WeatherCard } from './components/cards/WeatherCard';
+import { EarthquakeCard } from './components/cards/EarthquakeCard';
+import { UvCard } from './components/cards/UvCard';
+import { VolcanoCard } from './components/cards/VolcanoCard';
+import { KarhutlaCard } from './components/cards/KarhutlaCard';
+import { fetchKarhutlaData } from './services/karhutla';
+import { Footer } from './components/common/Footer';
+import { WidgetEmbedView } from './components/embed/WidgetEmbedView';
+import { INDONESIA_CITIES } from './utils/cities';
+import { apiCache } from './utils/apiCache';
+import { useGeolocation } from './hooks/useGeolocation';
+import { useDarkMode } from './hooks/useDarkMode';
+import { triggerHaptic } from './utils/haptics';
+import { fetchWeatherData, getDefaultWeather } from './services/weather';
+import { fetchAirQualityData } from './services/airQuality';
+import { fetchLatestEarthquake, fetchRecentEarthquakes } from './services/bmkg';
+import { i18n } from './utils/i18n';
+import { Download, AlertTriangle, X, Loader2, WifiOff, CheckCircle2 } from 'lucide-react';
 
 // Lazy load heavy components for peak initial load speed & performance
 const AqiChart = lazy(() =>
@@ -83,598 +83,543 @@ function ComponentSkeleton({ height = "200px", label = "Memuat komponen..." }) {
 }
 
 export function App() {
-	const { isDark, toggleDarkMode } = useDarkMode();
-	const { location, selectCity, requestGpsLocation, gpsLoading } =
-		useGeolocation();
+  const { isDark, toggleDarkMode } = useDarkMode();
+  const { location, selectCity, requestGpsLocation, gpsLoading } = useGeolocation();
 
-	const [weatherData, setWeatherData] = useState(null);
-	const [airQualityData, setAirQualityData] = useState(null);
-	const [latestEarthquake, setLatestEarthquake] = useState(null);
-	const [recentEarthquakes, setRecentEarthquakes] = useState([]);
-	const [loading, setLoading] = useState(true);
-	const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [weatherData, setWeatherData] = useState(null);
+  const [airQualityData, setAirQualityData] = useState(null);
+  const [latestEarthquake, setLatestEarthquake] = useState(null);
+  const [recentEarthquakes, setRecentEarthquakes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showUpdateToast, setShowUpdateToast] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(new Date());
 
-	// Language state: 'id' or 'en'
-	const t = i18n.id;
-	// Embed mode check
-	const isEmbedMode =
-		typeof window !== "undefined" &&
-		new URLSearchParams(window.location.search).get("embed") === "true";
-	const cityParam =
-		typeof window !== "undefined"
-			? new URLSearchParams(window.location.search).get("city")
-			: null;
+  // Language state: 'id' or 'en'
+  const t = i18n.id;
+// Embed mode check
+  const isEmbedMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('embed') === 'true';
+  const cityParam = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('city') : null;
 
-	useEffect(() => {
-		if (cityParam) {
-			const match = INDONESIA_CITIES.find(
-				(c) =>
-					c.name.toLowerCase() === cityParam.toLowerCase() ||
-					c.name.toLowerCase().includes(cityParam.toLowerCase()) ||
-					cityParam.toLowerCase().includes(c.name.toLowerCase()),
-			);
-			if (
-				match &&
-				(match.lat !== location.lat || match.lon !== location.lon)
-			) {
-				selectCity(match);
-			}
-		}
-	}, [cityParam]);
+  useEffect(() => {
+    if (cityParam) {
+      const match = INDONESIA_CITIES.find(
+        (c) => c.name.toLowerCase() === cityParam.toLowerCase() ||
+               c.name.toLowerCase().includes(cityParam.toLowerCase()) ||
+               cityParam.toLowerCase().includes(c.name.toLowerCase())
+      );
+      if (match && (match.lat !== location.lat || match.lon !== location.lon)) {
+        selectCity(match);
+      }
+    }
+  }, [cityParam]);
 
-	// Modals
-	const [isSearchOpen, setIsSearchOpen] = useState(false);
-	const [isShareOpen, setIsShareOpen] = useState(false);
-	const [isEmergencyOpen, setIsEmergencyOpen] = useState(false);
-	const [isVolcanoOpen, setIsVolcanoOpen] = useState(false);
-	const [isKarhutlaOpen, setIsKarhutlaOpen] = useState(false);
-	const [karhutlaData, setKarhutlaData] = useState(() =>
-		fetchKarhutlaData(
-			location?.lat || -6.1805,
-			location?.lon || 106.8284,
-			getDefaultWeather(
-				location?.lat || -6.1805,
-				location?.lon || 106.8284,
-			),
-			false,
-		),
-	);
-	const [isWidgetOpen, setIsWidgetOpen] = useState(false);
 
-	// PWA Prompt
-	const [installPrompt, setInstallPrompt] = useState(null);
-	const [showPwaBanner, setShowPwaBanner] = useState(true);
+  // Modals
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isShareOpen, setIsShareOpen] = useState(false);
+  const [isEmergencyOpen, setIsEmergencyOpen] = useState(false);
+  const [isVolcanoOpen, setIsVolcanoOpen] = useState(false);
+  const [isKarhutlaOpen, setIsKarhutlaOpen] = useState(false);
+  const [karhutlaData, setKarhutlaData] = useState(() => fetchKarhutlaData(location?.lat || -6.1805, location?.lon || 106.8284, getDefaultWeather(location?.lat || -6.1805, location?.lon || 106.8284), false));
+  const [isWidgetOpen, setIsWidgetOpen] = useState(false);
 
-	// Notification state
-	const [notificationsEnabled, setNotificationsEnabled] = useState(false);
-	// Online / Offline Status
-	const [isOnline, setIsOnline] = useState(() =>
-		typeof navigator !== "undefined" ? navigator.onLine : true,
-	);
+  // PWA Prompt
+  const [installPrompt, setInstallPrompt] = useState(null);
+  const [showPwaBanner, setShowPwaBanner] = useState(true);
 
-	useEffect(() => {
-		const handleOnline = () => setIsOnline(true);
-		const handleOffline = () => setIsOnline(false);
-		window.addEventListener("online", handleOnline);
-		window.addEventListener("offline", handleOffline);
-		return () => {
-			window.removeEventListener("online", handleOnline);
-			window.removeEventListener("offline", handleOffline);
-		};
-	}, []);
+  // Notification state
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  // Online / Offline Status
+  const [isOnline, setIsOnline] = useState(() => typeof navigator !== 'undefined' ? navigator.onLine : true);
 
-	// Dynamic SEO Title & Meta Tag Synchronization
-	useEffect(() => {
-		if (typeof document !== "undefined") {
-			const aqiStr = airQualityData?.current?.aqi
-				? `AQI ${airQualityData.current.aqi}`
-				: "Real-Time";
-			document.title = `JagaKota: ${location.name} • ${aqiStr} & Cuaca BMKG`;
-			const metaDesc = document.querySelector('meta[name="description"]');
-			if (metaDesc) {
-				metaDesc.setAttribute(
-					"content",
-					`Pantauan kualitas udara (${aqiStr}), suhu ${weatherData?.current?.temp || 29}°C, gempa BMKG & karhutla di ${location.name}, ${location.province}.`,
-				);
-			}
-		}
-	}, [
-		location.name,
-		location.province,
-		airQualityData?.current?.aqi,
-		weatherData?.current?.temp,
-	]);
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
-	useEffect(() => {
-		const handleBeforeInstallPrompt = (e) => {
-			e.preventDefault();
-			setInstallPrompt(e);
-		};
-		window.addEventListener(
-			"beforeinstallprompt",
-			handleBeforeInstallPrompt,
-		);
+  // Dynamic SEO Title & Meta Tag Synchronization
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      const aqiStr = airQualityData?.current?.aqi ? `AQI ${airQualityData.current.aqi}` : 'Real-Time';
+      document.title = `JagaKota: ${location.name} • ${aqiStr} & Cuaca BMKG`;
+      const metaDesc = document.querySelector('meta[name="description"]');
+      if (metaDesc) {
+        metaDesc.setAttribute(
+          'content',
+          `Pantauan kualitas udara (${aqiStr}), suhu ${weatherData?.current?.temp || 29}°C, gempa BMKG & karhutla di ${location.name}, ${location.province}.`
+        );
+      }
+    }
+  }, [location.name, location.province, airQualityData?.current?.aqi, weatherData?.current?.temp]);
 
-		if ("serviceWorker" in navigator) {
-			if (import.meta.env.PROD) {
-				navigator.serviceWorker.register("/sw.js").catch((err) => {
-					console.log("SW error:", err);
-				});
-			} else {
-				// Unregister SW in development to prevent stale caches
-				navigator.serviceWorker
-					.getRegistrations()
-					.then((registrations) => {
-						for (const reg of registrations) reg.unregister();
-					});
-			}
-		}
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
-		if ("Notification" in window && Notification.permission === "granted") {
-			setNotificationsEnabled(true);
-		}
+    if ('serviceWorker' in navigator) {
+      if (import.meta.env.PROD) {
+        navigator.serviceWorker.register('/sw.js').catch((err) => {
+          console.log('SW error:', err);
+        });
+      } else {
+        // Unregister SW in development to prevent stale caches
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+          for (const reg of registrations) reg.unregister();
+        });
+      }
+    }
 
-		return () =>
-			window.removeEventListener(
-				"beforeinstallprompt",
-				handleBeforeInstallPrompt,
-			);
-	}, []);
+    if ('Notification' in window && Notification.permission === 'granted') {
+      setNotificationsEnabled(true);
+    }
 
-	const handleInstallPwa = async () => {
-		if (!installPrompt) return;
-		installPrompt.prompt();
-		const { outcome } = await installPrompt.userChoice;
-		if (outcome === "accepted") {
-			setInstallPrompt(null);
-		}
-	};
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  }, []);
 
-	const handleRequestNotification = async () => {
-		if (!("Notification" in window)) {
-			alert("Browser ini tidak mendukung notifikasi Web.");
-			return;
-		}
-		const perm = await Notification.requestPermission();
-		if (perm === "granted") {
-			setNotificationsEnabled(true);
-			new Notification("JagaKota Aktif", {
-				body: "Notifikasi peringatan gempa, gunung api & kualitas udara berhasil diaktifkan.",
-				icon: "/leaf.svg",
-			});
-		}
-	};
+  const handleInstallPwa = async () => {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    const { outcome } = await installPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setInstallPrompt(null);
+    }
+  };
 
-	// Load Nationwide Earthquake Data on mount or manual refresh
-	const loadEarthquakeData = async (force = false) => {
-		try {
-			const [quake, quakeList] = await Promise.all([
-				fetchLatestEarthquake(force),
-				fetchRecentEarthquakes(force),
-			]);
-			if (quake) setLatestEarthquake(quake);
-			if (quakeList && quakeList.length > 0)
-				setRecentEarthquakes(quakeList);
-		} catch (err) {
-			console.warn("Earthquake fetch error:", err);
-		}
-	};
+  const handleRequestNotification = async () => {
+    if (!('Notification' in window)) {
+      alert('Browser ini tidak mendukung notifikasi Web.');
+      return;
+    }
+    const perm = await Notification.requestPermission();
+    if (perm === 'granted') {
+      setNotificationsEnabled(true);
+      new Notification('JagaKota Aktif', {
+        body: 'Notifikasi peringatan gempa, gunung api & kualitas udara berhasil diaktifkan.',
+        icon: '/leaf.svg'
+      });
+    }
+  };
 
-	useEffect(() => {
-		loadEarthquakeData();
-	}, []);
+    // Load Nationwide Earthquake Data on mount or manual refresh
+  const loadEarthquakeData = async (force = false) => {
+    try {
+      const [quake, quakeList] = await Promise.all([
+        fetchLatestEarthquake(force),
+        fetchRecentEarthquakes(force)
+      ]);
+      if (quake) setLatestEarthquake(quake);
+      if (quakeList && quakeList.length > 0) setRecentEarthquakes(quakeList);
+    } catch (err) {
+      console.warn('Earthquake fetch error:', err);
+    }
+  };
 
-	// Load City-Specific Data (Weather, AQI, Karhutla) with Instant SWR Cache
-	const loadData = async (force = false) => {
-		// 1. Check synchronous cache first for instant 0ms UI render
-		const safeLat = Number(location?.lat) || -6.1805;
-		const safeLon = Number(location?.lon) || 106.8284;
-		const cachedWeather = apiCache.get(
-			`weather_${safeLat.toFixed(3)}_${safeLon.toFixed(3)}`,
-		);
-		const cachedAqi = apiCache.get(
-			`aqi_${safeLat.toFixed(3)}_${safeLon.toFixed(3)}`,
-		);
+  useEffect(() => {
+    loadEarthquakeData();
+  }, []);
 
-		if (cachedWeather && cachedAqi && !force) {
-			setWeatherData(cachedWeather);
-			setAirQualityData(cachedAqi);
-			const karhutla = fetchKarhutlaData(
-				location.lat,
-				location.lon,
-				cachedWeather,
-				false,
-			);
-			setKarhutlaData(karhutla);
-			setLoading(false);
-			// Revalidate in background silently
-			Promise.all([
-				fetchWeatherData(location.lat, location.lon, true),
-				fetchAirQualityData(location.lat, location.lon, true),
-			])
-				.then(([freshWeather, freshAqi]) => {
-					if (freshWeather) setWeatherData(freshWeather);
-					if (freshAqi) setAirQualityData(freshAqi);
-					const freshKarhutla = fetchKarhutlaData(
-						location.lat,
-						location.lon,
-						freshWeather,
-						true,
-					);
-					setKarhutlaData(freshKarhutla);
-					setLastUpdated(new Date());
-				})
-				.catch(() => {});
-			return;
-		}
+  // Load City-Specific Data (Weather, AQI, Karhutla) with Instant SWR Cache
+  const loadData = async (force = false) => {
+    // 1. Check synchronous cache first for instant 0ms UI render
+    const safeLat = Number(location?.lat) || -6.1805;
+    const safeLon = Number(location?.lon) || 106.8284;
+    const cachedWeather = apiCache.get(`weather_${safeLat.toFixed(3)}_${safeLon.toFixed(3)}`);
+    const cachedAqi = apiCache.get(`aqi_${safeLat.toFixed(3)}_${safeLon.toFixed(3)}`);
 
-		// 2. If not in cache or forced, show loading and fetch parallel
-		setLoading(true);
-		try {
-			const [weather, aqi] = await Promise.all([
-				fetchWeatherData(location.lat, location.lon, force),
-				fetchAirQualityData(location.lat, location.lon, force),
-			]);
+    if (cachedWeather && cachedAqi && !force) {
+      setWeatherData(cachedWeather);
+      setAirQualityData(cachedAqi);
+      const karhutla = fetchKarhutlaData(location.lat, location.lon, cachedWeather, false);
+      setKarhutlaData(karhutla);
+      setLoading(false);
+      // Revalidate in background silently
+      Promise.all([
+        fetchWeatherData(location.lat, location.lon, true),
+        fetchAirQualityData(location.lat, location.lon, true)
+      ]).then(([freshWeather, freshAqi]) => {
+        if (freshWeather) setWeatherData(freshWeather);
+        if (freshAqi) setAirQualityData(freshAqi);
+        const freshKarhutla = fetchKarhutlaData(location.lat, location.lon, freshWeather, true);
+        setKarhutlaData(freshKarhutla);
+        setLastUpdated(new Date());
+      }).catch(() => {});
+      return;
+    }
 
-			if (weather) setWeatherData(weather);
-			if (aqi) setAirQualityData(aqi);
+    // 2. If not in cache or forced, show loading and fetch parallel
+    setLoading(true);
+    try {
+      const [weather, aqi] = await Promise.all([
+        fetchWeatherData(location.lat, location.lon, force),
+        fetchAirQualityData(location.lat, location.lon, force)
+      ]);
 
-			const karhutla = fetchKarhutlaData(
-				location.lat,
-				location.lon,
-				weather,
-				force,
-			);
-			setKarhutlaData(karhutla);
-			setLastUpdated(new Date());
+      if (weather) setWeatherData(weather);
+      if (aqi) setAirQualityData(aqi);
 
-			if (
-				notificationsEnabled &&
-				"Notification" in window &&
-				Notification.permission === "granted"
-			) {
-				if (aqi?.current?.aqi > 150) {
-					new Notification("Peringatan Polusi Udara", {
-						body: `AQI di ${location.name} mencapai ${aqi.current.aqi} (Tidak Sehat).`,
-						icon: "/leaf.svg",
-					});
-				}
-			}
-		} catch (err) {
-			console.error("Error fetching dashboard data:", err);
-		} finally {
-			setLoading(false);
-		}
-	};
+      const karhutla = fetchKarhutlaData(location.lat, location.lon, weather, force);
+      setKarhutlaData(karhutla);
+      setLastUpdated(new Date());
 
-	useEffect(() => {
-		loadData();
-	}, [location?.lat, location?.lon]);
+      if (notificationsEnabled && 'Notification' in window && Notification.permission === 'granted') {
+        if (aqi?.current?.aqi > 150) {
+          new Notification('Peringatan Polusi Udara', {
+            body: `AQI di ${location.name} mencapai ${aqi.current.aqi} (Tidak Sehat).`,
+            icon: '/leaf.svg'
+          });
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching dashboard data:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-	// Touch Pull-to-Refresh on Mobile
-	const [touchStart, setTouchStart] = useState(0);
-	const [isPulling, setIsPulling] = useState(false);
+  useEffect(() => {
+    loadData();
+  }, [location?.lat, location?.lon]);
 
-	const handleTouchStart = (e) => {
-		if (window.scrollY === 0 && e.touches.length === 1) {
-			setTouchStart(e.touches[0].clientY);
-		}
-	};
+  // Touch Pull-to-Refresh on Mobile
+  const [touchStart, setTouchStart] = useState(0);
+  const [isPulling, setIsPulling] = useState(false);
 
-	const handleTouchMove = (e) => {
-		if (touchStart > 0 && window.scrollY === 0) {
-			const dist = e.touches[0].clientY - touchStart;
-			if (dist > 70) {
-				setIsPulling(true);
-			}
-		}
-	};
+  const handleTouchStart = (e) => {
+    if (window.scrollY === 0 && e.touches.length === 1) {
+      setTouchStart(e.touches[0].clientY);
+    }
+  };
 
-	const handleTouchEnd = () => {
-		if (isPulling) {
-			triggerHaptic(20);
-			handleManualRefresh();
-		}
-		setTouchStart(0);
-		setIsPulling(false);
-	};
+  const handleTouchMove = (e) => {
+    if (touchStart > 0 && window.scrollY === 0) {
+      const dist = e.touches[0].clientY - touchStart;
+      if (dist > 70) {
+        setIsPulling(true);
+      }
+    }
+  };
 
-	const handleManualRefresh = () => {
-		triggerHaptic(15);
-		loadEarthquakeData(true);
-		loadData(true);
-	};
+  const handleTouchEnd = () => {
+    if (isPulling) {
+      triggerHaptic(20);
+      handleManualRefresh();
+    }
+    setTouchStart(0);
+    setIsPulling(false);
+  };
 
-	const handleFocusQuake = (quake) => {
-		if (quake && quake.lat && quake.lon) {
-			selectCity({
-				name: `Lokasi Gempa (${quake.magnitude} SR)`,
-				province: quake.wilayah,
-				lat: quake.lat,
-				lon: quake.lon,
-			});
-		}
-	};
+  const handleManualRefresh = async () => {
+    if (isRefreshing) return;
+    triggerHaptic(15);
+    setIsRefreshing(true);
+    try {
+      await Promise.all([loadEarthquakeData(true), loadData(true)]);
+      setShowUpdateToast(true);
+      setTimeout(() => setShowUpdateToast(false), 2500);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
-	// Alerts
-	const currentAqi = airQualityData?.current?.aqi || 0;
-	const isAqiAlert = currentAqi > 150;
-	const isQuakeAlert = latestEarthquake && latestEarthquake.magnitude >= 5.5;
+  const handleFocusQuake = (quake) => {
+    if (quake && quake.lat && quake.lon) {
+      selectCity({
+        name: `Lokasi Gempa (${quake.magnitude} SR)`,
+        province: quake.wilayah,
+        lat: quake.lat,
+        lon: quake.lon
+      });
+    }
+  };
 
-	if (isEmbedMode) {
-		return (
-			<WidgetEmbedView
-				location={location}
-				weatherData={weatherData}
-				airQualityData={airQualityData}
-				loading={loading}
-				onRefresh={handleManualRefresh}
-			/>
-		);
-	}
+  // Alerts
+  const currentAqi = airQualityData?.current?.aqi || 0;
+  const isAqiAlert = currentAqi > 150;
+  const isQuakeAlert = latestEarthquake && latestEarthquake.magnitude >= 5.5;
 
-	return (
-		<div
-			className="app-container"
-			onTouchStart={handleTouchStart}
-			onTouchMove={handleTouchMove}
-			onTouchEnd={handleTouchEnd}
-		>
-			{/* Header */}
-			<Header
-				location={location}
-				onOpenSearch={() => setIsSearchOpen(true)}
-				onGpsClick={requestGpsLocation}
-				gpsLoading={gpsLoading}
-				isDark={isDark}
-				onToggleDark={toggleDarkMode}
-				onRefresh={handleManualRefresh}
-				lastUpdated={lastUpdated}
-				notificationsEnabled={notificationsEnabled}
-				onRequestNotification={handleRequestNotification}
-				onOpenShare={() => setIsShareOpen(true)}
-				onOpenEmergency={() => setIsEmergencyOpen(true)}
-				onOpenWidget={() => setIsWidgetOpen(true)}
-			/>
+  if (isEmbedMode) {
+    return (
+      <WidgetEmbedView
+        location={location}
+        weatherData={weatherData}
+        airQualityData={airQualityData}
+        loading={loading}
+        onRefresh={handleManualRefresh}
+      />
+    );
+  }
 
-			{/* Lazy Loaded City Search Modal */}
-			{isSearchOpen && (
-				<Suspense fallback={null}>
-					text-primary
-					<CitySearchModal
-						isOpen={isSearchOpen}
-						onClose={() => setIsSearchOpen(false)}
-						onSelectCity={selectCity}
-						currentCity={location}
-					/>
-				</Suspense>
-			)}
+  return (
+    <div className="app-container" onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
+      {/* Header */}
+      <Header
+        location={location}
+        onOpenSearch={() => setIsSearchOpen(true)}
+        onGpsClick={requestGpsLocation}
+        gpsLoading={gpsLoading}
+        isDark={isDark}
+        onToggleDark={toggleDarkMode}
+        onRefresh={handleManualRefresh}
+        isRefreshing={isRefreshing}
+        lastUpdated={lastUpdated}
+        notificationsEnabled={notificationsEnabled}
+        onRequestNotification={handleRequestNotification}
+        onOpenShare={() => setIsShareOpen(true)}
+        onOpenEmergency={() => setIsEmergencyOpen(true)}
+        onOpenWidget={() => setIsWidgetOpen(true)}
+      />
 
-			{/* Lazy Loaded Share Card Modal */}
-			{isShareOpen && (
-				<Suspense fallback={null}>
-					<ShareCardModal
-						isOpen={isShareOpen}
-						onClose={() => setIsShareOpen(false)}
-						location={location}
-						airQualityData={airQualityData}
-						weatherData={weatherData}
-						latestEarthquake={latestEarthquake}
-						karhutlaData={karhutlaData}
-					/>
-				</Suspense>
-			)}
+      {/* Lazy Loaded City Search Modal */}
+      {isSearchOpen && (
+        <Suspense fallback={null}>
+          <CitySearchModal
+            isOpen={isSearchOpen}
+            onClose={() => setIsSearchOpen(false)}
+            onSelectCity={selectCity}
+            currentCity={location}
+          />
+        </Suspense>
+      )}
 
-			{/* Lazy Loaded Emergency Guide Modal */}
-			{isEmergencyOpen && (
-				<Suspense fallback={null}>
-					<EmergencyGuideModal
-						isOpen={isEmergencyOpen}
-						onClose={() => setIsEmergencyOpen(false)}
-					/>
-				</Suspense>
-			)}
+      {/* Lazy Loaded Share Card Modal */}
+      {isShareOpen && (
+        <Suspense fallback={null}>
+          <ShareCardModal
+            isOpen={isShareOpen}
+            onClose={() => setIsShareOpen(false)}
+            location={location}
+            airQualityData={airQualityData}
+            weatherData={weatherData}
+            latestEarthquake={latestEarthquake}
+            karhutlaData={karhutlaData}
+          />
+        </Suspense>
+      )}
 
-			{/* Lazy Loaded Embed Widget Modal */}
-			{isWidgetOpen && (
-				<Suspense fallback={null}>
-					<EmbedWidgetModal
-						isOpen={isWidgetOpen}
-						onClose={() => setIsWidgetOpen(false)}
-						location={location}
-						airQualityData={airQualityData}
-						weatherData={weatherData}
-					/>
-				</Suspense>
-			)}
+      {/* Lazy Loaded Emergency Guide Modal */}
+      {isEmergencyOpen && (
+        <Suspense fallback={null}>
+          <EmergencyGuideModal
+            isOpen={isEmergencyOpen}
+            onClose={() => setIsEmergencyOpen(false)}
+          />
+        </Suspense>
+      )}
 
-			{/* Lazy Loaded Karhutla Hotspot Modal */}
-			{isKarhutlaOpen && (
-				<Suspense fallback={null}>
-					<KarhutlaListModal
-						isOpen={isKarhutlaOpen}
-						onClose={() => setIsKarhutlaOpen(false)}
-						userLocation={location}
-						hotspots={karhutlaData?.allHotspots || []}
-					/>
-				</Suspense>
-			)}
+      {/* Lazy Loaded Embed Widget Modal */}
+      {isWidgetOpen && (
+        <Suspense fallback={null}>
+          <EmbedWidgetModal
+            isOpen={isWidgetOpen}
+            onClose={() => setIsWidgetOpen(false)}
+            location={location}
+            airQualityData={airQualityData}
+            weatherData={weatherData}
+          />
+        </Suspense>
+      )}
 
-			{/* Lazy Loaded Volcano List Modal */}
-			{isVolcanoOpen && (
-				<Suspense fallback={null}>
-					<VolcanoListModal
-						isOpen={isVolcanoOpen}
-						onClose={() => setIsVolcanoOpen(false)}
-						userLocation={location}
-					/>
-				</Suspense>
-			)}
+      
+      {/* Lazy Loaded Karhutla Hotspot Modal */}
+      {isKarhutlaOpen && (
+        <Suspense fallback={null}>
+          <KarhutlaListModal
+            isOpen={isKarhutlaOpen}
+            onClose={() => setIsKarhutlaOpen(false)}
+            userLocation={location}
+            hotspots={karhutlaData?.allHotspots || []}
+          />
+        </Suspense>
+      )}
 
-			{/* PWA Install Banner */}
-			{installPrompt && showPwaBanner && (
-				<div className="pwa-banner animate-fade-in">
-					<div className="flex items-center gap-2.5">
-						<Download
-							size={18}
-							text-primary
-							className="text-primary"
-						/>
-						<span className="text-[0.85rem] font-bold text-(--text-main)">
-							Pasang aplikasi JagaKota di layar utama HP Anda
-							untuk akses instan & offline.
-						</span>
-					</div>
-					<div className="flex items-center gap-2">
-						<button
-							onClick={handleInstallPwa}
-							className="flat-btn-primary min-h-9 px-3.5 py-1.5 text-[0.8rem]"
-						>
-							{t.pwaInstall || "Pasang Aplikasi"}
-						</button>
-						<button
-							onClick={() => setShowPwaBanner(false)}
-							aria-label="Tutup"
-							className="flat-btn-secondary min-h-9 px-2.5 py-1.5"
-						>
-							<X size={16} />
-						</button>
-					</div>
-				</div>
-			)}
+      {/* Lazy Loaded Volcano List Modal */}
+      {isVolcanoOpen && (
+        <Suspense fallback={null}>
+          <VolcanoListModal
+            isOpen={isVolcanoOpen}
+            onClose={() => setIsVolcanoOpen(false)}
+            userLocation={location}
+          />
+        </Suspense>
+      )}
 
-			{/* Offline Mode Indicator */}
-			{!isOnline && (
-				<div className="mb-4 flex items-center justify-center gap-2 rounded-lg bg-amber-800 px-4 py-2 text-[0.8rem] font-bold text-amber-100">
-					<WifiOff size={16} />
-					<span>
-						Mode Offline: Menampilkan data cache lokal terakhir.
-					</span>
-				</div>
-			)}
+      {/* PWA Install Banner */}
+      {installPrompt && showPwaBanner && (
+        <div className="pwa-banner animate-fade-in">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <Download size={18} color="var(--color-primary)" />
+            <span style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-main)' }}>
+              Pasang aplikasi JagaKota di layar utama HP Anda untuk akses instan & offline.
+            </span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <button
+              onClick={handleInstallPwa}
+              className="flat-btn-primary"
+              style={{ minHeight: '36px', padding: '6px 14px', fontSize: '0.8rem' }}
+            >
+              {t.pwaInstall || 'Pasang Aplikasi'}
+            </button>
+            <button
+              onClick={() => setShowPwaBanner(false)}
+              aria-label="Tutup"
+              className="flat-btn-secondary"
+              style={{ minHeight: '36px', padding: '6px 10px' }}
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+      )}
 
-			{/* Critical Alert Banner */}
-			{(isAqiAlert || isQuakeAlert) && (
-				<div className="alert-banner animate-fade-in">
-					<div className="flex items-center gap-2.5">
-						<AlertTriangle
-							size={20}
-							className="shrink-0 text-danger"
-						/>
-						<div>
-							<strong className="block text-[0.85rem] text-danger">
-								{isAqiAlert
-									? t.alertAqiTitle
-									: t.alertQuakeTitle}
-							</strong>
-							<span className="text-[0.8rem] font-semibold text-(--text-main)">
-								{isAqiAlert
-									? `${t.alertAqiDesc} (AQI: ${currentAqi})`
-									: `Gempa M ${latestEarthquake?.magnitude} terjadi di ${latestEarthquake?.wilayah}.`}
-							</span>
-						</div>
-					</div>
-				</div>
-			)}
+      {/* Offline Mode Indicator */}
+      {!isOnline && (
+        <div style={{
+          backgroundColor: '#92400e',
+          color: '#fef3c7',
+          padding: '0.55rem 1rem',
+          borderRadius: 'var(--radius-md)',
+          marginBottom: '1rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '0.5rem',
+          fontSize: '0.8rem',
+          fontWeight: '700'
+        }}>
+          <WifiOff size={16} />
+          <span>Mode Offline: Menampilkan data cache lokal terakhir.</span>
+        </div>
+      )}
 
-			{/* UNIQUE DIFFERENTIATOR: Eco-Health Hero Score & Outdoor Activity Matrix */}
-			<EcoHealthCard
-				aqiData={airQualityData}
-				weatherData={weatherData}
-				loading={loading}
-			/>
+      {/* Critical Alert Banner */}
+      {(isAqiAlert || isQuakeAlert) && (
+        <div className="alert-banner animate-fade-in">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <AlertTriangle size={20} color="var(--color-danger)" style={{ flexShrink: 0 }} />
+            <div>
+              <strong style={{ fontSize: '0.85rem', color: 'var(--color-danger)', display: 'block' }}>
+                {isAqiAlert ? t.alertAqiTitle : t.alertQuakeTitle}
+              </strong>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-main)', fontWeight: '600' }}>
+                {isAqiAlert
+                  ? `${t.alertAqiDesc} (AQI: ${currentAqi})`
+                  : `Gempa M ${latestEarthquake?.magnitude} terjadi di ${latestEarthquake?.wilayah}.`}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
 
-			{/* Row 1: Atmospheric & Environmental Readouts (AQI, Weather, UV Radiation) */}
-			<div className="dashboard-grid-3">
-				<AqiCard data={airQualityData} loading={loading} />
-				<WeatherCard
-					data={weatherData}
-					locationName={location.name}
-					loading={loading}
-				/>
-				<UvCard
-					uvIndex={weatherData?.current?.uvIndex || 0}
-					loading={loading}
-				/>
-			</div>
+      {/* UNIQUE DIFFERENTIATOR: Eco-Health Hero Score & Outdoor Activity Matrix */}
+      <EcoHealthCard
+        aqiData={airQualityData}
+        weatherData={weatherData}
+        loading={loading || isRefreshing}
+      />
 
-			{/* Row 2: Geological & Seismic Hazards (Earthquake BMKG & Volcano PVMBG Side by Side) */}
-			<div className="dashboard-grid-2 mb-6">
-				<EarthquakeCard
-					earthquake={latestEarthquake}
-					recentQuakes={recentEarthquakes}
-					onFocusQuake={handleFocusQuake}
-					userLocation={location}
-				/>
-				<VolcanoCard
-					location={location}
-					onOpenModal={() => setIsVolcanoOpen(true)}
-				/>
-			</div>
+      {/* Row 1: Atmospheric & Environmental Readouts (AQI, Weather, UV Radiation) */}
+      <div className="dashboard-grid-3">
+        <AqiCard data={airQualityData} loading={loading || isRefreshing} />
+        <WeatherCard data={weatherData} locationName={location.name} loading={loading || isRefreshing} />
+        <UvCard uvIndex={weatherData?.current?.uvIndex || 0} loading={loading || isRefreshing} />
+      </div>
 
-			{/* Row 3: Wildfire & Haze Alert (BMKG FDRS, NASA FIRMS & KLHK SiPongi+) */}
-			<KarhutlaCard
-				karhutlaData={karhutlaData}
-				airQualityData={airQualityData}
-				location={location}
-				onOpenModal={() => setIsKarhutlaOpen(true)}
-				loading={loading}
-			/>
+      {/* Row 2: Geological & Seismic Hazards (Earthquake BMKG & Volcano PVMBG Side by Side) */}
+      <div className="dashboard-grid-2" style={{ marginBottom: '1.5rem' }}>
+        <EarthquakeCard
+          earthquake={latestEarthquake}
+          recentQuakes={recentEarthquakes}
+          onFocusQuake={handleFocusQuake}
+          userLocation={location}
+          isRefreshing={isRefreshing}
+        />
+        <VolcanoCard
+          location={location}
+          onOpenModal={() => setIsVolcanoOpen(true)}
+          isRefreshing={isRefreshing}
+        />
+      </div>
 
-			{/* Row 4: 24-Hour Air Quality Trend Chart (Dedicated Full Width) */}
-			<div className="mb-6">
-				<Suspense
-					fallback={
-						<ComponentSkeleton
-							height="260px"
-							label="Memuat Grafik Tren AQI..."
-						/>
-					}
-				>
-					<AqiChart hourlyData={airQualityData?.hourly} />
-				</Suspense>
-			</div>
+      {/* Row 3: Wildfire & Haze Alert (BMKG FDRS, NASA FIRMS & KLHK SiPongi+) */}
+      <KarhutlaCard
+        karhutlaData={karhutlaData}
+        airQualityData={airQualityData}
+        location={location}
+        onOpenModal={() => setIsKarhutlaOpen(true)}
+        loading={loading || isRefreshing}
+      />
 
-			{/* Row 3: 7-Day Forecast */}
-			<div className="mb-6">
-				<Suspense
-					fallback={
-						<ComponentSkeleton
-							height="260px"
-							label="Memuat Prakiraan Cuaca 7 Hari..."
-						/>
-					}
-				>
-					<WeatherForecastChart dailyData={weatherData?.daily} />
-				</Suspense>
-			</div>
+      {/* Row 4: 24-Hour Air Quality Trend Chart (Dedicated Full Width) */}
+      <div style={{ marginBottom: '1.5rem' }}>
+        <Suspense fallback={<ComponentSkeleton height="260px" label="Memuat Grafik Tren AQI..." />}>
+          <AqiChart hourlyData={airQualityData?.hourly} />
+        </Suspense>
+      </div>
 
-			{/* Row 4: Interactive Map */}
-			<div className="mb-6">
-				<Suspense
-					fallback={
-						<ComponentSkeleton
-							height="360px"
-							label="Memuat Peta Interaktif Indonesia..."
-						/>
-					}
-				>
-					<IndonesiaMap
-						currentLocation={location}
-						earthquakes={recentEarthquakes}
-						hotspots={karhutlaData?.allHotspots || []}
-						onSelectCity={selectCity}
-					/>
-				</Suspense>
-			</div>
+      {/* Row 3: 7-Day Forecast */}
+      <div style={{ marginBottom: '1.5rem' }}>
+        <Suspense fallback={<ComponentSkeleton height="260px" label="Memuat Prakiraan Cuaca 7 Hari..." />}>
+          <WeatherForecastChart dailyData={weatherData?.daily} />
+        </Suspense>
+      </div>
 
-			{/* Footer */}
-			<Footer onOpenWidget={() => setIsWidgetOpen(true)} />
+      {/* Row 4: Interactive Map */}
+      <div style={{ marginBottom: '1.5rem' }}>
+        <Suspense fallback={<ComponentSkeleton height="360px" label="Memuat Peta Interaktif Indonesia..." />}>
+          <IndonesiaMap
+            currentLocation={location}
+            earthquakes={recentEarthquakes}
+            hotspots={karhutlaData?.allHotspots || []}
+            onSelectCity={selectCity}
+          />
+        </Suspense>
+      </div>
 
-			{/* Vercel Web Analytics */}
-			<Analytics />
-		</div>
-	);
+      {/* Footer */}
+      <Footer onOpenWidget={() => setIsWidgetOpen(true)} />
+
+      {/* PWA Sync Toast: Data Sudah Update */}
+      {showUpdateToast && (
+        <div
+          className="animate-fade-in"
+          role="status"
+          style={{
+            position: 'fixed',
+            bottom: '24px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 99999,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            backgroundColor: 'var(--color-secondary)',
+            color: '#ffffff',
+            padding: '0.65rem 1.1rem',
+            borderRadius: '9999px',
+            fontSize: '0.85rem',
+            fontWeight: '700'
+          }}
+        >
+          <CheckCircle2 size={17} strokeWidth={2.5} />
+          <span>Data Sudah Update</span>
+        </div>
+      )}
+
+      {/* Vercel Web Analytics */}
+      <Analytics />
+    </div>
+  );
 }
 
 export default App;

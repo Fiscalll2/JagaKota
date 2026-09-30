@@ -3,12 +3,25 @@ import { Droplets, Wind, Gauge } from "lucide-react";
 import { getWeatherVisual } from "../../utils/weatherIcons";
 import { translations } from "../../utils/i18n";
 
-export function WeatherCard({ data, locationName }) {
-	const t = translations;
+export function WeatherCard({ data, locationName, loading }) {
+  const t = translations;
 
-	const current = data?.current || {};
-	const visual = getWeatherVisual(current.weatherCode || 0);
-	const CurrentIcon = visual.icon;
+  if (loading) {
+    return (
+      <div className="flat-card animate-pulse" style={{ padding: '1.5rem', minHeight: '220px' }}>
+        <div style={{ height: '24px', width: '45%', backgroundColor: 'var(--bg-muted)', borderRadius: '4px', marginBottom: '1rem' }} />
+        <div style={{ height: '54px', width: '40%', backgroundColor: 'var(--bg-muted)', borderRadius: '6px', marginBottom: '0.85rem' }} />
+        <div style={{ height: '14px', backgroundColor: 'var(--bg-muted)', borderRadius: '4px', marginBottom: '1rem' }} />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
+          <div style={{ height: '52px', backgroundColor: 'var(--bg-muted)', borderRadius: '8px' }} />
+          <div style={{ height: '52px', backgroundColor: 'var(--bg-muted)', borderRadius: '8px' }} />
+          <div style={{ height: '52px', backgroundColor: 'var(--bg-muted)', borderRadius: '8px' }} />
+        </div>
+      </div>
+    );
+  }
+
+  
 
 	return (
 		<div className="flat-card p-6">

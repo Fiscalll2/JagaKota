@@ -3,12 +3,21 @@ import { Wind } from "lucide-react";
 import { getAqiInfo } from "../../utils/aqi";
 import { translations } from "../../utils/i18n";
 
-export function AqiCard({ data }) {
-	const t = translations;
+export function AqiCard({ data, loading }) {
+  const t = translations;
 
-	const current = data?.current || {};
-	const aqi = Number(current.aqi) || 0;
-	const aqiInfo = getAqiInfo(aqi);
+  if (loading) {
+    return (
+      <div className="flat-card animate-pulse" style={{ padding: '1.5rem', minHeight: '220px' }}>
+        <div style={{ height: '24px', width: '45%', backgroundColor: 'var(--bg-muted)', borderRadius: '4px', marginBottom: '1rem' }} />
+        <div style={{ height: '54px', width: '30%', backgroundColor: 'var(--bg-muted)', borderRadius: '6px', marginBottom: '0.85rem' }} />
+        <div style={{ height: '10px', backgroundColor: 'var(--bg-muted)', borderRadius: '999px', marginBottom: '1rem' }} />
+        <div style={{ height: '60px', backgroundColor: 'var(--bg-muted)', borderRadius: '6px' }} />
+      </div>
+    );
+  }
+
+  
 
 	// Position percentage on standard 0-500 AQI scale
 	const needlePercent = Math.min(100, Math.max(0, (aqi / 500) * 100));
