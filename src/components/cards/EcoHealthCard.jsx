@@ -1,7 +1,14 @@
-import React from 'react';
-import { HeartPulse, Bike, Footprints, Baby, Wind, ShieldCheck } from 'lucide-react';
-import { calculateEcoHealthScore } from '../../utils/healthIndex';
-import { translations } from '../../utils/i18n';
+import React from "react";
+import {
+	HeartPulse,
+	Bike,
+	Footprints,
+	Baby,
+	Wind,
+	ShieldCheck,
+} from "lucide-react";
+import { calculateEcoHealthScore } from "../../utils/healthIndex";
+import { translations } from "../../utils/i18n";
 
 export function EcoHealthCard({ aqiData, weatherData, loading }) {
   const t = translations;

@@ -24,66 +24,62 @@ import { Download, AlertTriangle, X, Loader2, WifiOff, CheckCircle2 } from 'luci
 
 // Lazy load heavy components for peak initial load speed & performance
 const AqiChart = lazy(() =>
-  import('./components/charts/AqiChart').then((m) => ({ default: m.AqiChart }))
+	import("./components/charts/AqiChart").then((m) => ({
+		default: m.AqiChart,
+	})),
 );
 const WeatherForecastChart = lazy(() =>
-  import('./components/charts/WeatherForecastChart').then((m) => ({
-    default: m.WeatherForecastChart
-  }))
+	import("./components/charts/WeatherForecastChart").then((m) => ({
+		default: m.WeatherForecastChart,
+	})),
 );
 const IndonesiaMap = lazy(() =>
-  import('./components/map/IndonesiaMap').then((m) => ({ default: m.IndonesiaMap }))
+	import("./components/map/IndonesiaMap").then((m) => ({
+		default: m.IndonesiaMap,
+	})),
 );
 const CitySearchModal = lazy(() =>
-  import('./components/common/CitySearchModal').then((m) => ({ default: m.CitySearchModal }))
+	import("./components/common/CitySearchModal").then((m) => ({
+		default: m.CitySearchModal,
+	})),
 );
 const ShareCardModal = lazy(() =>
-  import('./components/common/ShareCardModal').then((m) => ({ default: m.ShareCardModal }))
+	import("./components/common/ShareCardModal").then((m) => ({
+		default: m.ShareCardModal,
+	})),
 );
 const EmergencyGuideModal = lazy(() =>
-  import('./components/common/EmergencyGuideModal').then((m) => ({
-    default: m.EmergencyGuideModal
-  }))
+	import("./components/common/EmergencyGuideModal").then((m) => ({
+		default: m.EmergencyGuideModal,
+	})),
 );
 const KarhutlaListModal = lazy(() =>
-  import('./components/common/KarhutlaListModal').then((m) => ({
-    default: m.KarhutlaListModal
-  }))
+	import("./components/common/KarhutlaListModal").then((m) => ({
+		default: m.KarhutlaListModal,
+	})),
 );
 const VolcanoListModal = lazy(() =>
-  import('./components/common/VolcanoListModal').then((m) => ({
-    default: m.VolcanoListModal
-  }))
+	import("./components/common/VolcanoListModal").then((m) => ({
+		default: m.VolcanoListModal,
+	})),
 );
 const EmbedWidgetModal = lazy(() =>
-  import('./components/common/EmbedWidgetModal').then((m) => ({
-    default: m.EmbedWidgetModal
-  }))
+	import("./components/common/EmbedWidgetModal").then((m) => ({
+		default: m.EmbedWidgetModal,
+	})),
 );
 
-// Loading Fallback Component
-function ComponentSkeleton({ height = '200px', label = 'Memuat komponen...' }) {
-  return (
-    <div
-      style={{
-        minHeight: height,
-        backgroundColor: 'var(--bg-card)',
-        border: '2px solid var(--border-color, #e5e7eb)',
-        borderRadius: 'var(--radius-lg, 12px)',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '0.5rem',
-        color: 'var(--text-muted, #6b7280)',
-        fontSize: '0.85rem',
-        fontWeight: '600'
-      }}
-    >
-      <Loader2 size={24} className="animate-spin" color="var(--color-primary, #3b82f6)" />
-      <span>{label}</span>
-    </div>
-  );
+// Loading Fallback Component — Tailwind (pengganti inline style native)
+function ComponentSkeleton({ height = "200px", label = "Memuat komponen..." }) {
+	return (
+		<div
+			style={{ minHeight: height }}
+			className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-(--border-flat) bg-(--bg-card) text-[0.85rem] font-semibold text-(--text-muted)"
+		>
+			<Loader2 size={24} className="animate-spin text-primary" />
+			<span>{label}</span>
+		</div>
+	);
 }
 
 export function App() {
