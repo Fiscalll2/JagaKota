@@ -2,6 +2,7 @@ import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Analytics } from '@vercel/analytics/react';
 import { Header } from './components/common/Header';
 import { TickerBar } from './components/common/TickerBar';
+import { OnboardingIntro } from './components/common/OnboardingIntro';
 import { EcoHealthCard } from './components/cards/EcoHealthCard';
 import { AqiCard } from './components/cards/AqiCard';
 import { WeatherCard } from './components/cards/WeatherCard';
@@ -132,6 +133,13 @@ export function App() {
   // PWA Prompt
   const [installPrompt, setInstallPrompt] = useState(null);
   const [showPwaBanner, setShowPwaBanner] = useState(true);
+
+  // Onboarding intro (shadcn): tampil setiap reload browser.
+  // Refresh data dari dalam aplikasi pakai tombol sync (tidak menyentuh state ini).
+  const [showIntro, setShowIntro] = useState(true);
+  const handleEnterDashboard = () => {
+    setShowIntro(false);
+  };
 
   // Notification state
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
@@ -377,6 +385,20 @@ export function App() {
 
   return (
     <div className="app-container" onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
+      {!isEmbedMode && showIntro && (
+        <OnboardingIntro
+          onEnter={handleEnterDashboard}
+          live={{
+            aqi: airQualityData?.current?.aqi ?? null,
+            temp: weatherData?.current?.temp ?? null,
+            uv: weatherData?.current?.uvIndex ?? null,
+            quakeMag: latestEarthquake?.magnitude ?? null,
+            quakeWilayah: latestEarthquake?.wilayah ?? null,
+            hotspotCount: karhutlaData?.allHotspots?.length ?? null,
+            fdrs: karhutlaData?.fdrs?.code ?? null
+          }}
+        />
+      )}
       <TickerBar items={tickerItems} />
       {/* Header */}
       <Header
