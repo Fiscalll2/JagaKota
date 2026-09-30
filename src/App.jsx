@@ -1,6 +1,7 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Analytics } from '@vercel/analytics/react';
 import { Header } from './components/common/Header';
+import { TickerBar } from './components/common/TickerBar';
 import { EcoHealthCard } from './components/cards/EcoHealthCard';
 import { AqiCard } from './components/cards/AqiCard';
 import { WeatherCard } from './components/cards/WeatherCard';
@@ -351,6 +352,17 @@ export function App() {
   const isAqiAlert = currentAqi > 150;
   const isQuakeAlert = latestEarthquake && latestEarthquake.magnitude >= 5.5;
 
+  // Ticker announcement items
+  const tickerItems = [
+    location?.name ? `Lokasi: ${location.name}${location?.province ? ` - ${location.province}` : ''}` : null,
+    airQualityData?.current ? `Kualitas Udara AQI ${airQualityData.current.aqi}` : null,
+    weatherData?.current ? `Suhu ${weatherData.current.temp}°C` : null,
+    weatherData?.current ? `UV Indeks ${weatherData.current.uvIndex}` : null,
+    latestEarthquake ? `Gempa M${latestEarthquake.magnitude} di ${latestEarthquake.wilayah}` : null,
+    karhutlaData?.fdrs ? `Karhutla: ${karhutlaData.fdrs.code}` : null,
+    !isOnline ? 'Mode Offline: menampilkan data cache lokal' : 'Data Real-Time BMKG • Open-Meteo • PVMBG • NASA FIRMS'
+  ].filter(Boolean);
+
   if (isEmbedMode) {
     return (
       <WidgetEmbedView
@@ -365,6 +377,7 @@ export function App() {
 
   return (
     <div className="app-container" onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
+      <TickerBar items={tickerItems} />
       {/* Header */}
       <Header
         location={location}

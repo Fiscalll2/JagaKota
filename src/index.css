@@ -443,3 +443,25 @@ button, input, select, a {
   from { opacity: 0; }
   to { opacity: 1; }
 }
+
+/* Ticker Announcement Bar */
+.ticker-viewport {
+  overflow: hidden;
+  flex: 1;
+}
+
+.ticker-track {
+  display: inline-flex;
+  white-space: nowrap;
+  animation: jagakota-ticker 30s linear infinite;
+  will-change: transform;
+}
+
+.ticker-bar:hover .ticker-track {
+  animation-play-state: paused;
+}
+
+@keyframes jagakota-ticker {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
