@@ -122,12 +122,15 @@ export async function fetchWeatherData(lat, lon, forceRefresh = false) {
       weather_code: calibratedHourlyWeatherCodes
     } : getDefaultWeather().hourly;
 
-    // Kalibrasi kode cuaca harian (7 hari) untuk mencegah hari kering salah didiagnosis gerimis di seluruh lokasi
+    // Kalibrasi kode cuaca harian (7 hari) untuk musim kering / El Nino:
+    // Model global sering memberi kode Gerimis (51-57, 61, 80) dari virga padahal di darat kering.
+    // Pakai OR agar konsisten dengan kalibrasi hourly: cukup salah satu kering -> downgrade ke Berawan.
     const calibratedDailyWeatherCodes = (data.daily?.weather_code || []).map((code, idx) => {
       const pSum = Number(data.daily?.precipitation_sum?.[idx] ?? 0);
       const pProb = Number(data.daily?.precipitation_probability_max?.[idx] ?? 0);
-      if (pSum < 0.35 && pProb < 35 && ((code >= 51 && code <= 57) || code === 80 || code === 61)) {
-        return 2; // Berawan
+      if ((pSum < 1.0 || pProb < 50) && ((code >= 51 && code <= 57) || code === 80 || code === 61)) {
+        if (pSum < 0.3 && pProb < 20) return 1; // Sangat kering -> Cerah Berawan
+        return 2; // Kering -> Berawan
       }
       return code;
     });

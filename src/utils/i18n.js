@@ -5,8 +5,8 @@ const dictionaryId = {
   // Navigation & Header
   appName: 'JagaKota',
   appTitle: 'JagaKota',
-  appSubtitle: 'Pantauan Lingkungan Hidup & Mitigasi Bencana Real-Time',
-  appTagline: 'Pantauan Lingkungan & Mitigasi Bencana Real-Time',
+  appSubtitle: 'Pemantauan Ekologi & Kesiapsiagaan Bencana Real-Time',
+  appTagline: 'Pemantauan Ekologi & Kesiapsiagaan Bencana Real-Time',
   liveBadge: 'DATA REAL-TIME',
   selectCity: 'Pilih Kota',
   searchCity: 'Cari kota atau lokasi...',
@@ -33,7 +33,7 @@ const dictionaryId = {
 
   // EcoHealth Card
   ecoTitle: 'Kondisi Lingkungan Hidup',
-  ecoSubtitle: 'Indeks komposit kualitas udara, suhu panas, dan radiasi UV',
+  ecoSubtitle: 'Skor terpadu mutu udara, tekanan panas, dan paparan UV',
   ecoScoreTitle: 'SKOR KUALITAS LINGKUNGAN',
   exposure: 'Paparan',
   cigsUnit: 'batang rokok/hari',
@@ -185,7 +185,7 @@ const dictionaryId = {
   shareStoryText: 'Bagikan ringkasan visual kualitas udara, cuaca, gempa, dan karhutla terkini.',
 
   // Footer & Common
-  footerTitle: 'JagaKota: Pantauan Lingkungan Hidup & Mitigasi Bencana Real-Time',
+  footerTitle: 'JagaKota: Pemantauan Ekologi & Kesiapsiagaan Bencana Real-Time',
   footerSources: 'Sumber Data Resmi: BMKG (Meteorologi, Klimatologi & Geofisika), PVMBG / Magma Indonesia (Aktivitas Gunung Api), KLHK SiPongi+ & NASA FIRMS (Satelit Titik Panas Karhutla), serta Open-Meteo / Copernicus Atmosphere (Kualitas Udara ISPU & AQI).',
   treatCoffee: 'Traktir Kopi',
   embedWidget: 'Pasang Widget',
