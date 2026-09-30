@@ -11,6 +11,7 @@ export function Header({
   isDark,
   onToggleDark,
   onRefresh,
+  isRefreshing,
   lastUpdated,
   notificationsEnabled,
   onRequestNotification,
@@ -225,6 +226,7 @@ export function Header({
           {/* Refresh */}
           <button
             onClick={onRefresh}
+            disabled={isRefreshing}
             aria-label={t.refresh}
             title={t.refresh}
             style={{
@@ -234,13 +236,14 @@ export function Header({
               border: 'none',
               backgroundColor: 'transparent',
               color: 'var(--text-main)',
-              cursor: 'pointer',
+              cursor: isRefreshing ? 'wait' : 'pointer',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              opacity: isRefreshing ? 0.6 : 1
             }}
           >
-            <RefreshCw size={15} strokeWidth={2.2} />
+            <RefreshCw size={15} strokeWidth={2.2} className={isRefreshing ? 'animate-spin' : ''} />
           </button>
 
           {/* Theme Toggle */}

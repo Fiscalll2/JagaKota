@@ -20,7 +20,7 @@ import { fetchWeatherData, getDefaultWeather } from './services/weather';
 import { fetchAirQualityData } from './services/airQuality';
 import { fetchLatestEarthquake, fetchRecentEarthquakes } from './services/bmkg';
 import { i18n } from './utils/i18n';
-import { Download, AlertTriangle, X, Loader2, WifiOff } from 'lucide-react';
+import { Download, AlertTriangle, X, Loader2, WifiOff, CheckCircle2 } from 'lucide-react';
 
 // Lazy load heavy components for peak initial load speed & performance
 const AqiChart = lazy(() =>
@@ -95,6 +95,8 @@ export function App() {
   const [latestEarthquake, setLatestEarthquake] = useState(null);
   const [recentEarthquakes, setRecentEarthquakes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showUpdateToast, setShowUpdateToast] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(new Date());
 
   // Language state: 'id' or 'en'
@@ -320,10 +322,17 @@ export function App() {
     setIsPulling(false);
   };
 
-  const handleManualRefresh = () => {
+  const handleManualRefresh = async () => {
+    if (isRefreshing) return;
     triggerHaptic(15);
-    loadEarthquakeData(true);
-    loadData(true);
+    setIsRefreshing(true);
+    try {
+      await Promise.all([loadEarthquakeData(true), loadData(true)]);
+      setShowUpdateToast(true);
+      setTimeout(() => setShowUpdateToast(false), 2500);
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   const handleFocusQuake = (quake) => {
@@ -365,6 +374,7 @@ export function App() {
         isDark={isDark}
         onToggleDark={toggleDarkMode}
         onRefresh={handleManualRefresh}
+        isRefreshing={isRefreshing}
         lastUpdated={lastUpdated}
         notificationsEnabled={notificationsEnabled}
         onRequestNotification={handleRequestNotification}
@@ -519,14 +529,14 @@ export function App() {
       <EcoHealthCard
         aqiData={airQualityData}
         weatherData={weatherData}
-        loading={loading}
+        loading={loading || isRefreshing}
       />
 
       {/* Row 1: Atmospheric & Environmental Readouts (AQI, Weather, UV Radiation) */}
       <div className="dashboard-grid-3">
-        <AqiCard data={airQualityData} loading={loading} />
-        <WeatherCard data={weatherData} locationName={location.name} loading={loading} />
-        <UvCard uvIndex={weatherData?.current?.uvIndex || 0} loading={loading} />
+        <AqiCard data={airQualityData} loading={loading || isRefreshing} />
+        <WeatherCard data={weatherData} locationName={location.name} loading={loading || isRefreshing} />
+        <UvCard uvIndex={weatherData?.current?.uvIndex || 0} loading={loading || isRefreshing} />
       </div>
 
       {/* Row 2: Geological & Seismic Hazards (Earthquake BMKG & Volcano PVMBG Side by Side) */}
@@ -536,10 +546,12 @@ export function App() {
           recentQuakes={recentEarthquakes}
           onFocusQuake={handleFocusQuake}
           userLocation={location}
+          isRefreshing={isRefreshing}
         />
         <VolcanoCard
           location={location}
           onOpenModal={() => setIsVolcanoOpen(true)}
+          isRefreshing={isRefreshing}
         />
       </div>
 
@@ -549,7 +561,7 @@ export function App() {
         airQualityData={airQualityData}
         location={location}
         onOpenModal={() => setIsKarhutlaOpen(true)}
-        loading={loading}
+        loading={loading || isRefreshing}
       />
 
       {/* Row 4: 24-Hour Air Quality Trend Chart (Dedicated Full Width) */}
@@ -580,6 +592,33 @@ export function App() {
 
       {/* Footer */}
       <Footer onOpenWidget={() => setIsWidgetOpen(true)} />
+
+      {/* PWA Sync Toast: Data Sudah Update */}
+      {showUpdateToast && (
+        <div
+          className="animate-fade-in"
+          role="status"
+          style={{
+            position: 'fixed',
+            bottom: '24px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 99999,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            backgroundColor: 'var(--color-secondary)',
+            color: '#ffffff',
+            padding: '0.65rem 1.1rem',
+            borderRadius: '9999px',
+            fontSize: '0.85rem',
+            fontWeight: '700'
+          }}
+        >
+          <CheckCircle2 size={17} strokeWidth={2.5} />
+          <span>Data Sudah Update</span>
+        </div>
+      )}
 
       {/* Vercel Web Analytics */}
       <Analytics />

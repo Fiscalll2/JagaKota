@@ -3,8 +3,23 @@ import { HeartPulse, Bike, Footprints, Baby, Wind, ShieldCheck } from 'lucide-re
 import { calculateEcoHealthScore } from '../../utils/healthIndex';
 import { translations } from '../../utils/i18n';
 
-export function EcoHealthCard({ aqiData, weatherData }) {
+export function EcoHealthCard({ aqiData, weatherData, loading }) {
   const t = translations;
+
+  if (loading) {
+    return (
+      <div className="flat-card animate-pulse" style={{ padding: '1.75rem', marginBottom: '1.5rem', minHeight: '180px' }}>
+        <div style={{ height: '24px', width: '35%', backgroundColor: 'var(--bg-muted)', borderRadius: '4px', marginBottom: '1rem' }} />
+        <div style={{ height: '68px', backgroundColor: 'var(--bg-muted)', borderRadius: '8px', marginBottom: '1rem' }} />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.65rem' }}>
+          <div style={{ height: '56px', backgroundColor: 'var(--bg-muted)', borderRadius: '8px' }} />
+          <div style={{ height: '56px', backgroundColor: 'var(--bg-muted)', borderRadius: '8px' }} />
+          <div style={{ height: '56px', backgroundColor: 'var(--bg-muted)', borderRadius: '8px' }} />
+          <div style={{ height: '56px', backgroundColor: 'var(--bg-muted)', borderRadius: '8px' }} />
+        </div>
+      </div>
+    );
+  }
 
   
 

@@ -411,3 +411,35 @@ button, input, select, a {
     transform: scale(1) translateY(0);
   }
 }
+
+/* ==========================================
+   ANIMATION UTILITIES (pengganti Tailwind)
+   Dipakai: animate-spin (icon refresh/GPS),
+   animate-pulse (skeleton cards), animate-fade-in
+   ========================================== */
+.animate-spin {
+  animation: jagakota-spin 1s linear infinite;
+  transform-origin: center;
+}
+
+@keyframes jagakota-spin {
+  to { transform: rotate(360deg); }
+}
+
+.animate-pulse {
+  animation: jagakota-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes jagakota-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-fade-in {
+  animation: jagakota-fade-in 200ms ease-out;
+}
+
+@keyframes jagakota-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

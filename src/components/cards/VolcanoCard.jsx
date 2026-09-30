@@ -3,8 +3,19 @@ import { Flame, Compass, ChevronRight, AlertTriangle, ShieldCheck } from 'lucide
 import { getNearbyVolcanoes } from '../../services/volcano.js';
 import { translations } from '../../utils/i18n.js';
 
-export function VolcanoCard({ location, onOpenModal }) {
+export function VolcanoCard({ location, onOpenModal, isRefreshing }) {
   const t = translations;
+
+  if (isRefreshing) {
+    return (
+      <div className="flat-card animate-pulse" style={{ padding: '1.5rem', minHeight: '220px' }}>
+        <div style={{ height: '24px', width: '45%', backgroundColor: 'var(--bg-muted)', borderRadius: '4px', marginBottom: '1rem' }} />
+        <div style={{ height: '70px', backgroundColor: 'var(--bg-muted)', borderRadius: '8px', marginBottom: '0.85rem' }} />
+        <div style={{ height: '40px', backgroundColor: 'var(--bg-muted)', borderRadius: '6px' }} />
+      </div>
+    );
+  }
+
   const { nearest } = getNearbyVolcanoes(location?.lat, location?.lon);
 
   if (!nearest) return null;

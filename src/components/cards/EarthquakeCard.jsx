@@ -4,9 +4,19 @@ import { getEarthquakeColor } from '../../utils/aqi';
 import { calculateDistance } from '../../utils/geo';
 import { translations } from '../../utils/i18n';
 
-export function EarthquakeCard({ earthquake, recentQuakes = [], onFocusQuake, userLocation }) {
+export function EarthquakeCard({ earthquake, recentQuakes = [], onFocusQuake, userLocation, isRefreshing }) {
   const [showList, setShowList] = useState(false);
   const t = translations;
+
+  if (isRefreshing) {
+    return (
+      <div className="flat-card animate-pulse" style={{ padding: '1.5rem', minHeight: '220px' }}>
+        <div style={{ height: '24px', width: '45%', backgroundColor: 'var(--bg-muted)', borderRadius: '4px', marginBottom: '1rem' }} />
+        <div style={{ height: '54px', width: '30%', backgroundColor: 'var(--bg-muted)', borderRadius: '6px', marginBottom: '0.85rem' }} />
+        <div style={{ height: '70px', backgroundColor: 'var(--bg-muted)', borderRadius: '8px' }} />
+      </div>
+    );
+  }
 
   if (!earthquake) {
     return (
