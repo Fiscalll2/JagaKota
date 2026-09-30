@@ -1,116 +1,90 @@
-import React from 'react';
-import { SunMedium, Info } from 'lucide-react';
-import { getUvInfo } from '../../utils/aqi';
-import { translations } from '../../utils/i18n';
+import React from "react";
+import { SunMedium, Info } from "lucide-react";
+import { getUvInfo } from "../../utils/aqi";
+import { translations } from "../../utils/i18n";
 
 export function UvCard({ uvIndex, loading }) {
-  const t = translations;
+	const t = translations;
 
-  if (loading) {
-    return (
-      <div className="flat-card animate-pulse" style={{ padding: '1.5rem', minHeight: '220px' }}>
-        <div style={{ height: '24px', width: '45%', backgroundColor: 'var(--bg-muted)', borderRadius: '4px', marginBottom: '1rem' }} />
-        <div style={{ height: '54px', width: '30%', backgroundColor: 'var(--bg-muted)', borderRadius: '6px', marginBottom: '0.85rem' }} />
-        <div style={{ height: '8px', backgroundColor: 'var(--bg-muted)', borderRadius: '999px', marginBottom: '1rem' }} />
-        <div style={{ height: '36px', backgroundColor: 'var(--bg-muted)', borderRadius: '6px' }} />
-      </div>
-    );
-  }
+	if (loading) {
+		return (
+			<div className="flat-card animate-pulse min-h-55 p-6">
+				<div className="mb-4 h-6 w-[45%] rounded bg-(--bg-muted)" />
+				<div className="mb-[0.85rem] h-13.5 w-[30%] rounded-md bg-(--bg-muted)" />
+				<div className="mb-4 h-2 rounded-full bg-(--bg-muted)" />
+				<div className="h-9 rounded-md bg-(--bg-muted)" />
+			</div>
+		);
+	}
 
-  const uvInfo = getUvInfo(uvIndex);
-  const numVal = Number(uvInfo.value) || 0;
-  const progressPercent = Math.min(100, Math.max(8, (numVal / 12) * 100));
+	const uvInfo = getUvInfo(uvIndex);
+	const numVal = Number(uvInfo.value) || 0;
+	const progressPercent = Math.min(100, Math.max(8, (numVal / 12) * 100));
 
-  return (
-    <div className="flat-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-      <div>
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <div style={{
-              width: '32px',
-              height: '32px',
-              borderRadius: 'var(--radius-full)',
-              backgroundColor: uvInfo.color,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#ffffff'
-            }}>
-              <SunMedium size={18} strokeWidth={2.5} />
-            </div>
-            <h3 style={{ fontSize: '1.05rem', fontWeight: '800', margin: 0, color: 'var(--text-main)' }}>
-              {t.uvTitle}
-            </h3>
-          </div>
-          <span style={{
-            fontSize: '0.75rem',
-            fontWeight: '800',
-            padding: '3px 10px',
-            borderRadius: 'var(--radius-sm)',
-            backgroundColor: uvInfo.color,
-            color: '#ffffff'
-          }}>
-            {uvInfo.label}
-          </span>
-        </div>
+	return (
+		<div className="flat-card flex flex-col justify-between p-6">
+			<div>
+				{/* Header */}
+				<div className="mb-3 flex items-center justify-between">
+					<div className="flex items-center gap-2">
+						<div
+							className="flex h-8 w-8 items-center justify-center rounded-(--radius-full) text-white"
+							style={{ backgroundColor: uvInfo.color }}
+						>
+							<SunMedium size={18} strokeWidth={2.5} />
+						</div>
+						<h3 className="m-0 text-[1.05rem] font-extrabold text-(--text-main)">
+							{t.uvTitle}
+						</h3>
+					</div>
+					<span
+						className="rounded-sm px-2.5 py-0.75 text-xs font-extrabold text-white"
+						style={{ backgroundColor: uvInfo.color }}
+					>
+						{uvInfo.label}
+					</span>
+				</div>
 
-        {/* Main UV Readout */}
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.85rem', margin: '0.85rem 0 0.5rem 0' }}>
-          <div style={{
-            fontSize: '3.4rem',
-            fontWeight: '800',
-            lineHeight: '1',
-            color: uvInfo.color,
-            letterSpacing: '-0.04em'
-          }}>
-            {uvInfo.value}
-          </div>
-          <div>
-            <strong style={{ fontSize: '1.15rem', color: 'var(--text-main)', display: 'block', fontWeight: '800', lineHeight: 1.2 }}>
-              {uvInfo.label}
-            </strong>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>
-              {t.uvSubtitle || 'Indeks Paparan Ultraviolet Global'}
-            </span>
-          </div>
-        </div>
+				{/* Main UV Readout */}
+				<div className="mx-0 mt-[0.85rem] mb-2 flex items-baseline gap-[0.85rem]">
+					<div
+						className="text-[3.4rem] leading-none font-extrabold tracking-[-0.04em]"
+						style={{ color: uvInfo.color }}
+					>
+						{uvInfo.value}
+					</div>
+					<div>
+						<strong className="block text-[1.15rem] leading-[1.2] font-extrabold text-(--text-main)">
+							{uvInfo.label}
+						</strong>
+						<span className="text-xs font-semibold text-(--text-muted)">
+							{t.uvSubtitle ||
+								"Indeks Paparan Ultraviolet Global"}
+						</span>
+					</div>
+				</div>
 
-        {/* Progress Track */}
-        <div style={{
-          width: '100%',
-          height: '6px',
-          borderRadius: '999px',
-          backgroundColor: 'var(--bg-muted)',
-          overflow: 'hidden',
-          margin: '0.75rem 0 0.5rem 0'
-        }}>
-          <div style={{
-            width: `${progressPercent}%`,
-            height: '100%',
-            backgroundColor: uvInfo.color,
-            borderRadius: '999px',
-            transition: 'width 0.4s ease'
-          }} />
-        </div>
-      </div>
+				{/* Progress Track */}
+				<div className="mx-0 mt-3 mb-2 h-1.5 w-full overflow-hidden rounded-full bg-(--bg-muted)">
+					<div
+						className="h-full rounded-full transition-[width] duration-400"
+						style={{
+							width: `${progressPercent}%`,
+							backgroundColor: uvInfo.color,
+						}}
+					/>
+				</div>
+			</div>
 
-      {/* Footer Advice */}
-      <div style={{
-        marginTop: '0.75rem',
-        paddingTop: '0.75rem',
-        borderTop: 'var(--border-thick)',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.45rem',
-        fontSize: '0.8rem',
-        color: 'var(--text-main)',
-        fontWeight: '600',
-        lineHeight: 1.35
-      }}>
-        <Info size={15} color="var(--color-primary)" style={{ flexShrink: 0 }} />
-        <span>{uvInfo.advice}</span>
-      </div>
-    </div>
-  );
+			{/* Footer Advice */}
+			<div className="mt-3 flex items-center gap-[0.45rem] border-t-2 border-(--border-flat) pt-3 text-[0.8rem] leading-[1.35] font-semibold text-(--text-main)">
+				<Info
+					size={15}
+					color="var(--color-primary)"
+					className="shrink-0"
+				/>
+				<span>{uvInfo.advice}</span>
+			</div>
+		</div>
+	);
 }

@@ -8,9 +8,9 @@ export function KarhutlaCard({ karhutlaData, airQualityData, location, onOpenMod
 
   if (loading && (!karhutlaData || !karhutlaData.fdrs)) {
     return (
-      <div className="flat-card animate-pulse" style={{ padding: '1.5rem', marginBottom: '1.5rem', minHeight: '180px' }}>
-        <div style={{ height: '24px', width: '40%', backgroundColor: 'var(--bg-muted)', borderRadius: '4px', marginBottom: '1rem' }} />
-        <div style={{ height: '70px', backgroundColor: 'var(--bg-muted)', borderRadius: '8px' }} />
+      <div className="flat-card animate-pulse mb-6 min-h-[180px] p-6">
+        <div className="mb-4 h-6 w-[40%] rounded bg-[var(--bg-muted)]" />
+        <div className="h-[70px] rounded-lg bg-[var(--bg-muted)]" />
       </div>
     );
   }
@@ -57,79 +57,44 @@ export function KarhutlaCard({ karhutlaData, airQualityData, location, onOpenMod
   }
 
   return (
-    <div className="flat-card" style={{ padding: '1.5rem', marginBottom: '1.5rem' }}>
+    <div className="flat-card mb-6 p-6">
       
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
-          <div style={{
-            width: '32px',
-            height: '32px',
-            borderRadius: 'var(--radius-full)',
-            backgroundColor: isHazeActive ? '#ef4444' : fdrs.color,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#ffffff'
-          }}>
+      <div className="mb-[0.85rem] flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-[0.55rem]">
+          <div
+            className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-full)] text-white"
+            style={{ backgroundColor: isHazeActive ? '#ef4444' : fdrs.color }}
+          >
             <Flame size={18} strokeWidth={2.5} />
           </div>
           <div>
-            <h3 style={{ fontSize: '1.05rem', fontWeight: '800', margin: 0, color: 'var(--text-main)' }}>
+            <h3 className="m-0 text-[1.05rem] font-extrabold text-[var(--text-main)]">
               {t.karhutlaTitle}
             </h3>
-            <span style={{ fontSize: '0.725rem', color: 'var(--text-muted)', fontWeight: '600' }}>
+            <span className="text-[0.725rem] font-semibold text-[var(--text-muted)]">
               {t.karhutlaSubtitle}
             </span>
           </div>
         </div>
 
         {/* Status Badges */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+        <div className="flex flex-wrap items-center gap-1.5">
           {isHazeActive ? (
-            <span style={{
-              fontSize: '0.725rem',
-              fontWeight: '800',
-              padding: '4px 10px',
-              borderRadius: 'var(--radius-sm)',
-              backgroundColor: 'rgba(239, 68, 68, 0.15)',
-              color: '#dc2626',
-              border: '1px solid #dc2626',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '4px'
-            }}>
+            <span className="inline-flex items-center gap-1 rounded-[var(--radius-sm)] border border-[#dc2626] bg-[rgba(239,68,68,0.15)] px-2.5 py-1 text-[0.725rem] font-extrabold text-[#dc2626]">
               <Wind size={12} strokeWidth={2.5} />
               <span>{t.hazeActiveBadge}</span>
             </span>
           ) : (
-            <span style={{
-              fontSize: '0.725rem',
-              fontWeight: '800',
-              padding: '4px 10px',
-              borderRadius: 'var(--radius-sm)',
-              backgroundColor: 'rgba(16, 185, 129, 0.12)',
-              color: '#059669',
-              border: '1px solid rgba(16, 185, 129, 0.3)',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '4px'
-            }}>
+            <span className="inline-flex items-center gap-1 rounded-[var(--radius-sm)] border border-[rgba(16,185,129,0.3)] bg-[rgba(16,185,129,0.12)] px-2.5 py-1 text-[0.725rem] font-extrabold text-[#059669]">
               <span>{t.hazeCleanBadge}</span>
             </span>
           )}
 
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '5px',
-            fontSize: '0.75rem',
-            fontWeight: '800',
-            padding: '4px 12px',
-            borderRadius: 'var(--radius-sm)',
-            backgroundColor: fdrs.color,
-            color: '#ffffff'
-          }}>
+          <div
+            className="inline-flex items-center gap-[5px] rounded-[var(--radius-sm)] px-3 py-1 text-xs font-extrabold text-white"
+            style={{ backgroundColor: fdrs.color }}
+          >
             <Flame size={13} strokeWidth={2.5} />
             <span>{t.landLocalBadge}: {fdrs.code}</span>
           </div>
@@ -137,38 +102,29 @@ export function KarhutlaCard({ karhutlaData, airQualityData, location, onOpenMod
       </div>
 
       {/* Main Info Grid */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-        gap: '1rem',
-        backgroundColor: 'var(--bg-muted)',
-        padding: '1rem 1.15rem',
-        borderRadius: 'var(--radius-md)',
-        border: 'var(--border-thick)',
-        margin: '0.75rem 0'
-      }}>
+      <div className="mx-0 my-3 grid gap-4 rounded-[var(--radius-md)] border-2 border-[var(--border-flat)] bg-[var(--bg-muted)] px-[1.15rem] py-4 sm:grid-cols-2">
         {/* Left: Nearest Hotspot */}
         <div>
-          <span style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          <span className="text-[0.7rem] font-extrabold tracking-[0.04em] text-[var(--text-muted)] uppercase">
             {t.nearestHotspotLabel}
           </span>
           {nearest ? (
-            <div style={{ marginTop: '0.25rem' }}>
-              <strong style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--text-main)', display: 'block' }}>
+            <div className="mt-1">
+              <strong className="block text-[1.15rem] font-extrabold text-[var(--text-main)]">
                 {nearest.regency}
               </strong>
-              <span style={{ fontSize: '0.775rem', color: 'var(--text-muted)', display: 'block', fontWeight: '600', marginTop: '0.1rem' }}>
+              <span className="mt-[0.1rem] block text-[0.775rem] font-semibold text-[var(--text-muted)]">
                 {nearest.province} · {nearest.type}
               </span>
-              <div style={{ marginTop: '0.45rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <div className="mt-[0.45rem] flex items-center gap-[0.4rem]">
                 <Compass size={16} color="var(--color-primary)" />
-                <span style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-main)' }}>
-                  Jarak: <span style={{ color: isVeryNear ? 'var(--color-danger)' : 'var(--color-primary)' }}>{nearest.distanceKm} km</span> dari {location.name}
+                <span className="text-[0.85rem] font-bold text-[var(--text-main)]">
+                  Jarak: <span className={isVeryNear ? 'text-[var(--color-danger)]' : 'text-[var(--color-primary)]'}>{nearest.distanceKm} km</span> dari {location.name}
                 </span>
               </div>
             </div>
           ) : (
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0.35rem 0 0 0', fontWeight: '600' }}>
+            <p className="mx-0 mt-[0.35rem] mb-0 text-[0.85rem] font-semibold text-[var(--text-muted)]">
               {t.noHotspotsNearby}
             </p>
           )}
@@ -176,48 +132,31 @@ export function KarhutlaCard({ karhutlaData, airQualityData, location, onOpenMod
 
         {/* Right: FDRS Condition */}
         <div>
-          <span style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          <span className="text-[0.7rem] font-extrabold tracking-[0.04em] text-[var(--text-muted)] uppercase">
             {t.landConditionTitle} ({location.name})
           </span>
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-main)', margin: '0.25rem 0 0 0', fontWeight: '600', lineHeight: 1.4 }}>
+          <p className="mx-0 mt-1 mb-0 text-[0.8rem] leading-[1.4] font-semibold text-[var(--text-main)]">
             {fdrs.desc}
           </p>
-          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '500', display: 'block', marginTop: '0.35rem' }}>
+          <span className="mt-[0.35rem] block text-[0.7rem] font-medium text-[var(--text-muted)]">
             {t.fdrsExplExplanation}
           </span>
         </div>
       </div>
 
       {/* Safety Evaluation Status Strip */}
-      <div style={{
-        padding: '0.75rem 1rem',
-        backgroundColor: statusBannerBg,
-        border: `1.5px solid ${statusBorder}`,
-        borderRadius: 'var(--radius-sm)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        fontSize: '0.775rem',
-        fontWeight: '600',
-        color: statusTextColor,
-        flexWrap: 'wrap',
-        gap: '0.65rem'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: '1 1 300px' }}>
+      <div
+        className="flex flex-wrap items-center justify-between gap-[0.65rem] rounded-[var(--radius-sm)] border-[1.5px] px-4 py-3 text-[0.775rem] font-semibold"
+        style={{ backgroundColor: statusBannerBg, borderColor: statusBorder, color: statusTextColor }}
+      >
+        <div className="flex flex-[1_1_300px] items-center gap-2">
           {statusIcon}
-          <span style={{ lineHeight: 1.4 }}>{statusMessage}</span>
+          <span className="leading-[1.4]">{statusMessage}</span>
         </div>
 
         <button
           onClick={onOpenModal}
-          className="flat-btn-primary"
-          style={{
-            padding: '4px 10px',
-            minHeight: '30px',
-            fontSize: '0.725rem',
-            gap: '0.3rem',
-            whiteSpace: 'nowrap'
-          }}
+          className="flat-btn-primary gap-[0.3rem] px-2.5 py-1 text-[0.725rem] whitespace-nowrap"
         >
           <span>{t.allHotspotsBtn} ({totalInIndo})</span>
           <ChevronRight size={14} />
