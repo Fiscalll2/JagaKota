@@ -1,190 +1,104 @@
 import React from 'react';
-import { HeartPulse, Bike, Footprints, Baby, Wind, ShieldCheck } from 'lucide-react';
-import { calculateEcoHealthScore } from '../../utils/healthIndex';
-import { translations } from '../../utils/i18n';
+import { ShieldCheck, Flag, Wind, Footprints, Baby, DoorOpen } from 'lucide-react';
+import { calculateKotaSiaga } from '../../utils/kotaScore';
 
-export function EcoHealthCard({ aqiData, weatherData, loading }) {
-  const t = translations;
-
-  if (loading) {
-    return (
-      <div className="flat-card animate-pulse" style={{ padding: '1.75rem', marginBottom: '1.5rem', minHeight: '180px' }}>
-        <div style={{ height: '24px', width: '35%', backgroundColor: 'var(--bg-muted)', borderRadius: '4px', marginBottom: '1rem' }} />
-        <div style={{ height: '68px', backgroundColor: 'var(--bg-muted)', borderRadius: '8px', marginBottom: '1rem' }} />
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.65rem' }}>
-          <div style={{ height: '56px', backgroundColor: 'var(--bg-muted)', borderRadius: '8px' }} />
-          <div style={{ height: '56px', backgroundColor: 'var(--bg-muted)', borderRadius: '8px' }} />
-          <div style={{ height: '56px', backgroundColor: 'var(--bg-muted)', borderRadius: '8px' }} />
-          <div style={{ height: '56px', backgroundColor: 'var(--bg-muted)', borderRadius: '8px' }} />
-        </div>
-      </div>
-    );
-  }
-
-  
-
-  const aqi = aqiData?.current?.aqi ?? 0;
-  const pm25 = aqiData?.current?.pm25 ?? 0;
-  const temp = weatherData?.current?.temp ?? 28;
-  const humidity = weatherData?.current?.humidity ?? 70;
-  const uvIndex = weatherData?.current?.uvIndex ?? 0;
-
-  const health = calculateEcoHealthScore(aqi, temp, humidity, uvIndex, pm25);
-
+function SaranChip({ icon: Icon, title, value, color }) {
   return (
-    <div
-      className="flat-card"
-      style={{
-        padding: '1.75rem',
-        marginBottom: '1.5rem',
-        backgroundColor: 'var(--bg-card)'
-      }}
-    >
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.5rem' }}>
-        
-        {/* Top: Score & Summary */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1.25rem' }}>
-          
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-            
-            {/* Flat Score Badge */}
-            <div
-              style={{
-                width: '68px',
-                height: '68px',
-                borderRadius: 'var(--radius-md)',
-                backgroundColor: health.color,
-                color: '#ffffff',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0
-              }}
-            >
-              <span style={{ fontSize: '1.75rem', fontWeight: '800', lineHeight: 1 }}>
-                {health.score}
-              </span>
-              <span style={{ fontSize: '0.65rem', fontWeight: '700', opacity: 0.9 }}>
-                /100
-              </span>
-            </div>
-
-            <div>
-              <span style={{ fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.06em', color: health.color, display: 'block' }}>
-                {t.ecoTitle}
-              </span>
-              <h2 style={{ fontSize: '1.35rem', fontWeight: '800', margin: '0.1rem 0', color: 'var(--text-main)', letterSpacing: '-0.02em' }}>
-                {health.category}
-              </h2>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0, fontWeight: '500' }}>
-                {t.ecoSubtitle}
-              </p>
-            </div>
-
-          </div>
-
-          {/* Exposure Block */}
-          <div
-            style={{
-              padding: '0.65rem 1.15rem',
-              borderRadius: 'var(--radius-md)',
-              backgroundColor: health.cigs > 1.5 ? 'var(--color-danger-bg)' : 'var(--bg-muted)',
-              border: health.cigs > 1.5 ? '2px solid var(--color-danger)' : 'var(--border-thick)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.65rem'
-            }}
-          >
-            <div style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: 'var(--radius-full)',
-              backgroundColor: health.cigs > 1.5 ? 'var(--color-danger)' : 'var(--color-secondary)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#ffffff'
-            }}>
-              <HeartPulse size={20} strokeWidth={2.5} />
-            </div>
-            <div>
-              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', fontWeight: '600' }}>
-                {t.exposure}
-              </span>
-              <strong style={{ fontSize: '0.9rem', color: 'var(--text-main)', fontWeight: '800' }}>
-                {health.cigs > 0
-                  ? `${health.cigs} ${t.cigsUnit}`
-                  : t.cleanAir}
-              </strong>
-            </div>
-          </div>
-
-        </div>
-
-        {/* Outdoor Activities Matrix */}
-        <div style={{ paddingTop: '1.25rem', borderTop: 'var(--border-thick)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.85rem' }}>
-            <ShieldCheck size={16} color="var(--color-secondary)" strokeWidth={2.5} />
-            <span style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              {t.activitiesTitle}
-            </span>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.65rem' }}>
-            
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', padding: '0.65rem 0.85rem', borderRadius: 'var(--radius-md)', backgroundColor: 'var(--bg-muted)', border: 'var(--border-thick)' }}>
-              <div style={{ width: '32px', height: '32px', borderRadius: 'var(--radius-full)', backgroundColor: health.activities.jogging.color, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0 }}>
-                <Footprints size={16} strokeWidth={2.5} />
-              </div>
-              <div style={{ minWidth: 0 }}>
-                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', fontWeight: '600' }}>Jogging</span>
-                <strong style={{ fontSize: '0.825rem', color: 'var(--text-main)', fontWeight: '800' }}>
-                  {health.activities.jogging.status}
-                </strong>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', padding: '0.65rem 0.85rem', borderRadius: 'var(--radius-md)', backgroundColor: 'var(--bg-muted)', border: 'var(--border-thick)' }}>
-              <div style={{ width: '32px', height: '32px', borderRadius: 'var(--radius-full)', backgroundColor: health.activities.cycling.color, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0 }}>
-                <Bike size={16} strokeWidth={2.5} />
-              </div>
-              <div style={{ minWidth: 0 }}>
-                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', fontWeight: '600' }}>Sepeda</span>
-                <strong style={{ fontSize: '0.825rem', color: 'var(--text-main)', fontWeight: '800' }}>
-                  {health.activities.cycling.status}
-                </strong>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', padding: '0.65rem 0.85rem', borderRadius: 'var(--radius-md)', backgroundColor: 'var(--bg-muted)', border: 'var(--border-thick)' }}>
-              <div style={{ width: '32px', height: '32px', borderRadius: 'var(--radius-full)', backgroundColor: health.activities.kidsAndSeniors.color, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0 }}>
-                <Baby size={16} strokeWidth={2.5} />
-              </div>
-              <div style={{ minWidth: 0 }}>
-                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', fontWeight: '600' }}>Anak & Lansia</span>
-                <strong style={{ fontSize: '0.825rem', color: 'var(--text-main)', fontWeight: '800' }}>
-                  {health.activities.kidsAndSeniors.status}
-                </strong>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', padding: '0.65rem 0.85rem', borderRadius: 'var(--radius-md)', backgroundColor: 'var(--bg-muted)', border: 'var(--border-thick)' }}>
-              <div style={{ width: '32px', height: '32px', borderRadius: 'var(--radius-full)', backgroundColor: health.activities.ventilation.color, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0 }}>
-                <Wind size={16} strokeWidth={2.5} />
-              </div>
-              <div style={{ minWidth: 0 }}>
-                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', fontWeight: '600' }}>Ventilasi</span>
-                <strong style={{ fontSize: '0.825rem', color: 'var(--text-main)', fontWeight: '800' }}>
-                  {health.activities.ventilation.status}
-                </strong>
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-      </div>
+    <div className="flex items-center gap-2.5 rounded-xl border-2 border-[var(--border-flat)] bg-[var(--bg-muted)] px-3 py-2.5">
+      <span
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white"
+        style={{ backgroundColor: color }}
+      >
+        <Icon size={15} strokeWidth={2.5} />
+      </span>
+      <span className="min-w-0">
+        <span className="block text-[11px] font-semibold text-[var(--text-muted)]">{title}</span>
+        <strong className="block truncate text-[13px] font-extrabold text-[var(--text-main)]">{value}</strong>
+      </span>
     </div>
   );
 }
+
+export function EcoHealthCard({ aqiData, weatherData, loading }) {
+  if (loading) {
+    return (
+      <section className="mb-6 animate-pulse rounded-2xl border-2 border-[var(--border-flat)] bg-[var(--bg-card)] p-5">
+        <div className="mb-3 h-5 w-1/3 rounded bg-[var(--bg-muted)]" />
+        <div className="mb-3 h-16 rounded-xl bg-[var(--bg-muted)]" />
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <div className="h-14 rounded-xl bg-[var(--bg-muted)]" />
+          <div className="h-14 rounded-xl bg-[var(--bg-muted)]" />
+          <div className="h-14 rounded-xl bg-[var(--bg-muted)]" />
+          <div className="h-14 rounded-xl bg-[var(--bg-muted)]" />
+        </div>
+      </section>
+    );
+  }
+
+  const hasil = calculateKotaSiaga({
+    aqi: aqiData?.current?.aqi ?? 0,
+    pm25: aqiData?.current?.pm25 ?? 0,
+    temp: weatherData?.current?.temp ?? 29,
+    humidity: weatherData?.current?.humidity ?? 70,
+    uvIndex: weatherData?.current?.uvIndex ?? 0,
+    rainProb: weatherData?.daily?.[0]?.rainProb ?? weatherData?.current?.rainProb ?? 0,
+  });
+
+  return (
+    <section
+      className="mb-6 rounded-2xl border-2 bg-[var(--bg-card)] p-5 sm:p-6"
+      style={{ borderColor: hasil.color }}
+      aria-label="Skor KotaSiaga JagaKota"
+    >
+      <div className="flex flex-wrap items-center gap-4">
+        <div
+          className="flex h-[76px] w-[76px] shrink-0 flex-col items-center justify-center rounded-2xl text-white shadow-sm"
+          style={{ backgroundColor: hasil.color }}
+        >
+          <span className="text-3xl font-black leading-none">{hasil.score}</span>
+          <span className="text-[11px] font-bold opacity-90">/100</span>
+        </div>
+
+        <div className="min-w-[200px] flex-1">
+          <p className="flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-widest" style={{ color: hasil.color }}>
+            <ShieldCheck size={14} strokeWidth={2.6} /> KotaSiaga • JagaKota
+          </p>
+          <h2 className="mt-0.5 text-xl font-black tracking-tight text-[var(--text-main)]">{hasil.label}</h2>
+          <p className="mt-0.5 text-[13px] font-medium text-[var(--text-muted)]">{hasil.aksi}</p>
+          <div className="mt-2 h-2 w-full max-w-md overflow-hidden rounded-full bg-[var(--bg-muted)]">
+            <div
+              className="h-full rounded-full transition-all"
+              style={{ width: `${hasil.score}%`, backgroundColor: hasil.color }}
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2.5 rounded-xl bg-[var(--bg-muted)] px-3.5 py-2.5">
+          <span className="flex h-9 w-9 items-center justify-center rounded-full text-white" style={{ backgroundColor: hasil.color }}>
+            <Flag size={17} strokeWidth={2.5} />
+          </span>
+          <span>
+            <span className="block text-[11px] font-semibold text-[var(--text-muted)]">Paparan hari ini</span>
+            <strong className="block text-sm font-extrabold text-[var(--text-main)]">
+              {hasil.paparan > 0 ? `≈ ${hasil.paparan} kretek` : 'Udara bersih'}
+            </strong>
+          </span>
+        </div>
+      </div>
+
+      <div className="mt-4 border-t-2 border-[var(--border-flat)] pt-4">
+        <p className="mb-2.5 text-[11px] font-extrabold uppercase tracking-widest text-[var(--text-muted)]">
+          Saran aksi warga
+        </p>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
+          <SaranChip icon={Footprints} title="Olahraga" value={hasil.saran.olahraga} color={hasil.color} />
+          <SaranChip icon={Wind} title="Masker" value={hasil.saran.masker} color={hasil.color} />
+          <SaranChip icon={Baby} title="Anak & Lansia" value={hasil.saran.anakLansia} color={hasil.color} />
+          <SaranChip icon={DoorOpen} title="Ventilasi" value={hasil.saran.ventilasi} color={hasil.color} />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export default EcoHealthCard;

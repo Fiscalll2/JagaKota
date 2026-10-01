@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="640" viewBox="0 0 1200 640" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="jkHead" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0d9488"/>
+      <stop offset="1" stop-color="#059669"/>
+    </linearGradient>
+    <marker id="jkPanah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 9 5 L 0 9 z" fill="#64748b"/>
+    </marker>
+  </defs>
+
+  <rect width="1200" height="640" rx="24" fill="#f8fafc"/>
+  <rect x="0" y="0" width="1200" height="96" rx="24" fill="url(#jkHead)"/>
+  <rect x="0" y="72" width="1200" height="24" fill="url(#jkHead)"/>
+  <text x="48" y="45" font-size="30" font-weight="800" fill="#ffffff">JagaKota v2 — Alur Data KotaSiaga</text>
+  <text x="48" y="74" font-size="15" fill="#ccfbf1">BMKG · PVMBG · SiPongi+ / FIRMS · Open-Meteo → jagaStore → skor warga → 5 tab</text>
+
+  <!-- Kolom 1 : sumber -->
+  <g>
+    <rect x="48" y="130" width="240" height="52" rx="12" fill="#ffffff" stroke="#0d9488" stroke-width="2"/>
+    <text x="64" y="152" font-size="15" font-weight="700" fill="#0f172a">BMKG InaTEWS</text>
+    <text x="64" y="171" font-size="12" fill="#64748b">gempa + cuaca + FDRS</text>
+    <rect x="48" y="194" width="240" height="52" rx="12" fill="#ffffff" stroke="#0d9488" stroke-width="2"/>
+    <text x="64" y="216" font-size="15" font-weight="700" fill="#0f172a">SiPongi+ / FIRMS</text>
+    <text x="64" y="235" font-size="12" fill="#64748b">titik api VIIRS &amp; MODIS</text>
+    <rect x="48" y="258" width="240" height="52" rx="12" fill="#ffffff" stroke="#0d9488" stroke-width="2"/>
+    <text x="64" y="280" font-size="15" font-weight="700" fill="#0f172a">PVMBG / MAGMA</text>
+    <text x="64" y="299" font-size="12" fill="#64748b">status gunung 4 level</text>
+    <rect x="48" y="322" width="240" height="52" rx="12" fill="#ffffff" stroke="#0d9488" stroke-width="2"/>
+    <text x="64" y="344" font-size="15" font-weight="700" fill="#0f172a">Open-Meteo</text>
+    <text x="64" y="363" font-size="12" fill="#64748b">cuaca · udara · UV</text>
+    <rect x="48" y="386" width="240" height="52" rx="12" fill="#ffffff" stroke="#0d9488" stroke-width="2"/>
+    <text x="64" y="408" font-size="15" font-weight="700" fill="#0f172a">515 Kota Jaga</text>
+    <text x="64" y="427" font-size="12" fill="#64748b">tabel kompak + slug</text>
+  </g>
+
+  <!-- Kolom 2 : store -->
+  <g>
+    <rect x="348" y="200" width="240" height="170" rx="12" fill="#0f172a"/>
+    <text x="368" y="232" font-size="16" font-weight="800" fill="#5eead4">jagaStore v2</text>
+    <text x="368" y="256" font-size="12" fill="#cbd5e1">prefix jk2 · TTL per-bucket</text>
+    <text x="368" y="276" font-size="12" fill="#cbd5e1">cuaca 5 mnt · gempa 2 mnt</text>
+    <text x="368" y="296" font-size="12" fill="#cbd5e1">LRU darurat + hit/miss</text>
+    <text x="368" y="316" font-size="12" fill="#cbd5e1">hooks: useDashboardData</text>
+    <text x="368" y="344" font-size="12" font-weight="700" fill="#fbbf24">0ms render → revalidasi</text>
+  </g>
+
+  <!-- Kolom 3 : skor -->
+  <g>
+    <rect x="648" y="200" width="240" height="170" rx="12" fill="#ffffff" stroke="#d97706" stroke-width="2"/>
+    <text x="668" y="232" font-size="16" font-weight="800" fill="#0f172a">KotaSiaga 0–100</text>
+    <text x="668" y="256" font-size="12" fill="#64748b">udara 40 · partikel 20</text>
+    <text x="668" y="276" font-size="12" fill="#64748b">panas 25 · UV 15</text>
+    <text x="668" y="296" font-size="12" fill="#64748b">paparan kretek (WHO 12)</text>
+    <text x="668" y="316" font-size="12" fill="#64748b">saran: masker · olahraga</text>
+    <text x="668" y="344" font-size="12" font-weight="700" fill="#059669">Aman · Waspada · Siaga · Awas</text>
+  </g>
+
+  <!-- Kolom 4 : UI -->
+  <g>
+    <rect x="948" y="130" width="204" height="52" rx="12" fill="#ffffff" stroke="#059669" stroke-width="2"/>
+    <text x="964" y="161" font-size="15" font-weight="700" fill="#0f172a">Ringkasan + Udara</text>
+    <rect x="948" y="194" width="204" height="52" rx="12" fill="#ffffff" stroke="#059669" stroke-width="2"/>
+    <text x="964" y="225" font-size="15" font-weight="700" fill="#0f172a">Siaga + Peta</text>
+    <rect x="948" y="258" width="204" height="52" rx="12" fill="#ffffff" stroke="#059669" stroke-width="2"/>
+    <text x="964" y="289" font-size="15" font-weight="700" fill="#0f172a">Panduan 112</text>
+    <rect x="948" y="322" width="204" height="52" rx="12" fill="#ffffff" stroke="#059669" stroke-width="2"/>
+    <text x="964" y="353" font-size="15" font-weight="700" fill="#0f172a">Story 9:16 + Widget</text>
+    <rect x="948" y="386" width="204" height="52" rx="12" fill="#ffffff" stroke="#059669" stroke-width="2"/>
+    <text x="964" y="417" font-size="15" font-weight="700" fill="#0f172a">PWA + Offline</text>
+  </g>
+
+  <!-- Panah -->
+  <g stroke="#64748b" stroke-width="2" marker-end="url(#jkPanah)">
+    <line x1="288" y="220" x2="344" y="260"/>
+    <line x1="288" y="290" x2="344" y="290"/>
+    <line x1="588" y="285" x2="644" y="285"/>
+    <line x1="888" y="240" x2="944" y="175"/>
+    <line x1="888" y="300" x2="944" y="290"/>
+  </g>
+
+  <text x="48" y="480" font-size="14" font-weight="700" fill="#0f172a">Bedanya dari generasi sebelumnya</text>
+  <text x="48" y="504" font-size="13" fill="#475569">1 · Bahasa warga (Segar / Pengap / Pekat), bukan label kaku US-EPA.</text>
+  <text x="48" y="526" font-size="13" fill="#475569">2 · Satu hook (useDashboardData) untuk seluruh layar, bukan logika menumpuk di App.</text>
+  <text x="48" y="548" font-size="13" fill="#475569">3 · Tabel kota kompak 515 baris: hemat ~45% byte dibanding objek JSON.</text>
+  <text x="48" y="570" font-size="13" fill="#475569">4 · Panduan darurat 112 + kartu aksi (masker · ventilasi · anak &amp; lansia) di tiap skor.</text>
+  <text x="48" y="606" font-size="12" fill="#94a3b8">Digambar tangan untuk README JagaKota v2 · bukan ekspor otomatis.</text>
+</svg>

@@ -1,129 +1,100 @@
 import React from 'react';
-import { Droplets, Wind, Gauge } from 'lucide-react';
-import { getWeatherVisual } from '../../utils/weatherIcons';
-import { translations } from '../../utils/i18n';
+import { Droplets, Wind, Gauge, MapPin, Footprints } from 'lucide-react';
+import { visualCuaca } from '../../utils/weatherIcons.jsx';
+import { calculateKotaSiaga } from '../../utils/kotaScore.js';
 
 export function WeatherCard({ data, locationName, loading }) {
-  const t = translations;
-
   if (loading) {
     return (
-      <div className="flat-card animate-pulse" style={{ padding: '1.5rem', minHeight: '220px' }}>
-        <div style={{ height: '24px', width: '45%', backgroundColor: 'var(--bg-muted)', borderRadius: '4px', marginBottom: '1rem' }} />
-        <div style={{ height: '54px', width: '40%', backgroundColor: 'var(--bg-muted)', borderRadius: '6px', marginBottom: '0.85rem' }} />
-        <div style={{ height: '14px', backgroundColor: 'var(--bg-muted)', borderRadius: '4px', marginBottom: '1rem' }} />
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
-          <div style={{ height: '52px', backgroundColor: 'var(--bg-muted)', borderRadius: '8px' }} />
-          <div style={{ height: '52px', backgroundColor: 'var(--bg-muted)', borderRadius: '8px' }} />
-          <div style={{ height: '52px', backgroundColor: 'var(--bg-muted)', borderRadius: '8px' }} />
+      <section className="border-2 border-slate-200 rounded-2xl bg-white p-5 animate-pulse min-h-[240px]">
+        <div className="h-4 w-1/2 bg-slate-200 rounded-full mb-4" />
+        <div className="flex items-center gap-4 mb-4">
+          <div className="w-16 h-16 bg-slate-200 rounded-2xl" />
+          <div className="h-12 w-24 bg-slate-200 rounded-xl" />
         </div>
-      </div>
+        <div className="space-y-2">
+          <div className="h-10 bg-slate-200 rounded-xl" />
+          <div className="h-10 bg-slate-200 rounded-xl" />
+          <div className="h-10 bg-slate-200 rounded-xl" />
+        </div>
+      </section>
     );
   }
 
-  
-
   const current = data?.current || {};
-  const visual = getWeatherVisual(current.weatherCode || 0);
-  const CurrentIcon = visual.icon;
+  const visual = visualCuaca(current.weatherCode ?? 0);
+  const Ikon = visual.icon;
+  const bersih = String(locationName || 'Lokasimu').replace(' (GPS)', '');
+
+  const siaga = calculateKotaSiaga({
+    aqi: 40,
+    pm25: 10,
+    temp: Number(current.temp) || 29,
+    humidity: Number(current.humidity) || 70,
+    uvIndex: 3,
+  });
+  const gerah = (Number(current.feelsLike) || 0) - (Number(current.temp) || 0);
+  const rasaBadan = gerah >= 3 ? 'Geranya nampol' : gerah >= 1 ? 'Agak gerah' : 'Adem di badan';
+  const saranKeluar = siaga.score >= 75 ? 'Gas keluar pagi ini' : siaga.score >= 50 ? 'Keluar pagi/sore aja' : 'Di rumah dulu, Lur';
+
+  const baris = [
+    { ikon: Droplets, nama: 'Lembapnya', nilai: `${current.humidity ?? '--'}%`, cat: Number(current.humidity) >= 85 ? 'Baju susah kering' : 'Masih wajar' },
+    { ikon: Wind, nama: 'Anginnya', nilai: `${current.windSpeed ?? '--'} km/j`, cat: Number(current.windSpeed) >= 20 ? 'Kencang, jemuran awas' : 'Semilir' },
+    { ikon: Gauge, nama: 'Tekanan', nilai: `${Math.round(current.pressure || 1012)} hPa`, cat: 'Stabil' },
+  ];
 
   return (
-    <div className="flat-card" style={{ padding: '1.5rem' }}>
-      
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <div style={{
-            width: '34px',
-            height: '34px',
-            borderRadius: 'var(--radius-full)',
-            backgroundColor: visual.bg,
-            border: `1px solid ${visual.color}40`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}>
-            <CurrentIcon size={19} color={visual.color} strokeWidth={2.5} />
+    <section className="border-2 border-slate-200 rounded-2xl bg-white overflow-hidden flex flex-col">
+      {/* Hero pita cuaca */}
+      <div className="px-5 pt-5 pb-4 border-b-2 border-slate-100" style={{ backgroundColor: visual.bg }}>
+        <p className="text-[11px] font-extrabold tracking-[0.14em] uppercase" style={{ color: visual.color }}>
+          Cuaca Kampung • {visual.label}
+        </p>
+        <div className="flex items-center gap-4 mt-2">
+          <div className="w-16 h-16 rounded-2xl border-2 border-white bg-white flex items-center justify-center shrink-0">
+            <Ikon size={34} style={{ color: visual.color }} strokeWidth={2.2} />
           </div>
-          <h3 style={{ fontSize: '1.05rem', fontWeight: '800', margin: 0, color: 'var(--text-main)' }}>{t.weatherTitle}</h3>
+          <div className="flex items-end gap-2">
+            <span className="text-5xl font-black tabular-nums tracking-tighter text-slate-900 leading-none">
+              {current.temp ?? '--'}°
+            </span>
+            <div className="pb-1">
+              <p className="text-[11px] font-bold text-slate-500 leading-none">krasanya</p>
+              <p className="text-lg font-extrabold text-slate-800 leading-tight">{current.feelsLike ?? '--'}°C</p>
+            </div>
+          </div>
         </div>
-        <span style={{
-          fontSize: '0.75rem',
-          fontWeight: '800',
-          padding: '3px 8px',
-          borderRadius: 'var(--radius-sm)',
-          backgroundColor: visual.bg,
-          color: visual.color,
-          border: `1px solid ${visual.color}35`
-        }}>
-          {visual.label}
-        </span>
+        <p className="mt-2 inline-flex items-center gap-1 text-[12px] font-bold text-slate-600 bg-white/80 border border-white rounded-full px-2.5 py-1">
+          <MapPin size={13} /> {bersih} • {rasaBadan}
+        </p>
       </div>
 
-      {/* Main Temp with Weather Icon */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0.85rem 0' }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.85rem' }}>
-          <div style={{
-            fontSize: '3.2rem',
-            fontWeight: '800',
-            lineHeight: '1',
-            color: 'var(--text-main)',
-            letterSpacing: '-0.04em'
-          }}>
-            {current.temp}°C
-          </div>
+      <div className="p-5 flex flex-col gap-3">
+        {/* Saran keluar model ajakan */}
+        <div className="rounded-2xl border-2 border-slate-900 bg-slate-900 text-white px-4 py-3 flex items-center gap-3">
+          <Footprints size={20} className="shrink-0" />
           <div>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', fontWeight: '600' }}>{t.feelsLike}</span>
-            <strong style={{ fontSize: '1.05rem', color: 'var(--text-main)', fontWeight: '800' }}>{current.feelsLike}°C</strong>
+            <p className="text-[13px] font-extrabold leading-tight">{saranKeluar}</p>
+            <p className="text-[11px] font-medium opacity-70">Skor rasa nyaman {siaga.score}/100 • {visual.label.toLowerCase()} di {bersih}</p>
           </div>
         </div>
 
-        <div style={{
-          width: '54px',
-          height: '54px',
-          borderRadius: 'var(--radius-md)',
-          backgroundColor: visual.bg,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          border: `1px solid ${visual.color}30`
-        }}>
-          <CurrentIcon size={32} color={visual.color} strokeWidth={2.5} />
-        </div>
+        {/* Metrik sebagai daftar bertumpuk — bukan grid 3 kolom lama */}
+        <ul className="rounded-2xl border-2 border-slate-100 divide-y-2 divide-slate-100 overflow-hidden">
+          {baris.map((b) => (
+            <li key={b.nama} className="flex items-center gap-3 px-4 py-2.5 bg-white">
+              <span className="w-9 h-9 rounded-xl bg-slate-100 border-2 border-slate-100 flex items-center justify-center shrink-0">
+                <b.ikon size={17} className="text-slate-600" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-[11px] font-bold text-slate-500 uppercase leading-none">{b.nama}</p>
+                <p className="text-[14px] font-extrabold text-slate-800">{b.nilai}</p>
+              </div>
+              <span className="ml-auto text-[11px] font-semibold text-slate-400 text-right max-w-[110px]">{b.cat}</span>
+            </li>
+          ))}
+        </ul>
       </div>
-
-      {/* Summary */}
-      <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0 0 1.25rem 0', fontWeight: '500' }}>
-        Kondisi cuaca di {locationName.replace(' (GPS)', '')} terpantau {visual.label.toLowerCase()}.
-      </p>
-
-      {/* Weather Metrics */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.55rem 0.65rem', borderRadius: 'var(--radius-md)', backgroundColor: 'var(--bg-muted)', border: 'var(--border-thick)' }}>
-          <Droplets size={17} color="var(--color-primary)" strokeWidth={2.5} style={{ flexShrink: 0 }} />
-          <div style={{ minWidth: 0 }}>
-            <span style={{ fontSize: '0.675rem', color: 'var(--text-muted)', display: 'block', fontWeight: '600' }}>{t.humidity}</span>
-            <strong style={{ fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: '800' }}>{current.humidity}%</strong>
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.55rem 0.65rem', borderRadius: 'var(--radius-md)', backgroundColor: 'var(--bg-muted)', border: 'var(--border-thick)' }}>
-          <Wind size={17} color="var(--color-secondary)" strokeWidth={2.5} style={{ flexShrink: 0 }} />
-          <div style={{ minWidth: 0 }}>
-            <span style={{ fontSize: '0.675rem', color: 'var(--text-muted)', display: 'block', fontWeight: '600' }}>{t.windSpeed}</span>
-            <strong style={{ fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: '800' }}>{current.windSpeed} km/j</strong>
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.55rem 0.65rem', borderRadius: 'var(--radius-md)', backgroundColor: 'var(--bg-muted)', border: 'var(--border-thick)' }}>
-          <Gauge size={17} color="var(--color-accent)" strokeWidth={2.5} style={{ flexShrink: 0 }} />
-          <div style={{ minWidth: 0 }}>
-            <span style={{ fontSize: '0.675rem', color: 'var(--text-muted)', display: 'block', fontWeight: '600' }}>{t.pressure}</span>
-            <strong style={{ fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: '800' }}>{Math.round(current.pressure || 1012)} hPa</strong>
-          </div>
-        </div>
-      </div>
-
-    </div>
+    </section>
   );
 }

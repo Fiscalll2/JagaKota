@@ -9,30 +9,30 @@ export default function handler(request) {
     const { searchParams } = new URL(request.url);
 
     // Extract query parameters with smart fallbacks
-    const city = searchParams.get('city') || 'Nusantara';
-    const province = searchParams.get('province') || 'Indonesia';
+    const city = searchParams.get('kota') || searchParams.get('city') || 'Nusantara';
+    const province = searchParams.get('provinsi') || searchParams.get('province') || 'Indonesia';
     const aqi = searchParams.get('aqi') || '42';
-    const aqiStatus = searchParams.get('status') || 'Baik';
-    const temp = searchParams.get('temp') || '30';
-    const weather = searchParams.get('weather') || 'Cerah Berawan';
-    const quake = searchParams.get('quake') || 'M 4.9 (BMKG)';
+    const aqiStatus = searchParams.get('status') || 'Segar';
+    const temp = searchParams.get('suhu') || searchParams.get('temp') || '30';
+    const weather = searchParams.get('cuaca') || searchParams.get('weather') || 'Mendung Tipis';
+    const quake = searchParams.get('gempa') || searchParams.get('quake') || 'M 4.9 (BMKG)';
 
-    // Dynamic AQI badge color
+    // Warna lencana JagaKota v2 (palet warga)
     const aqiNum = parseInt(aqi, 10) || 0;
-    let aqiBg = '#10b981'; // Good (Green)
+    let aqiBg = '#059669';
     let aqiTextColor = '#ffffff';
 
     if (aqiNum > 300) {
-      aqiBg = '#881337'; // Hazardous
+      aqiBg = '#7f1d1d';
     } else if (aqiNum > 200) {
-      aqiBg = '#a855f7'; // Very Unhealthy
+      aqiBg = '#7c3aed';
     } else if (aqiNum > 150) {
-      aqiBg = '#ef4444'; // Unhealthy
+      aqiBg = '#dc2626';
     } else if (aqiNum > 100) {
-      aqiBg = '#f97316'; // Sensitive
+      aqiBg = '#ea580c';
     } else if (aqiNum > 50) {
-      aqiBg = '#eab308'; // Moderate
-      aqiTextColor = '#000000';
+      aqiBg = '#b45309';
+      aqiTextColor = '#ffffff';
     }
 
     return new ImageResponse(
@@ -159,7 +159,7 @@ export default function handler(request) {
                   fontWeight: '500',
                 }}
               >
-                Pantau AQI, Cuaca BMKG, Seismik Gempa, Erupsi PVMBG & Titik Panas Karhutla
+                Jaga Kota Bersama — Pantau Udara, Siaga Bencana, Aksi Warga
               </p>
             </div>
 

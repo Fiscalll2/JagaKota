@@ -1,103 +1,70 @@
 import { apiCache } from '../utils/apiCache.js';
 import { calculateFdrs, getNearbyHotspots } from '../utils/karhutla.js';
 
-/**
- * Layanan data Karhutla (Kebakaran Hutan & Lahan) & Hotspot Satelit KLHK SiPongi+ / NASA FIRMS / BMKG
- */
+function tebakPulau(lat, lon) {
+  if (lon < 106 && lat > -6) return 'Sumatera';
+  if (lon >= 105 && lon <= 116 && lat <= -5.5) return 'Jawa';
+  if (lon >= 108 && lon <= 119 && lat > -5) return 'Kalimantan';
+  if (lon >= 118 && lon <= 126 && lat > -6) return 'Sulawesi';
+  if (lon >= 114 && lon <= 126 && lat <= -6) return 'Bali & Nusa Tenggara';
+  if (lon > 126) return 'Maluku & Papua';
+  return 'Indonesia';
+}
 
-/**
- * Fetch live NASA FIRMS data jika API Key tersedia di environment
- */
 export async function fetchLiveFirmsHotspots(mapKey) {
   if (!mapKey) return null;
+  const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const t = ctrl ? setTimeout(() => ctrl.abort(), 7000) : null;
   try {
     const url = `https://firms.modaps.eosdis.nasa.gov/api/country/csv/${mapKey}/VIIRS_SNPP_NRT/IDN/1`;
-    const response = await fetch(url, { signal: AbortSignal.timeout(6000) });
-    if (!response.ok) return null;
-
-    const csvText = await response.text();
-    const lines = csvText.trim().split('\n');
-    if (lines.length <= 1) return null;
-
-    const headers = lines[0].split(',').map((h) => h.trim());
-    const latIdx = headers.indexOf('latitude');
-    const lonIdx = headers.indexOf('longitude');
-    const brightIdx = headers.indexOf('bright_ti4');
-    const confIdx = headers.indexOf('confidence');
-    const frpIdx = headers.indexOf('frp');
-    const satIdx = headers.indexOf('satellite');
-
-    if (latIdx === -1 || lonIdx === -1) return null;
-
-    const parsed = lines.slice(1).map((line, idx) => {
-      const cols = line.split(',');
-      const lat = parseFloat(cols[latIdx]);
-      const lon = parseFloat(cols[lonIdx]);
-      const brightnessK = brightIdx !== -1 ? parseFloat(cols[brightIdx]) : 330.0;
-      const frpMw = frpIdx !== -1 ? parseFloat(cols[frpIdx]) : 15.0;
-      const confStr = confIdx !== -1 ? cols[confIdx] : 'nominal';
-      const sat = satIdx !== -1 ? cols[satIdx] : 'VIIRS SNPP (375m)';
-
-      const isHigh = confStr === 'h' || confStr === 'high';
-      const confidence = isHigh ? 'Tinggi (>85%)' : 'Sedang (70-85%)';
-
-      return {
-        id: `firms-live-${idx}`,
-        regency: `Titik Panas (${lat.toFixed(2)}, ${lon.toFixed(2)})`,
-        province: 'Wilayah Terdeteksi Satelit',
-        island: (lon < 106 && lat > -6)
-          ? 'Sumatera'
-          : (lon >= 105 && lon <= 116 && lat <= -5.5)
-            ? 'Jawa'
-            : (lon >= 108 && lon <= 119 && lat > -5)
-              ? 'Kalimantan'
-              : (lon >= 118 && lon <= 126 && lat > -6)
-                ? 'Sulawesi'
-                : (lon >= 114 && lon <= 126 && lat <= -6)
-                  ? 'Bali & Nusa Tenggara'
-                  : (lon > 126)
-                    ? 'Maluku & Papua'
-                    : 'Indonesia',
-        lat,
-        lon,
-        satellite: sat || 'VIIRS SNPP (375m)',
-        confidence,
-        confidenceLevel: isHigh ? 'HIGH' : 'MODERATE',
-        brightnessK,
-        frpMw,
-        type: 'Deteksi Termal Aktif',
-        source: 'NASA FIRMS NRT Live',
-        detectedAt: 'Live Satelit (NRT)'
-      };
-    }).filter((h) => !isNaN(h.lat) && !isNaN(h.lon));
-
-    return parsed.length > 0 ? parsed : null;
-  } catch {
-    return null;
-  }
+    const res = await fetch(url, { signal: ctrl ? ctrl.signal : undefined });
+    if (!res.ok) return null;
+    const teks = await res.text();
+    const baris = teks.trim().split('\n');
+    if (baris.length <= 1) return null;
+    const head = baris[0].split(',').map((h) => h.trim());
+    const ci = (n) => head.indexOf(n);
+    const iLat = ci('latitude'), iLon = ci('longitude');
+    if (iLat < 0 || iLon < 0) return null;
+    const iB = ci('bright_ti4'), iC = ci('confidence'), iF = ci('frp'), iS = ci('satellite');
+    const hasil = [];
+    for (let k = 1; k < baris.length; k++) {
+      const kol = baris[k].split(',');
+      const la = parseFloat(kol[iLat]); const lo = parseFloat(kol[iLon]);
+      if (!Number.isFinite(la) || !Number.isFinite(lo)) continue;
+      const mentah = iC >= 0 ? String(kol[iC]).trim() : 'n';
+      const tinggi = mentah === 'h' || mentah === 'high';
+      hasil.push({
+        id: `jk-firms-${k}`, regency: `Hotspot (${la.toFixed(2)}, ${lo.toFixed(2)})`,
+        province: 'Terdeteksi Satelit', island: tebakPulau(la, lo), lat: la, lon: lo,
+        satellite: (iS >= 0 && kol[iS]) || 'VIIRS SNPP (375m)',
+        confidence: tinggi ? 'Tinggi (>85%)' : 'Sedang (70-85%)',
+        confidenceLevel: tinggi ? 'HIGH' : 'MODERATE',
+        brightnessK: iB >= 0 ? parseFloat(kol[iB]) || 330 : 330,
+        frpMw: iF >= 0 ? parseFloat(kol[iF]) || 15 : 15,
+        type: 'Deteksi Termal Aktif', source: 'NASA FIRMS NRT Live', detectedAt: 'Live (NRT)',
+      });
+    }
+    return hasil.length ? hasil : null;
+  } catch { return null; } finally { if (t) clearTimeout(t); }
 }
 
 export function fetchKarhutlaData(lat, lon, weatherData, forceRefresh = false) {
-  const cacheKey = `karhutla_${lat?.toFixed?.(2) || 0}_${lon?.toFixed?.(2) || 0}`;
-
+  const la = Number(lat) || 0; const lo = Number(lon) || 0;
+  const kunci = `siaga_api_${la.toFixed(2)}_${lo.toFixed(2)}`;
   if (!forceRefresh) {
-    const cached = apiCache.get(cacheKey);
-    if (cached) return cached;
+    const cepat = apiCache.get(kunci) || apiCache.get(`karhutla_${la.toFixed?.(2) || 0}_${lo.toFixed?.(2) || 0}`);
+    if (cepat) return cepat;
   }
-
   const fdrs = calculateFdrs(weatherData);
-  const hotspotInfo = getNearbyHotspots(lat, lon);
-
-  const result = {
-    fdrs,
-    nearest: hotspotInfo.nearest,
-    nearbyList: hotspotInfo.nearbyList,
-    allHotspots: hotspotInfo.allHotspots,
-    totalInIndo: hotspotInfo.totalInIndo,
-    dataSource: 'NASA FIRMS (VIIRS SNPP / NOAA-20 / NOAA-21 / MODIS) & KLHK SiPongi+',
-    lastSync: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+  const info = getNearbyHotspots(la, lo);
+  const hasil = {
+    fdrs, nearest: info.nearest, nearbyList: info.nearbyList,
+    allHotspots: info.allHotspots, totalInIndo: info.totalInIndo,
+    dataSource: 'JagaKota Siaga Api — FIRMS VIIRS/MODIS & SiPongi+',
+    lastSync: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+    versi: 2,
   };
-
-  apiCache.set(cacheKey, result, 5 * 60 * 1000); // 5 min TTL
-  return result;
+  apiCache.set(kunci, hasil);
+  return hasil;
 }

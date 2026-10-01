@@ -1,3623 +1,543 @@
-
-export const REGIONS = [
-  'Semua',
-  'Jawa',
-  'Sumatera',
-  'Kalimantan',
-  'Sulawesi',
-  'Bali & Nusa Tenggara',
-  'Maluku & Papua',
-  'Nusantara'
+// JagaKota — basis kota v2: tabel kompak + turunan objek (hemat diff, cepat parse)
+export const REGIONS = ['Semua','Jawa','Sumatera','Kalimantan','Sulawesi','Bali & Nusa Tenggara','Maluku & Papua','Nusantara'];
+// name|province|region, lat, lon
+const _TABEL = [
+  ["Banda Aceh|Aceh|Sumatera",5.5483,95.3238], // jk-1
+  ["Sabang|Aceh|Sumatera",5.8933,95.3214], // jk-2
+  ["Lhokseumawe|Aceh|Sumatera",5.1801,97.1407], // jk-3
+  ["Langsa|Aceh|Sumatera",4.4719,97.9683], // jk-4
+  ["Subulussalam|Aceh|Sumatera",2.75,98], // jk-5
+  ["Aceh Besar (Jantho)|Aceh|Sumatera",5.2858,95.59], // jk-6
+  ["Pidie (Sigli)|Aceh|Sumatera",5.3833,95.95], // jk-7
+  ["Pidie Jaya (Meureudu)|Aceh|Sumatera",5.25,96.1667], // jk-8
+  ["Bireuen|Aceh|Sumatera",5.2,96.7], // jk-9
+  ["Aceh Utara (Lhoksukon)|Aceh|Sumatera",5.0441,97.3186], // jk-10
+  ["Aceh Timur (Idi Rayeuk)|Aceh|Sumatera",4.9667,97.7667], // jk-11
+  ["Aceh Tamiang (Karang Baru)|Aceh|Sumatera",4.25,98.0333], // jk-12
+  ["Bener Meriah (Simpang Tiga Redelong)|Aceh|Sumatera",4.7333,96.8833], // jk-13
+  ["Aceh Tengah (Takengon)|Aceh|Sumatera",4.63,96.84], // jk-14
+  ["Gayo Lues (Blangkejeren)|Aceh|Sumatera",3.9833,97.35], // jk-15
+  ["Aceh Tenggara (Kutacane)|Aceh|Sumatera",3.4833,97.8167], // jk-16
+  ["Aceh Jaya (Calang)|Aceh|Sumatera",4.6333,95.5833], // jk-17
+  ["Aceh Barat (Meulaboh)|Aceh|Sumatera",4.1449,96.1285], // jk-18
+  ["Nagan Raya (Suka Makmue)|Aceh|Sumatera",4.1667,96.3333], // jk-19
+  ["Aceh Barat Daya (Blangpidie)|Aceh|Sumatera",3.75,96.8333], // jk-20
+  ["Aceh Selatan (Tapaktuan)|Aceh|Sumatera",3.25,97.1833], // jk-21
+  ["Aceh Singkil (Singkil)|Aceh|Sumatera",2.3333,97.8333], // jk-22
+  ["Simeulue (Sinabang)|Aceh|Sumatera",2.4833,96.3833], // jk-23
+  ["Medan|Sumatera Utara|Sumatera",3.5952,98.6722], // jk-24
+  ["Binjai|Sumatera Utara|Sumatera",3.6008,98.4854], // jk-25
+  ["Tebing Tinggi|Sumatera Utara|Sumatera",3.3285,99.1626], // jk-26
+  ["Pematangsiantar|Sumatera Utara|Sumatera",2.9592,99.0687], // jk-27
+  ["Tanjungbalai|Sumatera Utara|Sumatera",2.9667,99.8], // jk-28
+  ["Sibolga|Sumatera Utara|Sumatera",1.7426,98.7792], // jk-29
+  ["Padangsidimpuan|Sumatera Utara|Sumatera",1.3733,99.2731], // jk-30
+  ["Gunungsitoli|Sumatera Utara|Sumatera",1.2894,97.6148], // jk-31
+  ["Deli Serdang (Lubuk Pakam)|Sumatera Utara|Sumatera",3.5592,98.8753], // jk-32
+  ["Langkat (Stabat)|Sumatera Utara|Sumatera",3.75,98.45], // jk-33
+  ["Karo (Kabanjahe)|Sumatera Utara|Sumatera",3.1,98.4833], // jk-34
+  ["Dairi (Sidikalang)|Sumatera Utara|Sumatera",2.75,98.3167], // jk-35
+  ["Pakpak Bharat (Salak)|Sumatera Utara|Sumatera",2.5667,98.2833], // jk-36
+  ["Simalungun (Raya)|Sumatera Utara|Sumatera",2.9667,98.8667], // jk-37
+  ["Asahan (Kisaran)|Sumatera Utara|Sumatera",2.9833,99.6333], // jk-38
+  ["Batu Bara (Limapuluh)|Sumatera Utara|Sumatera",3.1667,99.5333], // jk-39
+  ["Labuhanbatu (Rantau Prapat)|Sumatera Utara|Sumatera",2.0833,99.8333], // jk-40
+  ["Labuhanbatu Utara (Aek Kanopan)|Sumatera Utara|Sumatera",2.5667,99.65], // jk-41
+  ["Labuhanbatu Selatan (Kota Pinang)|Sumatera Utara|Sumatera",1.9,100.0833], // jk-42
+  ["Tapanuli Utara (Tarutung)|Sumatera Utara|Sumatera",2.0167,98.9667], // jk-43
+  ["Tapanuli Tengah (Pandan)|Sumatera Utara|Sumatera",1.6833,98.8333], // jk-44
+  ["Tapanuli Selatan (Sipirok)|Sumatera Utara|Sumatera",1.6,99.2667], // jk-45
+  ["Toba (Balige)|Sumatera Utara|Sumatera",2.3333,99.0667], // jk-46
+  ["Samosir (Pangururan)|Sumatera Utara|Sumatera",2.6,98.7], // jk-47
+  ["Humbang Hasundutan (Dolok Sanggul)|Sumatera Utara|Sumatera",2.2667,98.75], // jk-48
+  ["Mandailing Natal (Panyabungan)|Sumatera Utara|Sumatera",0.8667,99.5667], // jk-49
+  ["Padang Lawas (Sibuhuan)|Sumatera Utara|Sumatera",1.0667,99.7833], // jk-50
+  ["Padang Lawas Utara (Gunung Tua)|Sumatera Utara|Sumatera",1.4833,99.6333], // jk-51
+  ["Serdang Bedagai (Sei Rampah)|Sumatera Utara|Sumatera",3.4833,99.15], // jk-52
+  ["Nias (Gido)|Sumatera Utara|Sumatera",1.1167,97.75], // jk-53
+  ["Nias Selatan (Teluk Dalam)|Sumatera Utara|Sumatera",0.55,97.85], // jk-54
+  ["Nias Utara (Lotu)|Sumatera Utara|Sumatera",1.3333,97.3167], // jk-55
+  ["Nias Barat (Lahomi)|Sumatera Utara|Sumatera",1.05,97.45], // jk-56
+  ["Padang|Sumatera Barat|Sumatera",-0.9471,100.4172], // jk-57
+  ["Bukittinggi|Sumatera Barat|Sumatera",-0.3056,100.3692], // jk-58
+  ["Payakumbuh|Sumatera Barat|Sumatera",-0.2244,100.6309], // jk-59
+  ["Pariaman|Sumatera Barat|Sumatera",-0.6264,100.1206], // jk-60
+  ["Solok|Sumatera Barat|Sumatera",-0.7964,100.6558], // jk-61
+  ["Padang Panjang|Sumatera Barat|Sumatera",-0.4639,100.3986], // jk-62
+  ["Sawahlunto|Sumatera Barat|Sumatera",-0.6806,100.7761], // jk-63
+  ["Agam (Lubuk Basung)|Sumatera Barat|Sumatera",-0.3,100.0333], // jk-64
+  ["Lima Puluh Kota (Sarilamak)|Sumatera Barat|Sumatera",-0.1333,100.6667], // jk-65
+  ["Pasaman (Lubuk Sikaping)|Sumatera Barat|Sumatera",0.15,100.1667], // jk-66
+  ["Pasaman Barat (Simpang Empat)|Sumatera Barat|Sumatera",0.1,99.8], // jk-67
+  ["Tanah Datar (Batusangkar)|Sumatera Barat|Sumatera",-0.45,100.5833], // jk-68
+  ["Padang Pariaman (Parit Malintang)|Sumatera Barat|Sumatera",-0.6333,100.2833], // jk-69
+  ["Pesisir Selatan (Painan)|Sumatera Barat|Sumatera",-1.35,100.5667], // jk-70
+  ["Kab. Solok (Arosuka)|Sumatera Barat|Sumatera",-0.9333,100.6167], // jk-71
+  ["Solok Selatan (Padang Aro)|Sumatera Barat|Sumatera",-1.4833,101.2167], // jk-72
+  ["Dharmasraya (Pulau Punjung)|Sumatera Barat|Sumatera",-0.9833,101.6167], // jk-73
+  ["Sijunjung (Muaro Sijunjung)|Sumatera Barat|Sumatera",-0.6833,101], // jk-74
+  ["Kepulauan Mentawai (Tuapejat)|Sumatera Barat|Sumatera",-2.0167,99.6], // jk-75
+  ["Pekanbaru|Riau|Sumatera",0.5071,101.4478], // jk-76
+  ["Dumai|Riau|Sumatera",1.6833,101.45], // jk-77
+  ["Kampar (Bangkinang)|Riau|Sumatera",0.3333,101.0333], // jk-78
+  ["Siak (Siak Sri Indrapura)|Riau|Sumatera",0.8,102.05], // jk-79
+  ["Pelalawan (Pangkalan Kerinci)|Riau|Sumatera",0.4,101.85], // jk-80
+  ["Indragiri Hulu (Rengat)|Riau|Sumatera",-0.3667,102.55], // jk-81
+  ["Indragiri Hilir (Tembilahan)|Riau|Sumatera",-0.3167,103.15], // jk-82
+  ["Bengkalis|Riau|Sumatera",1.4833,102.1333], // jk-83
+  ["Rokan Hulu (Pasir Pengaraian)|Riau|Sumatera",0.8667,100.3167], // jk-84
+  ["Rokan Hilir (Bagansiapiapi)|Riau|Sumatera",2.1667,100.8167], // jk-85
+  ["Kuantan Singingi (Teluk Kuantan)|Riau|Sumatera",-0.5333,101.5667], // jk-86
+  ["Kepulauan Meranti (Selatpanjang)|Riau|Sumatera",1.0167,102.7], // jk-87
+  ["Batam|Kepulauan Riau|Sumatera",1.1301,104.0529], // jk-88
+  ["Tanjungpinang|Kepulauan Riau|Sumatera",0.9167,104.45], // jk-89
+  ["Bintan (Bandar Seri Bentan)|Kepulauan Riau|Sumatera",1.1667,104.5833], // jk-90
+  ["Karimun (Tanjung Balai Karimun)|Kepulauan Riau|Sumatera",1.0833,103.4333], // jk-91
+  ["Natuna (Ranai)|Kepulauan Riau|Sumatera",3.95,108.3833], // jk-92
+  ["Kepulauan Anambas (Tarempa)|Kepulauan Riau|Sumatera",3.2167,106.2167], // jk-93
+  ["Lingga (Daik)|Kepulauan Riau|Sumatera",-0.2,104.6167], // jk-94
+  ["Kota Jambi|Jambi|Sumatera",-1.6101,103.6131], // jk-95
+  ["Sungai Penuh|Jambi|Sumatera",-2.0667,101.4], // jk-96
+  ["Batanghari (Muara Bulian)|Jambi|Sumatera",-1.7167,103.2833], // jk-97
+  ["Bungo (Muara Bungo)|Jambi|Sumatera",-1.5,102.1167], // jk-98
+  ["Kerinci (Siulak)|Jambi|Sumatera",-1.9833,101.2667], // jk-99
+  ["Merangin (Bangko)|Jambi|Sumatera",-2.0667,102.2667], // jk-100
+  ["Muaro Jambi (Sengeti)|Jambi|Sumatera",-1.4167,103.65], // jk-101
+  ["Sarolangun|Jambi|Sumatera",-2.3,102.65], // jk-102
+  ["Tanjung Jabung Barat (Kuala Tungkal)|Jambi|Sumatera",-0.8167,103.4667], // jk-103
+  ["Tanjung Jabung Timur (Muara Sabak)|Jambi|Sumatera",-1.1333,103.8667], // jk-104
+  ["Tebo (Muara Tebo)|Jambi|Sumatera",-1.4833,102.4], // jk-105
+  ["Kota Bengkulu|Bengkulu|Sumatera",-3.8004,102.2655], // jk-106
+  ["Bengkulu Selatan (Manna)|Bengkulu|Sumatera",-4.4667,102.9], // jk-107
+  ["Bengkulu Tengah (Karang Tinggi)|Bengkulu|Sumatera",-3.75,102.4333], // jk-108
+  ["Bengkulu Utara (Arga Makmur)|Bengkulu|Sumatera",-3.4333,102.1833], // jk-109
+  ["Kaur (Bintuhan)|Bengkulu|Sumatera",-4.75,103.35], // jk-110
+  ["Kepahiang|Bengkulu|Sumatera",-3.65,102.5833], // jk-111
+  ["Lebong (Tubei)|Bengkulu|Sumatera",-3.15,102.2833], // jk-112
+  ["Mukomuko|Bengkulu|Sumatera",-2.5833,101.1167], // jk-113
+  ["Rejang Lebong (Curup)|Bengkulu|Sumatera",-3.4667,102.5333], // jk-114
+  ["Seluma (Tais)|Bengkulu|Sumatera",-4.0833,102.55], // jk-115
+  ["Palembang|Sumatera Selatan|Sumatera",-2.9761,104.7754], // jk-116
+  ["Prabumulih|Sumatera Selatan|Sumatera",-3.4316,104.2344], // jk-117
+  ["Pagar Alam|Sumatera Selatan|Sumatera",-4.0278,103.2667], // jk-118
+  ["Lubuklinggau|Sumatera Selatan|Sumatera",-3.2958,102.8617], // jk-119
+  ["Banyuasin (Pangkalan Balai)|Sumatera Selatan|Sumatera",-2.8833,104.3833], // jk-120
+  ["Empat Lawang (Tebing Tinggi)|Sumatera Selatan|Sumatera",-3.6167,103.0833], // jk-121
+  ["Lahat|Sumatera Selatan|Sumatera",-3.7833,103.5333], // jk-122
+  ["Muara Enim|Sumatera Selatan|Sumatera",-3.65,103.7667], // jk-123
+  ["Musi Banyuasin (Sekayu)|Sumatera Selatan|Sumatera",-2.8833,103.8333], // jk-124
+  ["Musi Rawas (Muara Beliti)|Sumatera Selatan|Sumatera",-3.25,103.0333], // jk-125
+  ["Musi Rawas Utara (Rupit)|Sumatera Selatan|Sumatera",-2.7167,102.8667], // jk-126
+  ["Ogan Ilir (Indralaya)|Sumatera Selatan|Sumatera",-3.2333,104.65], // jk-127
+  ["Ogan Komering Ilir (Kayu Agung)|Sumatera Selatan|Sumatera",-3.4,104.8333], // jk-128
+  ["Ogan Komering Ulu (Baturaja)|Sumatera Selatan|Sumatera",-4.1333,104.1667], // jk-129
+  ["OKU Selatan (Muaradua)|Sumatera Selatan|Sumatera",-4.5167,104.05], // jk-130
+  ["OKU Timur (Martapura)|Sumatera Selatan|Sumatera",-4.3167,104.35], // jk-131
+  ["Penukal Abab Lematang Ilir - PALI (Talang Ubi)|Sumatera Selatan|Sumatera",-3.2833,103.85], // jk-132
+  ["Pangkalpinang|Kepulauan Bangka Belitung|Sumatera",-2.1333,106.1167], // jk-133
+  ["Bangka (Sungailiat)|Kepulauan Bangka Belitung|Sumatera",-1.8667,106.1167], // jk-134
+  ["Bangka Barat (Muntok)|Kepulauan Bangka Belitung|Sumatera",-2.0667,105.1667], // jk-135
+  ["Bangka Tengah (Koba)|Kepulauan Bangka Belitung|Sumatera",-2.4833,106.4], // jk-136
+  ["Bangka Selatan (Toboali)|Kepulauan Bangka Belitung|Sumatera",-3.0167,106.45], // jk-137
+  ["Belitung (Tanjung Pandan)|Kepulauan Bangka Belitung|Sumatera",-2.7333,107.6333], // jk-138
+  ["Belitung Timur (Manggar)|Kepulauan Bangka Belitung|Sumatera",-2.8833,108.2667], // jk-139
+  ["Bandar Lampung|Lampung|Sumatera",-5.45,105.2667], // jk-140
+  ["Metro|Lampung|Sumatera",-5.1139,105.3067], // jk-141
+  ["Lampung Selatan (Kalianda)|Lampung|Sumatera",-5.7333,105.5833], // jk-142
+  ["Lampung Tengah (Gunung Sugih)|Lampung|Sumatera",-4.95,105.2167], // jk-143
+  ["Lampung Utara (Kotabumi)|Lampung|Sumatera",-4.8333,104.8833], // jk-144
+  ["Lampung Barat (Liwa)|Lampung|Sumatera",-5.0333,104.0667], // jk-145
+  ["Lampung Timur (Sukadana)|Lampung|Sumatera",-5.1,105.55], // jk-146
+  ["Pesawaran (Gedong Tataan)|Lampung|Sumatera",-5.4333,105.1], // jk-147
+  ["Pringsewu|Lampung|Sumatera",-5.3583,104.975], // jk-148
+  ["Tanggamus (Kota Agung)|Lampung|Sumatera",-5.5,104.6167], // jk-149
+  ["Tulang Bawang (Menggala)|Lampung|Sumatera",-4.55,105.25], // jk-150
+  ["Tulang Bawang Barat (Panaragan Jaya)|Lampung|Sumatera",-4.4333,105.05], // jk-151
+  ["Way Kanan (Blambangan Umpu)|Lampung|Sumatera",-4.5,104.5333], // jk-152
+  ["Mesuji (Wiralaga Mulya)|Lampung|Sumatera",-4.0167,105.4], // jk-153
+  ["Pesisir Barat (Krui)|Lampung|Sumatera",-5.1833,103.9333], // jk-154
+  ["Jakarta Pusat|DKI Jakarta|Jawa",-6.1805,106.8284], // jk-155
+  ["Jakarta Selatan|DKI Jakarta|Jawa",-6.2615,106.8106], // jk-156
+  ["Jakarta Timur|DKI Jakarta|Jawa",-6.225,106.9004], // jk-157
+  ["Jakarta Barat|DKI Jakarta|Jawa",-6.1683,106.7589], // jk-158
+  ["Jakarta Utara|DKI Jakarta|Jawa",-6.1214,106.7741], // jk-159
+  ["Kepulauan Seribu (Pulau Pramuka)|DKI Jakarta|Jawa",-5.7472,106.6139], // jk-160
+  ["Serang|Banten|Jawa",-6.12,106.1503], // jk-161
+  ["Cilegon|Banten|Jawa",-6.0174,106.0538], // jk-162
+  ["Tangerang|Banten|Jawa",-6.1783,106.6319], // jk-163
+  ["Tangerang Selatan (BSD/Serpong)|Banten|Jawa",-6.2886,106.7179], // jk-164
+  ["Kab. Tangerang (Tigaraksa)|Banten|Jawa",-6.2611,106.48], // jk-165
+  ["Kab. Serang (Ciruas)|Banten|Jawa",-6.1333,106.2167], // jk-166
+  ["Lebak (Rangkasbitung)|Banten|Jawa",-6.35,106.25], // jk-167
+  ["Pandeglang|Banten|Jawa",-6.3083,106.1067], // jk-168
+  ["Bandung|Jawa Barat|Jawa",-6.9175,107.6191], // jk-169
+  ["Bekasi|Jawa Barat|Jawa",-6.2383,106.9756], // jk-170
+  ["Bogor|Jawa Barat|Jawa",-6.595,106.8167], // jk-171
+  ["Depok|Jawa Barat|Jawa",-6.4025,106.7942], // jk-172
+  ["Cimahi|Jawa Barat|Jawa",-6.8722,107.5422], // jk-173
+  ["Cirebon|Jawa Barat|Jawa",-6.732,108.5523], // jk-174
+  ["Sukabumi|Jawa Barat|Jawa",-6.9277,106.9297], // jk-175
+  ["Tasikmalaya|Jawa Barat|Jawa",-7.3274,108.2207], // jk-176
+  ["Banjar|Jawa Barat|Jawa",-7.3711,108.535], // jk-177
+  ["Kab. Bandung (Soreang)|Jawa Barat|Jawa",-7.0314,107.5186], // jk-178
+  ["Bandung Barat (Ngamprah)|Jawa Barat|Jawa",-6.84,107.5], // jk-179
+  ["Kab. Bekasi (Cikarang)|Jawa Barat|Jawa",-6.3,107.1667], // jk-180
+  ["Kab. Bogor (Cibinong)|Jawa Barat|Jawa",-6.48,106.85], // jk-181
+  ["Ciamis|Jawa Barat|Jawa",-7.325,108.35], // jk-182
+  ["Cianjur|Jawa Barat|Jawa",-6.8222,107.1394], // jk-183
+  ["Kab. Cirebon (Sumber)|Jawa Barat|Jawa",-6.7667,108.4833], // jk-184
+  ["Garut (Tarogong)|Jawa Barat|Jawa",-7.2167,107.9], // jk-185
+  ["Indramayu|Jawa Barat|Jawa",-6.3264,108.32], // jk-186
+  ["Karawang|Jawa Barat|Jawa",-6.3072,107.3089], // jk-187
+  ["Kuningan|Jawa Barat|Jawa",-6.9767,108.4833], // jk-188
+  ["Majalengka|Jawa Barat|Jawa",-6.8361,108.2278], // jk-189
+  ["Pangandaran (Parigi)|Jawa Barat|Jawa",-7.7,108.4833], // jk-190
+  ["Purwakarta|Jawa Barat|Jawa",-6.5569,107.4433], // jk-191
+  ["Subang|Jawa Barat|Jawa",-6.5714,107.76], // jk-192
+  ["Kab. Sukabumi (Palabuhanratu)|Jawa Barat|Jawa",-6.9833,106.55], // jk-193
+  ["Sumedang|Jawa Barat|Jawa",-6.8586,107.9267], // jk-194
+  ["Kab. Tasikmalaya (Singaparna)|Jawa Barat|Jawa",-7.35,108.1167], // jk-195
+  ["Semarang|Jawa Tengah|Jawa",-6.9667,110.4167], // jk-196
+  ["Surakarta (Solo)|Jawa Tengah|Jawa",-7.5755,110.8243], // jk-197
+  ["Magelang|Jawa Tengah|Jawa",-7.4706,110.2178], // jk-198
+  ["Pekalongan|Jawa Tengah|Jawa",-6.8886,109.6753], // jk-199
+  ["Salatiga|Jawa Tengah|Jawa",-7.3306,110.5083], // jk-200
+  ["Tegal|Jawa Tengah|Jawa",-6.8694,109.1403], // jk-201
+  ["Banjarnegara|Jawa Tengah|Jawa",-7.3972,109.6967], // jk-202
+  ["Banyumas (Purwokerto)|Jawa Tengah|Jawa",-7.4244,109.23], // jk-203
+  ["Batang|Jawa Tengah|Jawa",-6.9083,109.7333], // jk-204
+  ["Blora|Jawa Tengah|Jawa",-6.97,111.4183], // jk-205
+  ["Boyolali|Jawa Tengah|Jawa",-7.5333,110.5967], // jk-206
+  ["Brebes|Jawa Tengah|Jawa",-6.8708,109.0431], // jk-207
+  ["Cilacap|Jawa Tengah|Jawa",-7.7186,109.0153], // jk-208
+  ["Demak|Jawa Tengah|Jawa",-6.8944,110.6389], // jk-209
+  ["Grobogan (Purwodadi)|Jawa Tengah|Jawa",-7.0867,110.9167], // jk-210
+  ["Jepara|Jawa Tengah|Jawa",-6.5917,110.6694], // jk-211
+  ["Karanganyar|Jawa Tengah|Jawa",-7.5967,110.9517], // jk-212
+  ["Kebumen|Jawa Tengah|Jawa",-7.6717,109.6583], // jk-213
+  ["Kendal|Jawa Tengah|Jawa",-6.92,110.2039], // jk-214
+  ["Klaten|Jawa Tengah|Jawa",-7.7036,110.6033], // jk-215
+  ["Kudus|Jawa Tengah|Jawa",-6.8047,110.8406], // jk-216
+  ["Pati|Jawa Tengah|Jawa",-6.7558,111.0378], // jk-217
+  ["Pemalang|Jawa Tengah|Jawa",-6.8917,109.3806], // jk-218
+  ["Purbalingga|Jawa Tengah|Jawa",-7.3889,109.3639], // jk-219
+  ["Purworejo|Jawa Tengah|Jawa",-7.7167,110.0167], // jk-220
+  ["Rembang|Jawa Tengah|Jawa",-6.7083,111.3417], // jk-221
+  ["Kab. Semarang (Ungaran)|Jawa Tengah|Jawa",-7.1394,110.4039], // jk-222
+  ["Sragen|Jawa Tengah|Jawa",-7.4267,111.0217], // jk-223
+  ["Sukoharjo|Jawa Tengah|Jawa",-7.6833,110.8333], // jk-224
+  ["Kab. Tegal (Slawi)|Jawa Tengah|Jawa",-6.9833,109.1333], // jk-225
+  ["Temanggung|Jawa Tengah|Jawa",-7.3167,110.1767], // jk-226
+  ["Wonogiri|Jawa Tengah|Jawa",-7.8167,110.9267], // jk-227
+  ["Wonosobo|Jawa Tengah|Jawa",-7.3617,109.9], // jk-228
+  ["Kab. Magelang (Mungkid)|Jawa Tengah|Jawa",-7.5833,110.2333], // jk-229
+  ["Kab. Pekalongan (Kajen)|Jawa Tengah|Jawa",-7.0333,109.6], // jk-230
+  ["Yogyakarta|DI Yogyakarta|Jawa",-7.7956,110.3695], // jk-231
+  ["Sleman|DI Yogyakarta|Jawa",-7.7167,110.3556], // jk-232
+  ["Bantul|DI Yogyakarta|Jawa",-7.8894,110.3289], // jk-233
+  ["Gunungkidul (Wonosari)|DI Yogyakarta|Jawa",-7.9658,110.6019], // jk-234
+  ["Kulon Progo (Wates)|DI Yogyakarta|Jawa",-7.8572,110.1608], // jk-235
+  ["Surabaya|Jawa Timur|Jawa",-7.2575,112.7521], // jk-236
+  ["Malang|Jawa Timur|Jawa",-7.9797,112.6304], // jk-237
+  ["Batu|Jawa Timur|Jawa",-7.8711,112.5272], // jk-238
+  ["Kediri|Jawa Timur|Jawa",-7.8167,112.0167], // jk-239
+  ["Blitar|Jawa Timur|Jawa",-8.0983,112.1681], // jk-240
+  ["Madiun|Jawa Timur|Jawa",-7.6298,111.5239], // jk-241
+  ["Mojokerto|Jawa Timur|Jawa",-7.4722,112.4339], // jk-242
+  ["Pasuruan|Jawa Timur|Jawa",-7.6469,112.9078], // jk-243
+  ["Probolinggo|Jawa Timur|Jawa",-7.7544,113.2158], // jk-244
+  ["Bangkalan|Jawa Timur|Jawa",-7.0333,112.75], // jk-245
+  ["Banyuwangi|Jawa Timur|Jawa",-8.2192,114.3692], // jk-246
+  ["Bojonegoro|Jawa Timur|Jawa",-7.15,111.8833], // jk-247
+  ["Bondowoso|Jawa Timur|Jawa",-7.9139,113.8214], // jk-248
+  ["Gresik|Jawa Timur|Jawa",-7.1564,112.6558], // jk-249
+  ["Jember|Jawa Timur|Jawa",-8.1725,113.7], // jk-250
+  ["Jombang|Jawa Timur|Jawa",-7.5461,112.2331], // jk-251
+  ["Lamongan|Jawa Timur|Jawa",-7.1194,112.4139], // jk-252
+  ["Lumajang|Jawa Timur|Jawa",-8.1333,113.2167], // jk-253
+  ["Magetan|Jawa Timur|Jawa",-7.6539,111.3283], // jk-254
+  ["Nganjuk|Jawa Timur|Jawa",-7.6039,111.9039], // jk-255
+  ["Ngawi|Jawa Timur|Jawa",-7.4039,111.4456], // jk-256
+  ["Pacitan|Jawa Timur|Jawa",-8.2047,111.0928], // jk-257
+  ["Pamekasan|Jawa Timur|Jawa",-7.1608,113.4739], // jk-258
+  ["Ponorogo|Jawa Timur|Jawa",-7.8683,111.4628], // jk-259
+  ["Sampang|Jawa Timur|Jawa",-7.1878,113.2394], // jk-260
+  ["Sidoarjo|Jawa Timur|Jawa",-7.4478,112.7183], // jk-261
+  ["Situbondo|Jawa Timur|Jawa",-7.7064,114.0044], // jk-262
+  ["Sumenep|Jawa Timur|Jawa",-7.0167,113.8667], // jk-263
+  ["Trenggalek|Jawa Timur|Jawa",-8.05,111.7167], // jk-264
+  ["Tuban|Jawa Timur|Jawa",-6.8978,112.065], // jk-265
+  ["Tulungagung|Jawa Timur|Jawa",-8.0667,111.9], // jk-266
+  ["Kab. Blitar (Kanigoro)|Jawa Timur|Jawa",-8.1333,112.2167], // jk-267
+  ["Kab. Kediri (Ngasem/Pare)|Jawa Timur|Jawa",-7.7667,112.1833], // jk-268
+  ["Kab. Madiun (Caruban)|Jawa Timur|Jawa",-7.55,111.65], // jk-269
+  ["Kab. Malang (Kepanjen)|Jawa Timur|Jawa",-8.1333,112.5667], // jk-270
+  ["Kab. Mojokerto (Mojosari)|Jawa Timur|Jawa",-7.5167,112.55], // jk-271
+  ["Kab. Pasuruan (Bangil)|Jawa Timur|Jawa",-7.5833,112.8], // jk-272
+  ["Kab. Probolinggo (Kraksaan)|Jawa Timur|Jawa",-7.7667,113.4333], // jk-273
+  ["Denpasar|Bali|Bali & Nusa Tenggara",-8.6705,115.2126], // jk-274
+  ["Badung (Kuta / Mangupura)|Bali|Bali & Nusa Tenggara",-8.5833,115.1833], // jk-275
+  ["Bangli|Bali|Bali & Nusa Tenggara",-8.4542,115.355], // jk-276
+  ["Buleleng (Singaraja)|Bali|Bali & Nusa Tenggara",-8.112,115.0882], // jk-277
+  ["Gianyar (Ubud)|Bali|Bali & Nusa Tenggara",-8.5414,115.3253], // jk-278
+  ["Jembrana (Negara)|Bali|Bali & Nusa Tenggara",-8.3583,114.6167], // jk-279
+  ["Karangasem (Amlapura)|Bali|Bali & Nusa Tenggara",-8.4478,115.6128], // jk-280
+  ["Klungkung (Semarapura)|Bali|Bali & Nusa Tenggara",-8.5358,115.4039], // jk-281
+  ["Tabanan|Bali|Bali & Nusa Tenggara",-8.5392,115.1247], // jk-282
+  ["Mataram|Nusa Tenggara Barat|Bali & Nusa Tenggara",-8.5833,116.1167], // jk-283
+  ["Bima|Nusa Tenggara Barat|Bali & Nusa Tenggara",-8.4608,118.7256], // jk-284
+  ["Lombok Barat (Gerung)|Nusa Tenggara Barat|Bali & Nusa Tenggara",-8.6833,116.1333], // jk-285
+  ["Lombok Tengah (Praya)|Nusa Tenggara Barat|Bali & Nusa Tenggara",-8.7,116.2833], // jk-286
+  ["Lombok Timur (Selong)|Nusa Tenggara Barat|Bali & Nusa Tenggara",-8.65,116.5333], // jk-287
+  ["Lombok Utara (Tanjung)|Nusa Tenggara Barat|Bali & Nusa Tenggara",-8.35,116.15], // jk-288
+  ["Sumbawa (Sumbawa Besar)|Nusa Tenggara Barat|Bali & Nusa Tenggara",-8.5,117.4333], // jk-289
+  ["Sumbawa Barat (Taliwang)|Nusa Tenggara Barat|Bali & Nusa Tenggara",-8.75,116.85], // jk-290
+  ["Dompu|Nusa Tenggara Barat|Bali & Nusa Tenggara",-8.5333,118.4667], // jk-291
+  ["Kab. Bima (Woha)|Nusa Tenggara Barat|Bali & Nusa Tenggara",-8.5833,118.7], // jk-292
+  ["Kupang|Nusa Tenggara Timur|Bali & Nusa Tenggara",-10.1772,123.607], // jk-293
+  ["Alor (Kalabahi)|Nusa Tenggara Timur|Bali & Nusa Tenggara",-8.2167,124.5167], // jk-294
+  ["Belu (Atambua)|Nusa Tenggara Timur|Bali & Nusa Tenggara",-9.1069,124.8925], // jk-295
+  ["Ende|Nusa Tenggara Timur|Bali & Nusa Tenggara",-8.8433,121.6622], // jk-296
+  ["Flores Timur (Larantuka)|Nusa Tenggara Timur|Bali & Nusa Tenggara",-8.3433,122.9856], // jk-297
+  ["Lembata (Lewoleba)|Nusa Tenggara Timur|Bali & Nusa Tenggara",-8.3667,123.55], // jk-298
+  ["Malaka (Betun)|Nusa Tenggara Timur|Bali & Nusa Tenggara",-9.5667,124.9], // jk-299
+  ["Manggarai (Ruteng)|Nusa Tenggara Timur|Bali & Nusa Tenggara",-8.6133,120.4722], // jk-300
+  ["Manggarai Barat (Labuan Bajo)|Nusa Tenggara Timur|Bali & Nusa Tenggara",-8.4964,119.8878], // jk-301
+  ["Manggarai Timur (Borong)|Nusa Tenggara Timur|Bali & Nusa Tenggara",-8.8167,120.6167], // jk-302
+  ["Nagekeo (Mbay)|Nusa Tenggara Timur|Bali & Nusa Tenggara",-8.5667,121.3167], // jk-303
+  ["Ngada (Bajawa)|Nusa Tenggara Timur|Bali & Nusa Tenggara",-8.7917,120.9639], // jk-304
+  ["Rote Ndao (Baa)|Nusa Tenggara Timur|Bali & Nusa Tenggara",-10.7333,123.1167], // jk-305
+  ["Sabu Raijua (Menia)|Nusa Tenggara Timur|Bali & Nusa Tenggara",-10.5333,121.8333], // jk-306
+  ["Sikka (Maumere)|Nusa Tenggara Timur|Bali & Nusa Tenggara",-8.6197,122.2111], // jk-307
+  ["Sumba Barat (Waikabubak)|Nusa Tenggara Timur|Bali & Nusa Tenggara",-9.6333,119.4167], // jk-308
+  ["Sumba Barat Daya (Tambolaka)|Nusa Tenggara Timur|Bali & Nusa Tenggara",-9.4,119.2333], // jk-309
+  ["Sumba Tengah (Waibakul)|Nusa Tenggara Timur|Bali & Nusa Tenggara",-9.6,119.6], // jk-310
+  ["Sumba Timur (Waingapu)|Nusa Tenggara Timur|Bali & Nusa Tenggara",-9.6542,120.2642], // jk-311
+  ["Timor Tengah Selatan (Soe)|Nusa Tenggara Timur|Bali & Nusa Tenggara",-9.8608,124.2764], // jk-312
+  ["Timor Tengah Utara (Kefamenanu)|Nusa Tenggara Timur|Bali & Nusa Tenggara",-9.4447,124.4781], // jk-313
+  ["Kab. Kupang (Oelamasi)|Nusa Tenggara Timur|Bali & Nusa Tenggara",-10.05,123.8333], // jk-314
+  ["Pontianak|Kalimantan Barat|Kalimantan",-0.0263,109.3425], // jk-315
+  ["Singkawang|Kalimantan Barat|Kalimantan",0.9072,108.9867], // jk-316
+  ["Bengkayang|Kalimantan Barat|Kalimantan",0.8167,109.4833], // jk-317
+  ["Kapuas Hulu (Putussibau)|Kalimantan Barat|Kalimantan",0.85,112.9333], // jk-318
+  ["Kayong Utara (Sukadana)|Kalimantan Barat|Kalimantan",-1.25,109.95], // jk-319
+  ["Ketapang|Kalimantan Barat|Kalimantan",-1.85,109.9833], // jk-320
+  ["Kubu Raya (Sungai Raya)|Kalimantan Barat|Kalimantan",-0.1167,109.4], // jk-321
+  ["Landak (Ngabang)|Kalimantan Barat|Kalimantan",0.3833,109.9667], // jk-322
+  ["Melawi (Nanga Pinoh)|Kalimantan Barat|Kalimantan",-0.3333,111.7], // jk-323
+  ["Mempawah|Kalimantan Barat|Kalimantan",0.25,109.1833], // jk-324
+  ["Sambas|Kalimantan Barat|Kalimantan",1.35,109.3], // jk-325
+  ["Sanggau|Kalimantan Barat|Kalimantan",0.1167,110.5833], // jk-326
+  ["Sekadau|Kalimantan Barat|Kalimantan",0.0333,110.95], // jk-327
+  ["Sintang|Kalimantan Barat|Kalimantan",0.0667,111.5], // jk-328
+  ["Palangka Raya|Kalimantan Tengah|Kalimantan",-2.2161,113.9167], // jk-329
+  ["Barito Selatan (Buntok)|Kalimantan Tengah|Kalimantan",-1.7167,114.85], // jk-330
+  ["Barito Timur (Tamiang Layang)|Kalimantan Tengah|Kalimantan",-2,115.1667], // jk-331
+  ["Barito Utara (Muara Teweh)|Kalimantan Tengah|Kalimantan",-0.95,114.9], // jk-332
+  ["Gunung Mas (Kuala Kurun)|Kalimantan Tengah|Kalimantan",-1.1333,113.8667], // jk-333
+  ["Kapuas (Kuala Kapuas)|Kalimantan Tengah|Kalimantan",-3.0092,114.3875], // jk-334
+  ["Katingan (Kasongan)|Kalimantan Tengah|Kalimantan",-1.9,113.3833], // jk-335
+  ["Kotawaringin Barat (Pangkalan Bun)|Kalimantan Tengah|Kalimantan",-2.6833,111.6167], // jk-336
+  ["Kotawaringin Timur (Sampit)|Kalimantan Tengah|Kalimantan",-2.5333,112.95], // jk-337
+  ["Lamandau (Nanga Bulik)|Kalimantan Tengah|Kalimantan",-2.1667,111.45], // jk-338
+  ["Murung Raya (Puruk Cahu)|Kalimantan Tengah|Kalimantan",-0.6167,114.5833], // jk-339
+  ["Pulang Pisau|Kalimantan Tengah|Kalimantan",-2.75,114.25], // jk-340
+  ["Sukamara|Kalimantan Tengah|Kalimantan",-2.6333,111.2333], // jk-341
+  ["Seruyan (Kuala Pembuang)|Kalimantan Tengah|Kalimantan",-3.3,112.55], // jk-342
+  ["Banjarmasin|Kalimantan Selatan|Kalimantan",-3.3194,114.5908], // jk-343
+  ["Banjarbaru|Kalimantan Selatan|Kalimantan",-3.44,114.83], // jk-344
+  ["Balangan (Paringin)|Kalimantan Selatan|Kalimantan",-2.3333,115.4667], // jk-345
+  ["Banjar (Martapura)|Kalimantan Selatan|Kalimantan",-3.4167,114.85], // jk-346
+  ["Barito Kuala (Marabahan)|Kalimantan Selatan|Kalimantan",-2.9833,114.7667], // jk-347
+  ["Hulu Sungai Selatan (Kandangan)|Kalimantan Selatan|Kalimantan",-2.7833,115.2667], // jk-348
+  ["Hulu Sungai Tengah (Barabai)|Kalimantan Selatan|Kalimantan",-2.5833,115.3833], // jk-349
+  ["Hulu Sungai Utara (Amuntai)|Kalimantan Selatan|Kalimantan",-2.4167,115.25], // jk-350
+  ["Kotabaru|Kalimantan Selatan|Kalimantan",-3.25,116.2167], // jk-351
+  ["Tabalong (Tanjung)|Kalimantan Selatan|Kalimantan",-2.1833,115.3833], // jk-352
+  ["Tanah Bumbu (Batulicin)|Kalimantan Selatan|Kalimantan",-3.45,116], // jk-353
+  ["Tanah Laut (Pelaihari)|Kalimantan Selatan|Kalimantan",-3.8,114.7667], // jk-354
+  ["Tapin (Rantau)|Kalimantan Selatan|Kalimantan",-2.9333,115.15], // jk-355
+  ["Samarinda|Kalimantan Timur|Kalimantan",-0.5022,117.1536], // jk-356
+  ["Balikpapan|Kalimantan Timur|Kalimantan",-1.2654,116.8312], // jk-357
+  ["Bontang|Kalimantan Timur|Kalimantan",0.1333,117.5], // jk-358
+  ["Nusantara (IKN Sepaku)|Kalimantan Timur|Kalimantan",-0.97,116.7], // jk-359
+  ["Berau (Tanjung Redeb)|Kalimantan Timur|Kalimantan",2.15,117.5], // jk-360
+  ["Kutai Barat (Sendawar)|Kalimantan Timur|Kalimantan",-0.2333,115.7], // jk-361
+  ["Kutai Kartanegara (Tenggarong)|Kalimantan Timur|Kalimantan",-0.4167,116.9833], // jk-362
+  ["Kutai Timur (Sangatta)|Kalimantan Timur|Kalimantan",0.5,117.55], // jk-363
+  ["Mahakam Ulu (Ujoh Bilang)|Kalimantan Timur|Kalimantan",0.6333,114.85], // jk-364
+  ["Paser (Tanah Grogot)|Kalimantan Timur|Kalimantan",-1.9,116.2], // jk-365
+  ["Penajam Paser Utara (Penajam)|Kalimantan Timur|Kalimantan",-1.3333,116.75], // jk-366
+  ["Tarakan|Kalimantan Utara|Kalimantan",3.3,117.6333], // jk-367
+  ["Bulungan (Tanjung Selor)|Kalimantan Utara|Kalimantan",2.85,117.3667], // jk-368
+  ["Malinau|Kalimantan Utara|Kalimantan",3.5833,116.6333], // jk-369
+  ["Nunukan|Kalimantan Utara|Kalimantan",4.1333,117.65], // jk-370
+  ["Tana Tidung (Tideng Pale)|Kalimantan Utara|Kalimantan",3.55,117.25], // jk-371
+  ["Manado|Sulawesi Utara|Sulawesi",1.4748,124.8428], // jk-372
+  ["Bitung|Sulawesi Utara|Sulawesi",1.4451,125.1889], // jk-373
+  ["Kotamobagu|Sulawesi Utara|Sulawesi",0.7306,124.3139], // jk-374
+  ["Tomohon|Sulawesi Utara|Sulawesi",1.3289,124.8392], // jk-375
+  ["Bolaang Mongondow (Lolak)|Sulawesi Utara|Sulawesi",0.8833,124.0167], // jk-376
+  ["Bolaang Mongondow Selatan (Bolaang Uki)|Sulawesi Utara|Sulawesi",0.35,123.9], // jk-377
+  ["Bolaang Mongondow Timur (Tutuyan)|Sulawesi Utara|Sulawesi",0.7667,124.6], // jk-378
+  ["Bolaang Mongondow Utara (Boroko)|Sulawesi Utara|Sulawesi",0.9333,123.3167], // jk-379
+  ["Kepulauan Sangihe (Tahuna)|Sulawesi Utara|Sulawesi",3.6167,125.4833], // jk-380
+  ["Kepulauan Siau Tagulandang Biaro - Sitaro (Ondong)|Sulawesi Utara|Sulawesi",2.75,125.4], // jk-381
+  ["Kepulauan Talaud (Melonguane)|Sulawesi Utara|Sulawesi",4,126.7], // jk-382
+  ["Minahasa (Tondano)|Sulawesi Utara|Sulawesi",1.3,124.9167], // jk-383
+  ["Minahasa Selatan (Amurang)|Sulawesi Utara|Sulawesi",1.1833,124.5667], // jk-384
+  ["Minahasa Tenggara (Ratahan)|Sulawesi Utara|Sulawesi",1.05,124.8], // jk-385
+  ["Minahasa Utara (Airmadidi)|Sulawesi Utara|Sulawesi",1.4167,124.9833], // jk-386
+  ["Kota Gorontalo|Gorontalo|Sulawesi",0.5435,123.0568], // jk-387
+  ["Boalemo (Tilamuta)|Gorontalo|Sulawesi",0.5333,122.3333], // jk-388
+  ["Bone Bolango (Suwawa)|Gorontalo|Sulawesi",0.55,123.15], // jk-389
+  ["Gorontalo (Limboto)|Gorontalo|Sulawesi",0.6333,122.9833], // jk-390
+  ["Gorontalo Utara (Kwandang)|Gorontalo|Sulawesi",0.8333,122.9167], // jk-391
+  ["Pohuwato (Marisa)|Gorontalo|Sulawesi",0.45,121.9333], // jk-392
+  ["Palu|Sulawesi Tengah|Sulawesi",-0.8917,119.8707], // jk-393
+  ["Banggai (Luwuk)|Sulawesi Tengah|Sulawesi",-0.95,122.7833], // jk-394
+  ["Banggai Kepulauan (Salakan)|Sulawesi Tengah|Sulawesi",-1.3333,123.1667], // jk-395
+  ["Banggai Laut (Banggai)|Sulawesi Tengah|Sulawesi",-1.6,123.5], // jk-396
+  ["Buol|Sulawesi Tengah|Sulawesi",1.1667,121.4167], // jk-397
+  ["Donggala (Banawa)|Sulawesi Tengah|Sulawesi",-0.6833,119.75], // jk-398
+  ["Morowali (Bungku)|Sulawesi Tengah|Sulawesi",-2.5333,121.9667], // jk-399
+  ["Morowali Utara (Kolonodale)|Sulawesi Tengah|Sulawesi",-1.9833,121.3333], // jk-400
+  ["Parigi Moutong (Parigi)|Sulawesi Tengah|Sulawesi",-0.8,120.1833], // jk-401
+  ["Poso|Sulawesi Tengah|Sulawesi",-1.3986,120.7533], // jk-402
+  ["Sigi (Sigi Biromaru)|Sulawesi Tengah|Sulawesi",-1.0167,119.9333], // jk-403
+  ["Tojo Una-Una (Ampana)|Sulawesi Tengah|Sulawesi",-0.8667,121.5833], // jk-404
+  ["Tolitoli|Sulawesi Tengah|Sulawesi",1.05,120.8], // jk-405
+  ["Mamuju|Sulawesi Barat|Sulawesi",-2.6748,118.8888], // jk-406
+  ["Majene|Sulawesi Barat|Sulawesi",-3.5333,118.9667], // jk-407
+  ["Mamasa|Sulawesi Barat|Sulawesi",-2.9333,119.3833], // jk-408
+  ["Mamuju Tengah (Tobadak)|Sulawesi Barat|Sulawesi",-2.1,119.4], // jk-409
+  ["Pasangkayu|Sulawesi Barat|Sulawesi",-1.1833,119.3833], // jk-410
+  ["Polewali Mandar (Polewali)|Sulawesi Barat|Sulawesi",-3.4333,119.35], // jk-411
+  ["Makassar|Sulawesi Selatan|Sulawesi",-5.1477,119.4327], // jk-412
+  ["Palopo|Sulawesi Selatan|Sulawesi",-2.9944,120.1969], // jk-413
+  ["Parepare|Sulawesi Selatan|Sulawesi",-4.0133,119.6272], // jk-414
+  ["Bantaeng|Sulawesi Selatan|Sulawesi",-5.55,119.95], // jk-415
+  ["Barru|Sulawesi Selatan|Sulawesi",-4.4167,119.6833], // jk-416
+  ["Bone (Watampone)|Sulawesi Selatan|Sulawesi",-4.5386,120.3278], // jk-417
+  ["Bulukumba|Sulawesi Selatan|Sulawesi",-5.55,120.1833], // jk-418
+  ["Enrekang|Sulawesi Selatan|Sulawesi",-3.5667,119.7833], // jk-419
+  ["Gowa (Sungguminasa)|Sulawesi Selatan|Sulawesi",-5.2,119.45], // jk-420
+  ["Jeneponto (Bontosunggu)|Sulawesi Selatan|Sulawesi",-5.6833,119.7333], // jk-421
+  ["Kepulauan Selayar (Benteng)|Sulawesi Selatan|Sulawesi",-6.1167,120.4667], // jk-422
+  ["Luwu (Belopa)|Sulawesi Selatan|Sulawesi",-3.3667,120.35], // jk-423
+  ["Luwu Timur (Malili)|Sulawesi Selatan|Sulawesi",-2.6,121.1], // jk-424
+  ["Luwu Utara (Masamba)|Sulawesi Selatan|Sulawesi",-2.55,120.3167], // jk-425
+  ["Maros (Turikale)|Sulawesi Selatan|Sulawesi",-5,119.5833], // jk-426
+  ["Pangkajene dan Kepulauan - Pangkep|Sulawesi Selatan|Sulawesi",-4.8167,119.55], // jk-427
+  ["Pinrang|Sulawesi Selatan|Sulawesi",-3.7833,119.65], // jk-428
+  ["Sidenreng Rappang - Sidrap (Pangkajene)|Sulawesi Selatan|Sulawesi",-3.9333,119.8], // jk-429
+  ["Sinjai|Sulawesi Selatan|Sulawesi",-5.1333,120.25], // jk-430
+  ["Soppeng (Watansoppeng)|Sulawesi Selatan|Sulawesi",-4.35,119.8833], // jk-431
+  ["Takalar (Pattallassang)|Sulawesi Selatan|Sulawesi",-5.4167,119.45], // jk-432
+  ["Tana Toraja (Makale)|Sulawesi Selatan|Sulawesi",-3.1,119.8667], // jk-433
+  ["Toraja Utara (Rantepao)|Sulawesi Selatan|Sulawesi",-2.9667,119.9], // jk-434
+  ["Wajo (Sengkang)|Sulawesi Selatan|Sulawesi",-4.1333,120.0333], // jk-435
+  ["Kendari|Sulawesi Tenggara|Sulawesi",-3.9985,122.5126], // jk-436
+  ["Baubau|Sulawesi Tenggara|Sulawesi",-5.4633,122.6022], // jk-437
+  ["Bombana (Rumbia)|Sulawesi Tenggara|Sulawesi",-4.75,121.8333], // jk-438
+  ["Buton (Pasarwajo)|Sulawesi Tenggara|Sulawesi",-5.3167,122.85], // jk-439
+  ["Buton Selatan (Batauga)|Sulawesi Tenggara|Sulawesi",-5.5833,122.7], // jk-440
+  ["Buton Tengah (Labungkari)|Sulawesi Tenggara|Sulawesi",-5.3333,122.45], // jk-441
+  ["Buton Utara (Buranga)|Sulawesi Tenggara|Sulawesi",-4.8333,122.95], // jk-442
+  ["Kolaka|Sulawesi Tenggara|Sulawesi",-4.05,121.6], // jk-443
+  ["Kolaka Timur (Tirawuta)|Sulawesi Tenggara|Sulawesi",-4.1333,121.9], // jk-444
+  ["Kolaka Utara (Lasusua)|Sulawesi Tenggara|Sulawesi",-3.3667,121.05], // jk-445
+  ["Konawe (Unaaha)|Sulawesi Tenggara|Sulawesi",-3.8667,122.0667], // jk-446
+  ["Konawe Kepulauan (Langara)|Sulawesi Tenggara|Sulawesi",-4.0167,123.0167], // jk-447
+  ["Konawe Selatan (Andoolo)|Sulawesi Tenggara|Sulawesi",-4.3333,122.25], // jk-448
+  ["Konawe Utara (Wanggudu)|Sulawesi Tenggara|Sulawesi",-3.4833,122.1333], // jk-449
+  ["Muna (Raha)|Sulawesi Tenggara|Sulawesi",-4.85,122.7167], // jk-450
+  ["Muna Barat (Sawerigadi)|Sulawesi Tenggara|Sulawesi",-4.8333,122.4667], // jk-451
+  ["Wakatobi (Wangi-Wangi)|Sulawesi Tenggara|Sulawesi",-5.3167,123.5833], // jk-452
+  ["Ambon|Maluku|Maluku & Papua",-3.6554,128.1908], // jk-453
+  ["Tual|Maluku|Maluku & Papua",-5.6333,132.75], // jk-454
+  ["Buru (Namlea)|Maluku|Maluku & Papua",-3.25,127.1], // jk-455
+  ["Buru Selatan (Namrole)|Maluku|Maluku & Papua",-3.85,126.75], // jk-456
+  ["Kepulauan Aru (Dobo)|Maluku|Maluku & Papua",-5.7667,134.2167], // jk-457
+  ["Kepulauan Tanimbar (Saumlaki)|Maluku|Maluku & Papua",-7.9833,131.3], // jk-458
+  ["Maluku Barat Daya (Tiakur)|Maluku|Maluku & Papua",-8.1333,127.9167], // jk-459
+  ["Maluku Tengah (Masohi)|Maluku|Maluku & Papua",-3.3,128.95], // jk-460
+  ["Maluku Tenggara (Langgur)|Maluku|Maluku & Papua",-5.65,132.7333], // jk-461
+  ["Seram Bagian Barat (Piru)|Maluku|Maluku & Papua",-3.0667,128.1833], // jk-462
+  ["Seram Bagian Timur (Bula)|Maluku|Maluku & Papua",-3.1,130.5], // jk-463
+  ["Ternate|Maluku Utara|Maluku & Papua",0.7893,127.361], // jk-464
+  ["Tidore Kepulauan|Maluku Utara|Maluku & Papua",0.6833,127.4], // jk-465
+  ["Halmahera Barat (Jailolo)|Maluku Utara|Maluku & Papua",1.0667,127.4667], // jk-466
+  ["Halmahera Tengah (Weda)|Maluku Utara|Maluku & Papua",0.3333,127.8833], // jk-467
+  ["Halmahera Timur (Maba)|Maluku Utara|Maluku & Papua",0.7,128.3], // jk-468
+  ["Halmahera Selatan (Labuha)|Maluku Utara|Maluku & Papua",-0.6333,127.4833], // jk-469
+  ["Halmahera Utara (Tobelo)|Maluku Utara|Maluku & Papua",1.7333,128.0167], // jk-470
+  ["Kepulauan Sula (Sanana)|Maluku Utara|Maluku & Papua",-2.05,125.9833], // jk-471
+  ["Pulau Morotai (Daruba)|Maluku Utara|Maluku & Papua",2.05,128.2833], // jk-472
+  ["Pulau Taliabu (Bobong)|Maluku Utara|Maluku & Papua",-1.9167,124.3833], // jk-473
+  ["Jayapura|Papua|Maluku & Papua",-2.5337,140.7181], // jk-474
+  ["Kab. Jayapura (Sentani)|Papua|Maluku & Papua",-2.5667,140.5167], // jk-475
+  ["Biak Numfor|Papua|Maluku & Papua",-1.1833,136.0833], // jk-476
+  ["Keerom (Waris)|Papua|Maluku & Papua",-3.2833,140.7833], // jk-477
+  ["Kepulauan Yapen (Serui)|Papua|Maluku & Papua",-1.8667,136.2333], // jk-478
+  ["Mamberamo Raya (Burmeso)|Papua|Maluku & Papua",-2.1833,138.1667], // jk-479
+  ["Sarmi|Papua|Maluku & Papua",-1.8667,138.75], // jk-480
+  ["Supiori (Sorendiweri)|Papua|Maluku & Papua",-0.7333,135.6167], // jk-481
+  ["Waropen (Botawa)|Papua|Maluku & Papua",-2.6333,136.75], // jk-482
+  ["Manokwari|Papua Barat|Maluku & Papua",-0.8615,134.062], // jk-483
+  ["Fakfak|Papua Barat|Maluku & Papua",-2.9167,132.3], // jk-484
+  ["Kaimana|Papua Barat|Maluku & Papua",-3.6667,133.7667], // jk-485
+  ["Manokwari Selatan (Ransiki)|Papua Barat|Maluku & Papua",-1.5,134.1833], // jk-486
+  ["Pegunungan Arfak (Anggi)|Papua Barat|Maluku & Papua",-1.3667,133.9167], // jk-487
+  ["Teluk Bintuni (Bintuni)|Papua Barat|Maluku & Papua",-2.1333,133.5167], // jk-488
+  ["Teluk Wondama (Rasiei)|Papua Barat|Maluku & Papua",-2.7,134.5], // jk-489
+  ["Sorong|Papua Barat Daya|Maluku & Papua",-0.8762,131.2558], // jk-490
+  ["Kab. Sorong (Aimas)|Papua Barat Daya|Maluku & Papua",-0.9667,131.3333], // jk-491
+  ["Raja Ampat (Waisai)|Papua Barat Daya|Maluku & Papua",-0.4333,130.8167], // jk-492
+  ["Sorong Selatan (Teminabuan)|Papua Barat Daya|Maluku & Papua",-1.4833,132.0167], // jk-493
+  ["Tambrauw (Fef)|Papua Barat Daya|Maluku & Papua",-0.6333,132.4833], // jk-494
+  ["Maybrat (Kumurkek)|Papua Barat Daya|Maluku & Papua",-1.2833,132.3667], // jk-495
+  ["Merauke|Papua Selatan|Maluku & Papua",-8.4991,140.4018], // jk-496
+  ["Asmat (Agats)|Papua Selatan|Maluku & Papua",-5.5333,138.1333], // jk-497
+  ["Boven Digoel (Tanah Merah)|Papua Selatan|Maluku & Papua",-6.1,140.3], // jk-498
+  ["Mappi (Kepi)|Papua Selatan|Maluku & Papua",-6.5,139.3167], // jk-499
+  ["Nabire|Papua Tengah|Maluku & Papua",-3.3667,135.5], // jk-500
+  ["Mimika (Timika)|Papua Tengah|Maluku & Papua",-4.5467,136.8839], // jk-501
+  ["Deiyai (Tigi)|Papua Tengah|Maluku & Papua",-4.0167,136], // jk-502
+  ["Dogiyai (Kigamani)|Papua Tengah|Maluku & Papua",-4.05,135.75], // jk-503
+  ["Intan Jaya (Sugapa)|Papua Tengah|Maluku & Papua",-3.75,137.0333], // jk-504
+  ["Paniai (Enarotali)|Papua Tengah|Maluku & Papua",-3.9167,136.3667], // jk-505
+  ["Puncak (Ilaga)|Papua Tengah|Maluku & Papua",-3.9833,137.6167], // jk-506
+  ["Puncak Jaya (Kotamulia)|Papua Tengah|Maluku & Papua",-3.7333,137.95], // jk-507
+  ["Jayawijaya (Wamena)|Papua Pegunungan|Maluku & Papua",-4.0956,138.9442], // jk-508
+  ["Lanny Jaya (Tiom)|Papua Pegunungan|Maluku & Papua",-3.9,138.45], // jk-509
+  ["Mamberamo Tengah (Kobakma)|Papua Pegunungan|Maluku & Papua",-3.4,139.1], // jk-510
+  ["Nduga (Kenyam)|Papua Pegunungan|Maluku & Papua",-4.4167,138.5667], // jk-511
+  ["Pegunungan Bintang (Oksibil)|Papua Pegunungan|Maluku & Papua",-4.9,140.6333], // jk-512
+  ["Tolikara (Karubaga)|Papua Pegunungan|Maluku & Papua",-3.6167,138.65], // jk-513
+  ["Yahukimo (Dekai)|Papua Pegunungan|Maluku & Papua",-4.8333,139.5], // jk-514
+  ["Yalimo (Elelim)|Papua Pegunungan|Maluku & Papua",-3.7833,139.4], // jk-515
 ];
-
-/**
- * Daftar Lengkap Kota dan Kabupaten di Seluruh Indonesia (38 Provinsi)
- * Data sesuai stasiun BMKG & referensi wilayah administratif Indonesia
- */
-export const INDONESIA_CITIES = [
-  {
-    "name": "Banda Aceh",
-    "province": "Aceh",
-    "region": "Sumatera",
-    "lat": 5.5483,
-    "lon": 95.3238
-  },
-  {
-    "name": "Sabang",
-    "province": "Aceh",
-    "region": "Sumatera",
-    "lat": 5.8933,
-    "lon": 95.3214
-  },
-  {
-    "name": "Lhokseumawe",
-    "province": "Aceh",
-    "region": "Sumatera",
-    "lat": 5.1801,
-    "lon": 97.1407
-  },
-  {
-    "name": "Langsa",
-    "province": "Aceh",
-    "region": "Sumatera",
-    "lat": 4.4719,
-    "lon": 97.9683
-  },
-  {
-    "name": "Subulussalam",
-    "province": "Aceh",
-    "region": "Sumatera",
-    "lat": 2.75,
-    "lon": 98
-  },
-  {
-    "name": "Aceh Besar (Jantho)",
-    "province": "Aceh",
-    "region": "Sumatera",
-    "lat": 5.2858,
-    "lon": 95.59
-  },
-  {
-    "name": "Pidie (Sigli)",
-    "province": "Aceh",
-    "region": "Sumatera",
-    "lat": 5.3833,
-    "lon": 95.95
-  },
-  {
-    "name": "Pidie Jaya (Meureudu)",
-    "province": "Aceh",
-    "region": "Sumatera",
-    "lat": 5.25,
-    "lon": 96.1667
-  },
-  {
-    "name": "Bireuen",
-    "province": "Aceh",
-    "region": "Sumatera",
-    "lat": 5.2,
-    "lon": 96.7
-  },
-  {
-    "name": "Aceh Utara (Lhoksukon)",
-    "province": "Aceh",
-    "region": "Sumatera",
-    "lat": 5.0441,
-    "lon": 97.3186
-  },
-  {
-    "name": "Aceh Timur (Idi Rayeuk)",
-    "province": "Aceh",
-    "region": "Sumatera",
-    "lat": 4.9667,
-    "lon": 97.7667
-  },
-  {
-    "name": "Aceh Tamiang (Karang Baru)",
-    "province": "Aceh",
-    "region": "Sumatera",
-    "lat": 4.25,
-    "lon": 98.0333
-  },
-  {
-    "name": "Bener Meriah (Simpang Tiga Redelong)",
-    "province": "Aceh",
-    "region": "Sumatera",
-    "lat": 4.7333,
-    "lon": 96.8833
-  },
-  {
-    "name": "Aceh Tengah (Takengon)",
-    "province": "Aceh",
-    "region": "Sumatera",
-    "lat": 4.63,
-    "lon": 96.84
-  },
-  {
-    "name": "Gayo Lues (Blangkejeren)",
-    "province": "Aceh",
-    "region": "Sumatera",
-    "lat": 3.9833,
-    "lon": 97.35
-  },
-  {
-    "name": "Aceh Tenggara (Kutacane)",
-    "province": "Aceh",
-    "region": "Sumatera",
-    "lat": 3.4833,
-    "lon": 97.8167
-  },
-  {
-    "name": "Aceh Jaya (Calang)",
-    "province": "Aceh",
-    "region": "Sumatera",
-    "lat": 4.6333,
-    "lon": 95.5833
-  },
-  {
-    "name": "Aceh Barat (Meulaboh)",
-    "province": "Aceh",
-    "region": "Sumatera",
-    "lat": 4.1449,
-    "lon": 96.1285
-  },
-  {
-    "name": "Nagan Raya (Suka Makmue)",
-    "province": "Aceh",
-    "region": "Sumatera",
-    "lat": 4.1667,
-    "lon": 96.3333
-  },
-  {
-    "name": "Aceh Barat Daya (Blangpidie)",
-    "province": "Aceh",
-    "region": "Sumatera",
-    "lat": 3.75,
-    "lon": 96.8333
-  },
-  {
-    "name": "Aceh Selatan (Tapaktuan)",
-    "province": "Aceh",
-    "region": "Sumatera",
-    "lat": 3.25,
-    "lon": 97.1833
-  },
-  {
-    "name": "Aceh Singkil (Singkil)",
-    "province": "Aceh",
-    "region": "Sumatera",
-    "lat": 2.3333,
-    "lon": 97.8333
-  },
-  {
-    "name": "Simeulue (Sinabang)",
-    "province": "Aceh",
-    "region": "Sumatera",
-    "lat": 2.4833,
-    "lon": 96.3833
-  },
-  {
-    "name": "Medan",
-    "province": "Sumatera Utara",
-    "region": "Sumatera",
-    "lat": 3.5952,
-    "lon": 98.6722
-  },
-  {
-    "name": "Binjai",
-    "province": "Sumatera Utara",
-    "region": "Sumatera",
-    "lat": 3.6008,
-    "lon": 98.4854
-  },
-  {
-    "name": "Tebing Tinggi",
-    "province": "Sumatera Utara",
-    "region": "Sumatera",
-    "lat": 3.3285,
-    "lon": 99.1626
-  },
-  {
-    "name": "Pematangsiantar",
-    "province": "Sumatera Utara",
-    "region": "Sumatera",
-    "lat": 2.9592,
-    "lon": 99.0687
-  },
-  {
-    "name": "Tanjungbalai",
-    "province": "Sumatera Utara",
-    "region": "Sumatera",
-    "lat": 2.9667,
-    "lon": 99.8
-  },
-  {
-    "name": "Sibolga",
-    "province": "Sumatera Utara",
-    "region": "Sumatera",
-    "lat": 1.7426,
-    "lon": 98.7792
-  },
-  {
-    "name": "Padangsidimpuan",
-    "province": "Sumatera Utara",
-    "region": "Sumatera",
-    "lat": 1.3733,
-    "lon": 99.2731
-  },
-  {
-    "name": "Gunungsitoli",
-    "province": "Sumatera Utara",
-    "region": "Sumatera",
-    "lat": 1.2894,
-    "lon": 97.6148
-  },
-  {
-    "name": "Deli Serdang (Lubuk Pakam)",
-    "province": "Sumatera Utara",
-    "region": "Sumatera",
-    "lat": 3.5592,
-    "lon": 98.8753
-  },
-  {
-    "name": "Langkat (Stabat)",
-    "province": "Sumatera Utara",
-    "region": "Sumatera",
-    "lat": 3.75,
-    "lon": 98.45
-  },
-  {
-    "name": "Karo (Kabanjahe)",
-    "province": "Sumatera Utara",
-    "region": "Sumatera",
-    "lat": 3.1,
-    "lon": 98.4833
-  },
-  {
-    "name": "Dairi (Sidikalang)",
-    "province": "Sumatera Utara",
-    "region": "Sumatera",
-    "lat": 2.75,
-    "lon": 98.3167
-  },
-  {
-    "name": "Pakpak Bharat (Salak)",
-    "province": "Sumatera Utara",
-    "region": "Sumatera",
-    "lat": 2.5667,
-    "lon": 98.2833
-  },
-  {
-    "name": "Simalungun (Raya)",
-    "province": "Sumatera Utara",
-    "region": "Sumatera",
-    "lat": 2.9667,
-    "lon": 98.8667
-  },
-  {
-    "name": "Asahan (Kisaran)",
-    "province": "Sumatera Utara",
-    "region": "Sumatera",
-    "lat": 2.9833,
-    "lon": 99.6333
-  },
-  {
-    "name": "Batu Bara (Limapuluh)",
-    "province": "Sumatera Utara",
-    "region": "Sumatera",
-    "lat": 3.1667,
-    "lon": 99.5333
-  },
-  {
-    "name": "Labuhanbatu (Rantau Prapat)",
-    "province": "Sumatera Utara",
-    "region": "Sumatera",
-    "lat": 2.0833,
-    "lon": 99.8333
-  },
-  {
-    "name": "Labuhanbatu Utara (Aek Kanopan)",
-    "province": "Sumatera Utara",
-    "region": "Sumatera",
-    "lat": 2.5667,
-    "lon": 99.65
-  },
-  {
-    "name": "Labuhanbatu Selatan (Kota Pinang)",
-    "province": "Sumatera Utara",
-    "region": "Sumatera",
-    "lat": 1.9,
-    "lon": 100.0833
-  },
-  {
-    "name": "Tapanuli Utara (Tarutung)",
-    "province": "Sumatera Utara",
-    "region": "Sumatera",
-    "lat": 2.0167,
-    "lon": 98.9667
-  },
-  {
-    "name": "Tapanuli Tengah (Pandan)",
-    "province": "Sumatera Utara",
-    "region": "Sumatera",
-    "lat": 1.6833,
-    "lon": 98.8333
-  },
-  {
-    "name": "Tapanuli Selatan (Sipirok)",
-    "province": "Sumatera Utara",
-    "region": "Sumatera",
-    "lat": 1.6,
-    "lon": 99.2667
-  },
-  {
-    "name": "Toba (Balige)",
-    "province": "Sumatera Utara",
-    "region": "Sumatera",
-    "lat": 2.3333,
-    "lon": 99.0667
-  },
-  {
-    "name": "Samosir (Pangururan)",
-    "province": "Sumatera Utara",
-    "region": "Sumatera",
-    "lat": 2.6,
-    "lon": 98.7
-  },
-  {
-    "name": "Humbang Hasundutan (Dolok Sanggul)",
-    "province": "Sumatera Utara",
-    "region": "Sumatera",
-    "lat": 2.2667,
-    "lon": 98.75
-  },
-  {
-    "name": "Mandailing Natal (Panyabungan)",
-    "province": "Sumatera Utara",
-    "region": "Sumatera",
-    "lat": 0.8667,
-    "lon": 99.5667
-  },
-  {
-    "name": "Padang Lawas (Sibuhuan)",
-    "province": "Sumatera Utara",
-    "region": "Sumatera",
-    "lat": 1.0667,
-    "lon": 99.7833
-  },
-  {
-    "name": "Padang Lawas Utara (Gunung Tua)",
-    "province": "Sumatera Utara",
-    "region": "Sumatera",
-    "lat": 1.4833,
-    "lon": 99.6333
-  },
-  {
-    "name": "Serdang Bedagai (Sei Rampah)",
-    "province": "Sumatera Utara",
-    "region": "Sumatera",
-    "lat": 3.4833,
-    "lon": 99.15
-  },
-  {
-    "name": "Nias (Gido)",
-    "province": "Sumatera Utara",
-    "region": "Sumatera",
-    "lat": 1.1167,
-    "lon": 97.75
-  },
-  {
-    "name": "Nias Selatan (Teluk Dalam)",
-    "province": "Sumatera Utara",
-    "region": "Sumatera",
-    "lat": 0.55,
-    "lon": 97.85
-  },
-  {
-    "name": "Nias Utara (Lotu)",
-    "province": "Sumatera Utara",
-    "region": "Sumatera",
-    "lat": 1.3333,
-    "lon": 97.3167
-  },
-  {
-    "name": "Nias Barat (Lahomi)",
-    "province": "Sumatera Utara",
-    "region": "Sumatera",
-    "lat": 1.05,
-    "lon": 97.45
-  },
-  {
-    "name": "Padang",
-    "province": "Sumatera Barat",
-    "region": "Sumatera",
-    "lat": -0.9471,
-    "lon": 100.4172
-  },
-  {
-    "name": "Bukittinggi",
-    "province": "Sumatera Barat",
-    "region": "Sumatera",
-    "lat": -0.3056,
-    "lon": 100.3692
-  },
-  {
-    "name": "Payakumbuh",
-    "province": "Sumatera Barat",
-    "region": "Sumatera",
-    "lat": -0.2244,
-    "lon": 100.6309
-  },
-  {
-    "name": "Pariaman",
-    "province": "Sumatera Barat",
-    "region": "Sumatera",
-    "lat": -0.6264,
-    "lon": 100.1206
-  },
-  {
-    "name": "Solok",
-    "province": "Sumatera Barat",
-    "region": "Sumatera",
-    "lat": -0.7964,
-    "lon": 100.6558
-  },
-  {
-    "name": "Padang Panjang",
-    "province": "Sumatera Barat",
-    "region": "Sumatera",
-    "lat": -0.4639,
-    "lon": 100.3986
-  },
-  {
-    "name": "Sawahlunto",
-    "province": "Sumatera Barat",
-    "region": "Sumatera",
-    "lat": -0.6806,
-    "lon": 100.7761
-  },
-  {
-    "name": "Agam (Lubuk Basung)",
-    "province": "Sumatera Barat",
-    "region": "Sumatera",
-    "lat": -0.3,
-    "lon": 100.0333
-  },
-  {
-    "name": "Lima Puluh Kota (Sarilamak)",
-    "province": "Sumatera Barat",
-    "region": "Sumatera",
-    "lat": -0.1333,
-    "lon": 100.6667
-  },
-  {
-    "name": "Pasaman (Lubuk Sikaping)",
-    "province": "Sumatera Barat",
-    "region": "Sumatera",
-    "lat": 0.15,
-    "lon": 100.1667
-  },
-  {
-    "name": "Pasaman Barat (Simpang Empat)",
-    "province": "Sumatera Barat",
-    "region": "Sumatera",
-    "lat": 0.1,
-    "lon": 99.8
-  },
-  {
-    "name": "Tanah Datar (Batusangkar)",
-    "province": "Sumatera Barat",
-    "region": "Sumatera",
-    "lat": -0.45,
-    "lon": 100.5833
-  },
-  {
-    "name": "Padang Pariaman (Parit Malintang)",
-    "province": "Sumatera Barat",
-    "region": "Sumatera",
-    "lat": -0.6333,
-    "lon": 100.2833
-  },
-  {
-    "name": "Pesisir Selatan (Painan)",
-    "province": "Sumatera Barat",
-    "region": "Sumatera",
-    "lat": -1.35,
-    "lon": 100.5667
-  },
-  {
-    "name": "Kab. Solok (Arosuka)",
-    "province": "Sumatera Barat",
-    "region": "Sumatera",
-    "lat": -0.9333,
-    "lon": 100.6167
-  },
-  {
-    "name": "Solok Selatan (Padang Aro)",
-    "province": "Sumatera Barat",
-    "region": "Sumatera",
-    "lat": -1.4833,
-    "lon": 101.2167
-  },
-  {
-    "name": "Dharmasraya (Pulau Punjung)",
-    "province": "Sumatera Barat",
-    "region": "Sumatera",
-    "lat": -0.9833,
-    "lon": 101.6167
-  },
-  {
-    "name": "Sijunjung (Muaro Sijunjung)",
-    "province": "Sumatera Barat",
-    "region": "Sumatera",
-    "lat": -0.6833,
-    "lon": 101
-  },
-  {
-    "name": "Kepulauan Mentawai (Tuapejat)",
-    "province": "Sumatera Barat",
-    "region": "Sumatera",
-    "lat": -2.0167,
-    "lon": 99.6
-  },
-  {
-    "name": "Pekanbaru",
-    "province": "Riau",
-    "region": "Sumatera",
-    "lat": 0.5071,
-    "lon": 101.4478
-  },
-  {
-    "name": "Dumai",
-    "province": "Riau",
-    "region": "Sumatera",
-    "lat": 1.6833,
-    "lon": 101.45
-  },
-  {
-    "name": "Kampar (Bangkinang)",
-    "province": "Riau",
-    "region": "Sumatera",
-    "lat": 0.3333,
-    "lon": 101.0333
-  },
-  {
-    "name": "Siak (Siak Sri Indrapura)",
-    "province": "Riau",
-    "region": "Sumatera",
-    "lat": 0.8,
-    "lon": 102.05
-  },
-  {
-    "name": "Pelalawan (Pangkalan Kerinci)",
-    "province": "Riau",
-    "region": "Sumatera",
-    "lat": 0.4,
-    "lon": 101.85
-  },
-  {
-    "name": "Indragiri Hulu (Rengat)",
-    "province": "Riau",
-    "region": "Sumatera",
-    "lat": -0.3667,
-    "lon": 102.55
-  },
-  {
-    "name": "Indragiri Hilir (Tembilahan)",
-    "province": "Riau",
-    "region": "Sumatera",
-    "lat": -0.3167,
-    "lon": 103.15
-  },
-  {
-    "name": "Bengkalis",
-    "province": "Riau",
-    "region": "Sumatera",
-    "lat": 1.4833,
-    "lon": 102.1333
-  },
-  {
-    "name": "Rokan Hulu (Pasir Pengaraian)",
-    "province": "Riau",
-    "region": "Sumatera",
-    "lat": 0.8667,
-    "lon": 100.3167
-  },
-  {
-    "name": "Rokan Hilir (Bagansiapiapi)",
-    "province": "Riau",
-    "region": "Sumatera",
-    "lat": 2.1667,
-    "lon": 100.8167
-  },
-  {
-    "name": "Kuantan Singingi (Teluk Kuantan)",
-    "province": "Riau",
-    "region": "Sumatera",
-    "lat": -0.5333,
-    "lon": 101.5667
-  },
-  {
-    "name": "Kepulauan Meranti (Selatpanjang)",
-    "province": "Riau",
-    "region": "Sumatera",
-    "lat": 1.0167,
-    "lon": 102.7
-  },
-  {
-    "name": "Batam",
-    "province": "Kepulauan Riau",
-    "region": "Sumatera",
-    "lat": 1.1301,
-    "lon": 104.0529
-  },
-  {
-    "name": "Tanjungpinang",
-    "province": "Kepulauan Riau",
-    "region": "Sumatera",
-    "lat": 0.9167,
-    "lon": 104.45
-  },
-  {
-    "name": "Bintan (Bandar Seri Bentan)",
-    "province": "Kepulauan Riau",
-    "region": "Sumatera",
-    "lat": 1.1667,
-    "lon": 104.5833
-  },
-  {
-    "name": "Karimun (Tanjung Balai Karimun)",
-    "province": "Kepulauan Riau",
-    "region": "Sumatera",
-    "lat": 1.0833,
-    "lon": 103.4333
-  },
-  {
-    "name": "Natuna (Ranai)",
-    "province": "Kepulauan Riau",
-    "region": "Sumatera",
-    "lat": 3.95,
-    "lon": 108.3833
-  },
-  {
-    "name": "Kepulauan Anambas (Tarempa)",
-    "province": "Kepulauan Riau",
-    "region": "Sumatera",
-    "lat": 3.2167,
-    "lon": 106.2167
-  },
-  {
-    "name": "Lingga (Daik)",
-    "province": "Kepulauan Riau",
-    "region": "Sumatera",
-    "lat": -0.2,
-    "lon": 104.6167
-  },
-  {
-    "name": "Kota Jambi",
-    "province": "Jambi",
-    "region": "Sumatera",
-    "lat": -1.6101,
-    "lon": 103.6131
-  },
-  {
-    "name": "Sungai Penuh",
-    "province": "Jambi",
-    "region": "Sumatera",
-    "lat": -2.0667,
-    "lon": 101.4
-  },
-  {
-    "name": "Batanghari (Muara Bulian)",
-    "province": "Jambi",
-    "region": "Sumatera",
-    "lat": -1.7167,
-    "lon": 103.2833
-  },
-  {
-    "name": "Bungo (Muara Bungo)",
-    "province": "Jambi",
-    "region": "Sumatera",
-    "lat": -1.5,
-    "lon": 102.1167
-  },
-  {
-    "name": "Kerinci (Siulak)",
-    "province": "Jambi",
-    "region": "Sumatera",
-    "lat": -1.9833,
-    "lon": 101.2667
-  },
-  {
-    "name": "Merangin (Bangko)",
-    "province": "Jambi",
-    "region": "Sumatera",
-    "lat": -2.0667,
-    "lon": 102.2667
-  },
-  {
-    "name": "Muaro Jambi (Sengeti)",
-    "province": "Jambi",
-    "region": "Sumatera",
-    "lat": -1.4167,
-    "lon": 103.65
-  },
-  {
-    "name": "Sarolangun",
-    "province": "Jambi",
-    "region": "Sumatera",
-    "lat": -2.3,
-    "lon": 102.65
-  },
-  {
-    "name": "Tanjung Jabung Barat (Kuala Tungkal)",
-    "province": "Jambi",
-    "region": "Sumatera",
-    "lat": -0.8167,
-    "lon": 103.4667
-  },
-  {
-    "name": "Tanjung Jabung Timur (Muara Sabak)",
-    "province": "Jambi",
-    "region": "Sumatera",
-    "lat": -1.1333,
-    "lon": 103.8667
-  },
-  {
-    "name": "Tebo (Muara Tebo)",
-    "province": "Jambi",
-    "region": "Sumatera",
-    "lat": -1.4833,
-    "lon": 102.4
-  },
-  {
-    "name": "Kota Bengkulu",
-    "province": "Bengkulu",
-    "region": "Sumatera",
-    "lat": -3.8004,
-    "lon": 102.2655
-  },
-  {
-    "name": "Bengkulu Selatan (Manna)",
-    "province": "Bengkulu",
-    "region": "Sumatera",
-    "lat": -4.4667,
-    "lon": 102.9
-  },
-  {
-    "name": "Bengkulu Tengah (Karang Tinggi)",
-    "province": "Bengkulu",
-    "region": "Sumatera",
-    "lat": -3.75,
-    "lon": 102.4333
-  },
-  {
-    "name": "Bengkulu Utara (Arga Makmur)",
-    "province": "Bengkulu",
-    "region": "Sumatera",
-    "lat": -3.4333,
-    "lon": 102.1833
-  },
-  {
-    "name": "Kaur (Bintuhan)",
-    "province": "Bengkulu",
-    "region": "Sumatera",
-    "lat": -4.75,
-    "lon": 103.35
-  },
-  {
-    "name": "Kepahiang",
-    "province": "Bengkulu",
-    "region": "Sumatera",
-    "lat": -3.65,
-    "lon": 102.5833
-  },
-  {
-    "name": "Lebong (Tubei)",
-    "province": "Bengkulu",
-    "region": "Sumatera",
-    "lat": -3.15,
-    "lon": 102.2833
-  },
-  {
-    "name": "Mukomuko",
-    "province": "Bengkulu",
-    "region": "Sumatera",
-    "lat": -2.5833,
-    "lon": 101.1167
-  },
-  {
-    "name": "Rejang Lebong (Curup)",
-    "province": "Bengkulu",
-    "region": "Sumatera",
-    "lat": -3.4667,
-    "lon": 102.5333
-  },
-  {
-    "name": "Seluma (Tais)",
-    "province": "Bengkulu",
-    "region": "Sumatera",
-    "lat": -4.0833,
-    "lon": 102.55
-  },
-  {
-    "name": "Palembang",
-    "province": "Sumatera Selatan",
-    "region": "Sumatera",
-    "lat": -2.9761,
-    "lon": 104.7754
-  },
-  {
-    "name": "Prabumulih",
-    "province": "Sumatera Selatan",
-    "region": "Sumatera",
-    "lat": -3.4316,
-    "lon": 104.2344
-  },
-  {
-    "name": "Pagar Alam",
-    "province": "Sumatera Selatan",
-    "region": "Sumatera",
-    "lat": -4.0278,
-    "lon": 103.2667
-  },
-  {
-    "name": "Lubuklinggau",
-    "province": "Sumatera Selatan",
-    "region": "Sumatera",
-    "lat": -3.2958,
-    "lon": 102.8617
-  },
-  {
-    "name": "Banyuasin (Pangkalan Balai)",
-    "province": "Sumatera Selatan",
-    "region": "Sumatera",
-    "lat": -2.8833,
-    "lon": 104.3833
-  },
-  {
-    "name": "Empat Lawang (Tebing Tinggi)",
-    "province": "Sumatera Selatan",
-    "region": "Sumatera",
-    "lat": -3.6167,
-    "lon": 103.0833
-  },
-  {
-    "name": "Lahat",
-    "province": "Sumatera Selatan",
-    "region": "Sumatera",
-    "lat": -3.7833,
-    "lon": 103.5333
-  },
-  {
-    "name": "Muara Enim",
-    "province": "Sumatera Selatan",
-    "region": "Sumatera",
-    "lat": -3.65,
-    "lon": 103.7667
-  },
-  {
-    "name": "Musi Banyuasin (Sekayu)",
-    "province": "Sumatera Selatan",
-    "region": "Sumatera",
-    "lat": -2.8833,
-    "lon": 103.8333
-  },
-  {
-    "name": "Musi Rawas (Muara Beliti)",
-    "province": "Sumatera Selatan",
-    "region": "Sumatera",
-    "lat": -3.25,
-    "lon": 103.0333
-  },
-  {
-    "name": "Musi Rawas Utara (Rupit)",
-    "province": "Sumatera Selatan",
-    "region": "Sumatera",
-    "lat": -2.7167,
-    "lon": 102.8667
-  },
-  {
-    "name": "Ogan Ilir (Indralaya)",
-    "province": "Sumatera Selatan",
-    "region": "Sumatera",
-    "lat": -3.2333,
-    "lon": 104.65
-  },
-  {
-    "name": "Ogan Komering Ilir (Kayu Agung)",
-    "province": "Sumatera Selatan",
-    "region": "Sumatera",
-    "lat": -3.4,
-    "lon": 104.8333
-  },
-  {
-    "name": "Ogan Komering Ulu (Baturaja)",
-    "province": "Sumatera Selatan",
-    "region": "Sumatera",
-    "lat": -4.1333,
-    "lon": 104.1667
-  },
-  {
-    "name": "OKU Selatan (Muaradua)",
-    "province": "Sumatera Selatan",
-    "region": "Sumatera",
-    "lat": -4.5167,
-    "lon": 104.05
-  },
-  {
-    "name": "OKU Timur (Martapura)",
-    "province": "Sumatera Selatan",
-    "region": "Sumatera",
-    "lat": -4.3167,
-    "lon": 104.35
-  },
-  {
-    "name": "Penukal Abab Lematang Ilir - PALI (Talang Ubi)",
-    "province": "Sumatera Selatan",
-    "region": "Sumatera",
-    "lat": -3.2833,
-    "lon": 103.85
-  },
-  {
-    "name": "Pangkalpinang",
-    "province": "Kepulauan Bangka Belitung",
-    "region": "Sumatera",
-    "lat": -2.1333,
-    "lon": 106.1167
-  },
-  {
-    "name": "Bangka (Sungailiat)",
-    "province": "Kepulauan Bangka Belitung",
-    "region": "Sumatera",
-    "lat": -1.8667,
-    "lon": 106.1167
-  },
-  {
-    "name": "Bangka Barat (Muntok)",
-    "province": "Kepulauan Bangka Belitung",
-    "region": "Sumatera",
-    "lat": -2.0667,
-    "lon": 105.1667
-  },
-  {
-    "name": "Bangka Tengah (Koba)",
-    "province": "Kepulauan Bangka Belitung",
-    "region": "Sumatera",
-    "lat": -2.4833,
-    "lon": 106.4
-  },
-  {
-    "name": "Bangka Selatan (Toboali)",
-    "province": "Kepulauan Bangka Belitung",
-    "region": "Sumatera",
-    "lat": -3.0167,
-    "lon": 106.45
-  },
-  {
-    "name": "Belitung (Tanjung Pandan)",
-    "province": "Kepulauan Bangka Belitung",
-    "region": "Sumatera",
-    "lat": -2.7333,
-    "lon": 107.6333
-  },
-  {
-    "name": "Belitung Timur (Manggar)",
-    "province": "Kepulauan Bangka Belitung",
-    "region": "Sumatera",
-    "lat": -2.8833,
-    "lon": 108.2667
-  },
-  {
-    "name": "Bandar Lampung",
-    "province": "Lampung",
-    "region": "Sumatera",
-    "lat": -5.45,
-    "lon": 105.2667
-  },
-  {
-    "name": "Metro",
-    "province": "Lampung",
-    "region": "Sumatera",
-    "lat": -5.1139,
-    "lon": 105.3067
-  },
-  {
-    "name": "Lampung Selatan (Kalianda)",
-    "province": "Lampung",
-    "region": "Sumatera",
-    "lat": -5.7333,
-    "lon": 105.5833
-  },
-  {
-    "name": "Lampung Tengah (Gunung Sugih)",
-    "province": "Lampung",
-    "region": "Sumatera",
-    "lat": -4.95,
-    "lon": 105.2167
-  },
-  {
-    "name": "Lampung Utara (Kotabumi)",
-    "province": "Lampung",
-    "region": "Sumatera",
-    "lat": -4.8333,
-    "lon": 104.8833
-  },
-  {
-    "name": "Lampung Barat (Liwa)",
-    "province": "Lampung",
-    "region": "Sumatera",
-    "lat": -5.0333,
-    "lon": 104.0667
-  },
-  {
-    "name": "Lampung Timur (Sukadana)",
-    "province": "Lampung",
-    "region": "Sumatera",
-    "lat": -5.1,
-    "lon": 105.55
-  },
-  {
-    "name": "Pesawaran (Gedong Tataan)",
-    "province": "Lampung",
-    "region": "Sumatera",
-    "lat": -5.4333,
-    "lon": 105.1
-  },
-  {
-    "name": "Pringsewu",
-    "province": "Lampung",
-    "region": "Sumatera",
-    "lat": -5.3583,
-    "lon": 104.975
-  },
-  {
-    "name": "Tanggamus (Kota Agung)",
-    "province": "Lampung",
-    "region": "Sumatera",
-    "lat": -5.5,
-    "lon": 104.6167
-  },
-  {
-    "name": "Tulang Bawang (Menggala)",
-    "province": "Lampung",
-    "region": "Sumatera",
-    "lat": -4.55,
-    "lon": 105.25
-  },
-  {
-    "name": "Tulang Bawang Barat (Panaragan Jaya)",
-    "province": "Lampung",
-    "region": "Sumatera",
-    "lat": -4.4333,
-    "lon": 105.05
-  },
-  {
-    "name": "Way Kanan (Blambangan Umpu)",
-    "province": "Lampung",
-    "region": "Sumatera",
-    "lat": -4.5,
-    "lon": 104.5333
-  },
-  {
-    "name": "Mesuji (Wiralaga Mulya)",
-    "province": "Lampung",
-    "region": "Sumatera",
-    "lat": -4.0167,
-    "lon": 105.4
-  },
-  {
-    "name": "Pesisir Barat (Krui)",
-    "province": "Lampung",
-    "region": "Sumatera",
-    "lat": -5.1833,
-    "lon": 103.9333
-  },
-  {
-    "name": "Jakarta Pusat",
-    "province": "DKI Jakarta",
-    "region": "Jawa",
-    "lat": -6.1805,
-    "lon": 106.8284
-  },
-  {
-    "name": "Jakarta Selatan",
-    "province": "DKI Jakarta",
-    "region": "Jawa",
-    "lat": -6.2615,
-    "lon": 106.8106
-  },
-  {
-    "name": "Jakarta Timur",
-    "province": "DKI Jakarta",
-    "region": "Jawa",
-    "lat": -6.225,
-    "lon": 106.9004
-  },
-  {
-    "name": "Jakarta Barat",
-    "province": "DKI Jakarta",
-    "region": "Jawa",
-    "lat": -6.1683,
-    "lon": 106.7589
-  },
-  {
-    "name": "Jakarta Utara",
-    "province": "DKI Jakarta",
-    "region": "Jawa",
-    "lat": -6.1214,
-    "lon": 106.7741
-  },
-  {
-    "name": "Kepulauan Seribu (Pulau Pramuka)",
-    "province": "DKI Jakarta",
-    "region": "Jawa",
-    "lat": -5.7472,
-    "lon": 106.6139
-  },
-  {
-    "name": "Serang",
-    "province": "Banten",
-    "region": "Jawa",
-    "lat": -6.12,
-    "lon": 106.1503
-  },
-  {
-    "name": "Cilegon",
-    "province": "Banten",
-    "region": "Jawa",
-    "lat": -6.0174,
-    "lon": 106.0538
-  },
-  {
-    "name": "Tangerang",
-    "province": "Banten",
-    "region": "Jawa",
-    "lat": -6.1783,
-    "lon": 106.6319
-  },
-  {
-    "name": "Tangerang Selatan (BSD/Serpong)",
-    "province": "Banten",
-    "region": "Jawa",
-    "lat": -6.2886,
-    "lon": 106.7179
-  },
-  {
-    "name": "Kab. Tangerang (Tigaraksa)",
-    "province": "Banten",
-    "region": "Jawa",
-    "lat": -6.2611,
-    "lon": 106.48
-  },
-  {
-    "name": "Kab. Serang (Ciruas)",
-    "province": "Banten",
-    "region": "Jawa",
-    "lat": -6.1333,
-    "lon": 106.2167
-  },
-  {
-    "name": "Lebak (Rangkasbitung)",
-    "province": "Banten",
-    "region": "Jawa",
-    "lat": -6.35,
-    "lon": 106.25
-  },
-  {
-    "name": "Pandeglang",
-    "province": "Banten",
-    "region": "Jawa",
-    "lat": -6.3083,
-    "lon": 106.1067
-  },
-  {
-    "name": "Bandung",
-    "province": "Jawa Barat",
-    "region": "Jawa",
-    "lat": -6.9175,
-    "lon": 107.6191
-  },
-  {
-    "name": "Bekasi",
-    "province": "Jawa Barat",
-    "region": "Jawa",
-    "lat": -6.2383,
-    "lon": 106.9756
-  },
-  {
-    "name": "Bogor",
-    "province": "Jawa Barat",
-    "region": "Jawa",
-    "lat": -6.595,
-    "lon": 106.8167
-  },
-  {
-    "name": "Depok",
-    "province": "Jawa Barat",
-    "region": "Jawa",
-    "lat": -6.4025,
-    "lon": 106.7942
-  },
-  {
-    "name": "Cimahi",
-    "province": "Jawa Barat",
-    "region": "Jawa",
-    "lat": -6.8722,
-    "lon": 107.5422
-  },
-  {
-    "name": "Cirebon",
-    "province": "Jawa Barat",
-    "region": "Jawa",
-    "lat": -6.732,
-    "lon": 108.5523
-  },
-  {
-    "name": "Sukabumi",
-    "province": "Jawa Barat",
-    "region": "Jawa",
-    "lat": -6.9277,
-    "lon": 106.9297
-  },
-  {
-    "name": "Tasikmalaya",
-    "province": "Jawa Barat",
-    "region": "Jawa",
-    "lat": -7.3274,
-    "lon": 108.2207
-  },
-  {
-    "name": "Banjar",
-    "province": "Jawa Barat",
-    "region": "Jawa",
-    "lat": -7.3711,
-    "lon": 108.535
-  },
-  {
-    "name": "Kab. Bandung (Soreang)",
-    "province": "Jawa Barat",
-    "region": "Jawa",
-    "lat": -7.0314,
-    "lon": 107.5186
-  },
-  {
-    "name": "Bandung Barat (Ngamprah)",
-    "province": "Jawa Barat",
-    "region": "Jawa",
-    "lat": -6.84,
-    "lon": 107.5
-  },
-  {
-    "name": "Kab. Bekasi (Cikarang)",
-    "province": "Jawa Barat",
-    "region": "Jawa",
-    "lat": -6.3,
-    "lon": 107.1667
-  },
-  {
-    "name": "Kab. Bogor (Cibinong)",
-    "province": "Jawa Barat",
-    "region": "Jawa",
-    "lat": -6.48,
-    "lon": 106.85
-  },
-  {
-    "name": "Ciamis",
-    "province": "Jawa Barat",
-    "region": "Jawa",
-    "lat": -7.325,
-    "lon": 108.35
-  },
-  {
-    "name": "Cianjur",
-    "province": "Jawa Barat",
-    "region": "Jawa",
-    "lat": -6.8222,
-    "lon": 107.1394
-  },
-  {
-    "name": "Kab. Cirebon (Sumber)",
-    "province": "Jawa Barat",
-    "region": "Jawa",
-    "lat": -6.7667,
-    "lon": 108.4833
-  },
-  {
-    "name": "Garut (Tarogong)",
-    "province": "Jawa Barat",
-    "region": "Jawa",
-    "lat": -7.2167,
-    "lon": 107.9
-  },
-  {
-    "name": "Indramayu",
-    "province": "Jawa Barat",
-    "region": "Jawa",
-    "lat": -6.3264,
-    "lon": 108.32
-  },
-  {
-    "name": "Karawang",
-    "province": "Jawa Barat",
-    "region": "Jawa",
-    "lat": -6.3072,
-    "lon": 107.3089
-  },
-  {
-    "name": "Kuningan",
-    "province": "Jawa Barat",
-    "region": "Jawa",
-    "lat": -6.9767,
-    "lon": 108.4833
-  },
-  {
-    "name": "Majalengka",
-    "province": "Jawa Barat",
-    "region": "Jawa",
-    "lat": -6.8361,
-    "lon": 108.2278
-  },
-  {
-    "name": "Pangandaran (Parigi)",
-    "province": "Jawa Barat",
-    "region": "Jawa",
-    "lat": -7.7,
-    "lon": 108.4833
-  },
-  {
-    "name": "Purwakarta",
-    "province": "Jawa Barat",
-    "region": "Jawa",
-    "lat": -6.5569,
-    "lon": 107.4433
-  },
-  {
-    "name": "Subang",
-    "province": "Jawa Barat",
-    "region": "Jawa",
-    "lat": -6.5714,
-    "lon": 107.76
-  },
-  {
-    "name": "Kab. Sukabumi (Palabuhanratu)",
-    "province": "Jawa Barat",
-    "region": "Jawa",
-    "lat": -6.9833,
-    "lon": 106.55
-  },
-  {
-    "name": "Sumedang",
-    "province": "Jawa Barat",
-    "region": "Jawa",
-    "lat": -6.8586,
-    "lon": 107.9267
-  },
-  {
-    "name": "Kab. Tasikmalaya (Singaparna)",
-    "province": "Jawa Barat",
-    "region": "Jawa",
-    "lat": -7.35,
-    "lon": 108.1167
-  },
-  {
-    "name": "Semarang",
-    "province": "Jawa Tengah",
-    "region": "Jawa",
-    "lat": -6.9667,
-    "lon": 110.4167
-  },
-  {
-    "name": "Surakarta (Solo)",
-    "province": "Jawa Tengah",
-    "region": "Jawa",
-    "lat": -7.5755,
-    "lon": 110.8243
-  },
-  {
-    "name": "Magelang",
-    "province": "Jawa Tengah",
-    "region": "Jawa",
-    "lat": -7.4706,
-    "lon": 110.2178
-  },
-  {
-    "name": "Pekalongan",
-    "province": "Jawa Tengah",
-    "region": "Jawa",
-    "lat": -6.8886,
-    "lon": 109.6753
-  },
-  {
-    "name": "Salatiga",
-    "province": "Jawa Tengah",
-    "region": "Jawa",
-    "lat": -7.3306,
-    "lon": 110.5083
-  },
-  {
-    "name": "Tegal",
-    "province": "Jawa Tengah",
-    "region": "Jawa",
-    "lat": -6.8694,
-    "lon": 109.1403
-  },
-  {
-    "name": "Banjarnegara",
-    "province": "Jawa Tengah",
-    "region": "Jawa",
-    "lat": -7.3972,
-    "lon": 109.6967
-  },
-  {
-    "name": "Banyumas (Purwokerto)",
-    "province": "Jawa Tengah",
-    "region": "Jawa",
-    "lat": -7.4244,
-    "lon": 109.23
-  },
-  {
-    "name": "Batang",
-    "province": "Jawa Tengah",
-    "region": "Jawa",
-    "lat": -6.9083,
-    "lon": 109.7333
-  },
-  {
-    "name": "Blora",
-    "province": "Jawa Tengah",
-    "region": "Jawa",
-    "lat": -6.97,
-    "lon": 111.4183
-  },
-  {
-    "name": "Boyolali",
-    "province": "Jawa Tengah",
-    "region": "Jawa",
-    "lat": -7.5333,
-    "lon": 110.5967
-  },
-  {
-    "name": "Brebes",
-    "province": "Jawa Tengah",
-    "region": "Jawa",
-    "lat": -6.8708,
-    "lon": 109.0431
-  },
-  {
-    "name": "Cilacap",
-    "province": "Jawa Tengah",
-    "region": "Jawa",
-    "lat": -7.7186,
-    "lon": 109.0153
-  },
-  {
-    "name": "Demak",
-    "province": "Jawa Tengah",
-    "region": "Jawa",
-    "lat": -6.8944,
-    "lon": 110.6389
-  },
-  {
-    "name": "Grobogan (Purwodadi)",
-    "province": "Jawa Tengah",
-    "region": "Jawa",
-    "lat": -7.0867,
-    "lon": 110.9167
-  },
-  {
-    "name": "Jepara",
-    "province": "Jawa Tengah",
-    "region": "Jawa",
-    "lat": -6.5917,
-    "lon": 110.6694
-  },
-  {
-    "name": "Karanganyar",
-    "province": "Jawa Tengah",
-    "region": "Jawa",
-    "lat": -7.5967,
-    "lon": 110.9517
-  },
-  {
-    "name": "Kebumen",
-    "province": "Jawa Tengah",
-    "region": "Jawa",
-    "lat": -7.6717,
-    "lon": 109.6583
-  },
-  {
-    "name": "Kendal",
-    "province": "Jawa Tengah",
-    "region": "Jawa",
-    "lat": -6.92,
-    "lon": 110.2039
-  },
-  {
-    "name": "Klaten",
-    "province": "Jawa Tengah",
-    "region": "Jawa",
-    "lat": -7.7036,
-    "lon": 110.6033
-  },
-  {
-    "name": "Kudus",
-    "province": "Jawa Tengah",
-    "region": "Jawa",
-    "lat": -6.8047,
-    "lon": 110.8406
-  },
-  {
-    "name": "Pati",
-    "province": "Jawa Tengah",
-    "region": "Jawa",
-    "lat": -6.7558,
-    "lon": 111.0378
-  },
-  {
-    "name": "Pemalang",
-    "province": "Jawa Tengah",
-    "region": "Jawa",
-    "lat": -6.8917,
-    "lon": 109.3806
-  },
-  {
-    "name": "Purbalingga",
-    "province": "Jawa Tengah",
-    "region": "Jawa",
-    "lat": -7.3889,
-    "lon": 109.3639
-  },
-  {
-    "name": "Purworejo",
-    "province": "Jawa Tengah",
-    "region": "Jawa",
-    "lat": -7.7167,
-    "lon": 110.0167
-  },
-  {
-    "name": "Rembang",
-    "province": "Jawa Tengah",
-    "region": "Jawa",
-    "lat": -6.7083,
-    "lon": 111.3417
-  },
-  {
-    "name": "Kab. Semarang (Ungaran)",
-    "province": "Jawa Tengah",
-    "region": "Jawa",
-    "lat": -7.1394,
-    "lon": 110.4039
-  },
-  {
-    "name": "Sragen",
-    "province": "Jawa Tengah",
-    "region": "Jawa",
-    "lat": -7.4267,
-    "lon": 111.0217
-  },
-  {
-    "name": "Sukoharjo",
-    "province": "Jawa Tengah",
-    "region": "Jawa",
-    "lat": -7.6833,
-    "lon": 110.8333
-  },
-  {
-    "name": "Kab. Tegal (Slawi)",
-    "province": "Jawa Tengah",
-    "region": "Jawa",
-    "lat": -6.9833,
-    "lon": 109.1333
-  },
-  {
-    "name": "Temanggung",
-    "province": "Jawa Tengah",
-    "region": "Jawa",
-    "lat": -7.3167,
-    "lon": 110.1767
-  },
-  {
-    "name": "Wonogiri",
-    "province": "Jawa Tengah",
-    "region": "Jawa",
-    "lat": -7.8167,
-    "lon": 110.9267
-  },
-  {
-    "name": "Wonosobo",
-    "province": "Jawa Tengah",
-    "region": "Jawa",
-    "lat": -7.3617,
-    "lon": 109.9
-  },
-  {
-    "name": "Kab. Magelang (Mungkid)",
-    "province": "Jawa Tengah",
-    "region": "Jawa",
-    "lat": -7.5833,
-    "lon": 110.2333
-  },
-  {
-    "name": "Kab. Pekalongan (Kajen)",
-    "province": "Jawa Tengah",
-    "region": "Jawa",
-    "lat": -7.0333,
-    "lon": 109.6
-  },
-  {
-    "name": "Yogyakarta",
-    "province": "DI Yogyakarta",
-    "region": "Jawa",
-    "lat": -7.7956,
-    "lon": 110.3695
-  },
-  {
-    "name": "Sleman",
-    "province": "DI Yogyakarta",
-    "region": "Jawa",
-    "lat": -7.7167,
-    "lon": 110.3556
-  },
-  {
-    "name": "Bantul",
-    "province": "DI Yogyakarta",
-    "region": "Jawa",
-    "lat": -7.8894,
-    "lon": 110.3289
-  },
-  {
-    "name": "Gunungkidul (Wonosari)",
-    "province": "DI Yogyakarta",
-    "region": "Jawa",
-    "lat": -7.9658,
-    "lon": 110.6019
-  },
-  {
-    "name": "Kulon Progo (Wates)",
-    "province": "DI Yogyakarta",
-    "region": "Jawa",
-    "lat": -7.8572,
-    "lon": 110.1608
-  },
-  {
-    "name": "Surabaya",
-    "province": "Jawa Timur",
-    "region": "Jawa",
-    "lat": -7.2575,
-    "lon": 112.7521
-  },
-  {
-    "name": "Malang",
-    "province": "Jawa Timur",
-    "region": "Jawa",
-    "lat": -7.9797,
-    "lon": 112.6304
-  },
-  {
-    "name": "Batu",
-    "province": "Jawa Timur",
-    "region": "Jawa",
-    "lat": -7.8711,
-    "lon": 112.5272
-  },
-  {
-    "name": "Kediri",
-    "province": "Jawa Timur",
-    "region": "Jawa",
-    "lat": -7.8167,
-    "lon": 112.0167
-  },
-  {
-    "name": "Blitar",
-    "province": "Jawa Timur",
-    "region": "Jawa",
-    "lat": -8.0983,
-    "lon": 112.1681
-  },
-  {
-    "name": "Madiun",
-    "province": "Jawa Timur",
-    "region": "Jawa",
-    "lat": -7.6298,
-    "lon": 111.5239
-  },
-  {
-    "name": "Mojokerto",
-    "province": "Jawa Timur",
-    "region": "Jawa",
-    "lat": -7.4722,
-    "lon": 112.4339
-  },
-  {
-    "name": "Pasuruan",
-    "province": "Jawa Timur",
-    "region": "Jawa",
-    "lat": -7.6469,
-    "lon": 112.9078
-  },
-  {
-    "name": "Probolinggo",
-    "province": "Jawa Timur",
-    "region": "Jawa",
-    "lat": -7.7544,
-    "lon": 113.2158
-  },
-  {
-    "name": "Bangkalan",
-    "province": "Jawa Timur",
-    "region": "Jawa",
-    "lat": -7.0333,
-    "lon": 112.75
-  },
-  {
-    "name": "Banyuwangi",
-    "province": "Jawa Timur",
-    "region": "Jawa",
-    "lat": -8.2192,
-    "lon": 114.3692
-  },
-  {
-    "name": "Bojonegoro",
-    "province": "Jawa Timur",
-    "region": "Jawa",
-    "lat": -7.15,
-    "lon": 111.8833
-  },
-  {
-    "name": "Bondowoso",
-    "province": "Jawa Timur",
-    "region": "Jawa",
-    "lat": -7.9139,
-    "lon": 113.8214
-  },
-  {
-    "name": "Gresik",
-    "province": "Jawa Timur",
-    "region": "Jawa",
-    "lat": -7.1564,
-    "lon": 112.6558
-  },
-  {
-    "name": "Jember",
-    "province": "Jawa Timur",
-    "region": "Jawa",
-    "lat": -8.1725,
-    "lon": 113.7
-  },
-  {
-    "name": "Jombang",
-    "province": "Jawa Timur",
-    "region": "Jawa",
-    "lat": -7.5461,
-    "lon": 112.2331
-  },
-  {
-    "name": "Lamongan",
-    "province": "Jawa Timur",
-    "region": "Jawa",
-    "lat": -7.1194,
-    "lon": 112.4139
-  },
-  {
-    "name": "Lumajang",
-    "province": "Jawa Timur",
-    "region": "Jawa",
-    "lat": -8.1333,
-    "lon": 113.2167
-  },
-  {
-    "name": "Magetan",
-    "province": "Jawa Timur",
-    "region": "Jawa",
-    "lat": -7.6539,
-    "lon": 111.3283
-  },
-  {
-    "name": "Nganjuk",
-    "province": "Jawa Timur",
-    "region": "Jawa",
-    "lat": -7.6039,
-    "lon": 111.9039
-  },
-  {
-    "name": "Ngawi",
-    "province": "Jawa Timur",
-    "region": "Jawa",
-    "lat": -7.4039,
-    "lon": 111.4456
-  },
-  {
-    "name": "Pacitan",
-    "province": "Jawa Timur",
-    "region": "Jawa",
-    "lat": -8.2047,
-    "lon": 111.0928
-  },
-  {
-    "name": "Pamekasan",
-    "province": "Jawa Timur",
-    "region": "Jawa",
-    "lat": -7.1608,
-    "lon": 113.4739
-  },
-  {
-    "name": "Ponorogo",
-    "province": "Jawa Timur",
-    "region": "Jawa",
-    "lat": -7.8683,
-    "lon": 111.4628
-  },
-  {
-    "name": "Sampang",
-    "province": "Jawa Timur",
-    "region": "Jawa",
-    "lat": -7.1878,
-    "lon": 113.2394
-  },
-  {
-    "name": "Sidoarjo",
-    "province": "Jawa Timur",
-    "region": "Jawa",
-    "lat": -7.4478,
-    "lon": 112.7183
-  },
-  {
-    "name": "Situbondo",
-    "province": "Jawa Timur",
-    "region": "Jawa",
-    "lat": -7.7064,
-    "lon": 114.0044
-  },
-  {
-    "name": "Sumenep",
-    "province": "Jawa Timur",
-    "region": "Jawa",
-    "lat": -7.0167,
-    "lon": 113.8667
-  },
-  {
-    "name": "Trenggalek",
-    "province": "Jawa Timur",
-    "region": "Jawa",
-    "lat": -8.05,
-    "lon": 111.7167
-  },
-  {
-    "name": "Tuban",
-    "province": "Jawa Timur",
-    "region": "Jawa",
-    "lat": -6.8978,
-    "lon": 112.065
-  },
-  {
-    "name": "Tulungagung",
-    "province": "Jawa Timur",
-    "region": "Jawa",
-    "lat": -8.0667,
-    "lon": 111.9
-  },
-  {
-    "name": "Kab. Blitar (Kanigoro)",
-    "province": "Jawa Timur",
-    "region": "Jawa",
-    "lat": -8.1333,
-    "lon": 112.2167
-  },
-  {
-    "name": "Kab. Kediri (Ngasem/Pare)",
-    "province": "Jawa Timur",
-    "region": "Jawa",
-    "lat": -7.7667,
-    "lon": 112.1833
-  },
-  {
-    "name": "Kab. Madiun (Caruban)",
-    "province": "Jawa Timur",
-    "region": "Jawa",
-    "lat": -7.55,
-    "lon": 111.65
-  },
-  {
-    "name": "Kab. Malang (Kepanjen)",
-    "province": "Jawa Timur",
-    "region": "Jawa",
-    "lat": -8.1333,
-    "lon": 112.5667
-  },
-  {
-    "name": "Kab. Mojokerto (Mojosari)",
-    "province": "Jawa Timur",
-    "region": "Jawa",
-    "lat": -7.5167,
-    "lon": 112.55
-  },
-  {
-    "name": "Kab. Pasuruan (Bangil)",
-    "province": "Jawa Timur",
-    "region": "Jawa",
-    "lat": -7.5833,
-    "lon": 112.8
-  },
-  {
-    "name": "Kab. Probolinggo (Kraksaan)",
-    "province": "Jawa Timur",
-    "region": "Jawa",
-    "lat": -7.7667,
-    "lon": 113.4333
-  },
-  {
-    "name": "Denpasar",
-    "province": "Bali",
-    "region": "Bali & Nusa Tenggara",
-    "lat": -8.6705,
-    "lon": 115.2126
-  },
-  {
-    "name": "Badung (Kuta / Mangupura)",
-    "province": "Bali",
-    "region": "Bali & Nusa Tenggara",
-    "lat": -8.5833,
-    "lon": 115.1833
-  },
-  {
-    "name": "Bangli",
-    "province": "Bali",
-    "region": "Bali & Nusa Tenggara",
-    "lat": -8.4542,
-    "lon": 115.355
-  },
-  {
-    "name": "Buleleng (Singaraja)",
-    "province": "Bali",
-    "region": "Bali & Nusa Tenggara",
-    "lat": -8.112,
-    "lon": 115.0882
-  },
-  {
-    "name": "Gianyar (Ubud)",
-    "province": "Bali",
-    "region": "Bali & Nusa Tenggara",
-    "lat": -8.5414,
-    "lon": 115.3253
-  },
-  {
-    "name": "Jembrana (Negara)",
-    "province": "Bali",
-    "region": "Bali & Nusa Tenggara",
-    "lat": -8.3583,
-    "lon": 114.6167
-  },
-  {
-    "name": "Karangasem (Amlapura)",
-    "province": "Bali",
-    "region": "Bali & Nusa Tenggara",
-    "lat": -8.4478,
-    "lon": 115.6128
-  },
-  {
-    "name": "Klungkung (Semarapura)",
-    "province": "Bali",
-    "region": "Bali & Nusa Tenggara",
-    "lat": -8.5358,
-    "lon": 115.4039
-  },
-  {
-    "name": "Tabanan",
-    "province": "Bali",
-    "region": "Bali & Nusa Tenggara",
-    "lat": -8.5392,
-    "lon": 115.1247
-  },
-  {
-    "name": "Mataram",
-    "province": "Nusa Tenggara Barat",
-    "region": "Bali & Nusa Tenggara",
-    "lat": -8.5833,
-    "lon": 116.1167
-  },
-  {
-    "name": "Bima",
-    "province": "Nusa Tenggara Barat",
-    "region": "Bali & Nusa Tenggara",
-    "lat": -8.4608,
-    "lon": 118.7256
-  },
-  {
-    "name": "Lombok Barat (Gerung)",
-    "province": "Nusa Tenggara Barat",
-    "region": "Bali & Nusa Tenggara",
-    "lat": -8.6833,
-    "lon": 116.1333
-  },
-  {
-    "name": "Lombok Tengah (Praya)",
-    "province": "Nusa Tenggara Barat",
-    "region": "Bali & Nusa Tenggara",
-    "lat": -8.7,
-    "lon": 116.2833
-  },
-  {
-    "name": "Lombok Timur (Selong)",
-    "province": "Nusa Tenggara Barat",
-    "region": "Bali & Nusa Tenggara",
-    "lat": -8.65,
-    "lon": 116.5333
-  },
-  {
-    "name": "Lombok Utara (Tanjung)",
-    "province": "Nusa Tenggara Barat",
-    "region": "Bali & Nusa Tenggara",
-    "lat": -8.35,
-    "lon": 116.15
-  },
-  {
-    "name": "Sumbawa (Sumbawa Besar)",
-    "province": "Nusa Tenggara Barat",
-    "region": "Bali & Nusa Tenggara",
-    "lat": -8.5,
-    "lon": 117.4333
-  },
-  {
-    "name": "Sumbawa Barat (Taliwang)",
-    "province": "Nusa Tenggara Barat",
-    "region": "Bali & Nusa Tenggara",
-    "lat": -8.75,
-    "lon": 116.85
-  },
-  {
-    "name": "Dompu",
-    "province": "Nusa Tenggara Barat",
-    "region": "Bali & Nusa Tenggara",
-    "lat": -8.5333,
-    "lon": 118.4667
-  },
-  {
-    "name": "Kab. Bima (Woha)",
-    "province": "Nusa Tenggara Barat",
-    "region": "Bali & Nusa Tenggara",
-    "lat": -8.5833,
-    "lon": 118.7
-  },
-  {
-    "name": "Kupang",
-    "province": "Nusa Tenggara Timur",
-    "region": "Bali & Nusa Tenggara",
-    "lat": -10.1772,
-    "lon": 123.607
-  },
-  {
-    "name": "Alor (Kalabahi)",
-    "province": "Nusa Tenggara Timur",
-    "region": "Bali & Nusa Tenggara",
-    "lat": -8.2167,
-    "lon": 124.5167
-  },
-  {
-    "name": "Belu (Atambua)",
-    "province": "Nusa Tenggara Timur",
-    "region": "Bali & Nusa Tenggara",
-    "lat": -9.1069,
-    "lon": 124.8925
-  },
-  {
-    "name": "Ende",
-    "province": "Nusa Tenggara Timur",
-    "region": "Bali & Nusa Tenggara",
-    "lat": -8.8433,
-    "lon": 121.6622
-  },
-  {
-    "name": "Flores Timur (Larantuka)",
-    "province": "Nusa Tenggara Timur",
-    "region": "Bali & Nusa Tenggara",
-    "lat": -8.3433,
-    "lon": 122.9856
-  },
-  {
-    "name": "Lembata (Lewoleba)",
-    "province": "Nusa Tenggara Timur",
-    "region": "Bali & Nusa Tenggara",
-    "lat": -8.3667,
-    "lon": 123.55
-  },
-  {
-    "name": "Malaka (Betun)",
-    "province": "Nusa Tenggara Timur",
-    "region": "Bali & Nusa Tenggara",
-    "lat": -9.5667,
-    "lon": 124.9
-  },
-  {
-    "name": "Manggarai (Ruteng)",
-    "province": "Nusa Tenggara Timur",
-    "region": "Bali & Nusa Tenggara",
-    "lat": -8.6133,
-    "lon": 120.4722
-  },
-  {
-    "name": "Manggarai Barat (Labuan Bajo)",
-    "province": "Nusa Tenggara Timur",
-    "region": "Bali & Nusa Tenggara",
-    "lat": -8.4964,
-    "lon": 119.8878
-  },
-  {
-    "name": "Manggarai Timur (Borong)",
-    "province": "Nusa Tenggara Timur",
-    "region": "Bali & Nusa Tenggara",
-    "lat": -8.8167,
-    "lon": 120.6167
-  },
-  {
-    "name": "Nagekeo (Mbay)",
-    "province": "Nusa Tenggara Timur",
-    "region": "Bali & Nusa Tenggara",
-    "lat": -8.5667,
-    "lon": 121.3167
-  },
-  {
-    "name": "Ngada (Bajawa)",
-    "province": "Nusa Tenggara Timur",
-    "region": "Bali & Nusa Tenggara",
-    "lat": -8.7917,
-    "lon": 120.9639
-  },
-  {
-    "name": "Rote Ndao (Baa)",
-    "province": "Nusa Tenggara Timur",
-    "region": "Bali & Nusa Tenggara",
-    "lat": -10.7333,
-    "lon": 123.1167
-  },
-  {
-    "name": "Sabu Raijua (Menia)",
-    "province": "Nusa Tenggara Timur",
-    "region": "Bali & Nusa Tenggara",
-    "lat": -10.5333,
-    "lon": 121.8333
-  },
-  {
-    "name": "Sikka (Maumere)",
-    "province": "Nusa Tenggara Timur",
-    "region": "Bali & Nusa Tenggara",
-    "lat": -8.6197,
-    "lon": 122.2111
-  },
-  {
-    "name": "Sumba Barat (Waikabubak)",
-    "province": "Nusa Tenggara Timur",
-    "region": "Bali & Nusa Tenggara",
-    "lat": -9.6333,
-    "lon": 119.4167
-  },
-  {
-    "name": "Sumba Barat Daya (Tambolaka)",
-    "province": "Nusa Tenggara Timur",
-    "region": "Bali & Nusa Tenggara",
-    "lat": -9.4,
-    "lon": 119.2333
-  },
-  {
-    "name": "Sumba Tengah (Waibakul)",
-    "province": "Nusa Tenggara Timur",
-    "region": "Bali & Nusa Tenggara",
-    "lat": -9.6,
-    "lon": 119.6
-  },
-  {
-    "name": "Sumba Timur (Waingapu)",
-    "province": "Nusa Tenggara Timur",
-    "region": "Bali & Nusa Tenggara",
-    "lat": -9.6542,
-    "lon": 120.2642
-  },
-  {
-    "name": "Timor Tengah Selatan (Soe)",
-    "province": "Nusa Tenggara Timur",
-    "region": "Bali & Nusa Tenggara",
-    "lat": -9.8608,
-    "lon": 124.2764
-  },
-  {
-    "name": "Timor Tengah Utara (Kefamenanu)",
-    "province": "Nusa Tenggara Timur",
-    "region": "Bali & Nusa Tenggara",
-    "lat": -9.4447,
-    "lon": 124.4781
-  },
-  {
-    "name": "Kab. Kupang (Oelamasi)",
-    "province": "Nusa Tenggara Timur",
-    "region": "Bali & Nusa Tenggara",
-    "lat": -10.05,
-    "lon": 123.8333
-  },
-  {
-    "name": "Pontianak",
-    "province": "Kalimantan Barat",
-    "region": "Kalimantan",
-    "lat": -0.0263,
-    "lon": 109.3425
-  },
-  {
-    "name": "Singkawang",
-    "province": "Kalimantan Barat",
-    "region": "Kalimantan",
-    "lat": 0.9072,
-    "lon": 108.9867
-  },
-  {
-    "name": "Bengkayang",
-    "province": "Kalimantan Barat",
-    "region": "Kalimantan",
-    "lat": 0.8167,
-    "lon": 109.4833
-  },
-  {
-    "name": "Kapuas Hulu (Putussibau)",
-    "province": "Kalimantan Barat",
-    "region": "Kalimantan",
-    "lat": 0.85,
-    "lon": 112.9333
-  },
-  {
-    "name": "Kayong Utara (Sukadana)",
-    "province": "Kalimantan Barat",
-    "region": "Kalimantan",
-    "lat": -1.25,
-    "lon": 109.95
-  },
-  {
-    "name": "Ketapang",
-    "province": "Kalimantan Barat",
-    "region": "Kalimantan",
-    "lat": -1.85,
-    "lon": 109.9833
-  },
-  {
-    "name": "Kubu Raya (Sungai Raya)",
-    "province": "Kalimantan Barat",
-    "region": "Kalimantan",
-    "lat": -0.1167,
-    "lon": 109.4
-  },
-  {
-    "name": "Landak (Ngabang)",
-    "province": "Kalimantan Barat",
-    "region": "Kalimantan",
-    "lat": 0.3833,
-    "lon": 109.9667
-  },
-  {
-    "name": "Melawi (Nanga Pinoh)",
-    "province": "Kalimantan Barat",
-    "region": "Kalimantan",
-    "lat": -0.3333,
-    "lon": 111.7
-  },
-  {
-    "name": "Mempawah",
-    "province": "Kalimantan Barat",
-    "region": "Kalimantan",
-    "lat": 0.25,
-    "lon": 109.1833
-  },
-  {
-    "name": "Sambas",
-    "province": "Kalimantan Barat",
-    "region": "Kalimantan",
-    "lat": 1.35,
-    "lon": 109.3
-  },
-  {
-    "name": "Sanggau",
-    "province": "Kalimantan Barat",
-    "region": "Kalimantan",
-    "lat": 0.1167,
-    "lon": 110.5833
-  },
-  {
-    "name": "Sekadau",
-    "province": "Kalimantan Barat",
-    "region": "Kalimantan",
-    "lat": 0.0333,
-    "lon": 110.95
-  },
-  {
-    "name": "Sintang",
-    "province": "Kalimantan Barat",
-    "region": "Kalimantan",
-    "lat": 0.0667,
-    "lon": 111.5
-  },
-  {
-    "name": "Palangka Raya",
-    "province": "Kalimantan Tengah",
-    "region": "Kalimantan",
-    "lat": -2.2161,
-    "lon": 113.9167
-  },
-  {
-    "name": "Barito Selatan (Buntok)",
-    "province": "Kalimantan Tengah",
-    "region": "Kalimantan",
-    "lat": -1.7167,
-    "lon": 114.85
-  },
-  {
-    "name": "Barito Timur (Tamiang Layang)",
-    "province": "Kalimantan Tengah",
-    "region": "Kalimantan",
-    "lat": -2,
-    "lon": 115.1667
-  },
-  {
-    "name": "Barito Utara (Muara Teweh)",
-    "province": "Kalimantan Tengah",
-    "region": "Kalimantan",
-    "lat": -0.95,
-    "lon": 114.9
-  },
-  {
-    "name": "Gunung Mas (Kuala Kurun)",
-    "province": "Kalimantan Tengah",
-    "region": "Kalimantan",
-    "lat": -1.1333,
-    "lon": 113.8667
-  },
-  {
-    "name": "Kapuas (Kuala Kapuas)",
-    "province": "Kalimantan Tengah",
-    "region": "Kalimantan",
-    "lat": -3.0092,
-    "lon": 114.3875
-  },
-  {
-    "name": "Katingan (Kasongan)",
-    "province": "Kalimantan Tengah",
-    "region": "Kalimantan",
-    "lat": -1.9,
-    "lon": 113.3833
-  },
-  {
-    "name": "Kotawaringin Barat (Pangkalan Bun)",
-    "province": "Kalimantan Tengah",
-    "region": "Kalimantan",
-    "lat": -2.6833,
-    "lon": 111.6167
-  },
-  {
-    "name": "Kotawaringin Timur (Sampit)",
-    "province": "Kalimantan Tengah",
-    "region": "Kalimantan",
-    "lat": -2.5333,
-    "lon": 112.95
-  },
-  {
-    "name": "Lamandau (Nanga Bulik)",
-    "province": "Kalimantan Tengah",
-    "region": "Kalimantan",
-    "lat": -2.1667,
-    "lon": 111.45
-  },
-  {
-    "name": "Murung Raya (Puruk Cahu)",
-    "province": "Kalimantan Tengah",
-    "region": "Kalimantan",
-    "lat": -0.6167,
-    "lon": 114.5833
-  },
-  {
-    "name": "Pulang Pisau",
-    "province": "Kalimantan Tengah",
-    "region": "Kalimantan",
-    "lat": -2.75,
-    "lon": 114.25
-  },
-  {
-    "name": "Sukamara",
-    "province": "Kalimantan Tengah",
-    "region": "Kalimantan",
-    "lat": -2.6333,
-    "lon": 111.2333
-  },
-  {
-    "name": "Seruyan (Kuala Pembuang)",
-    "province": "Kalimantan Tengah",
-    "region": "Kalimantan",
-    "lat": -3.3,
-    "lon": 112.55
-  },
-  {
-    "name": "Banjarmasin",
-    "province": "Kalimantan Selatan",
-    "region": "Kalimantan",
-    "lat": -3.3194,
-    "lon": 114.5908
-  },
-  {
-    "name": "Banjarbaru",
-    "province": "Kalimantan Selatan",
-    "region": "Kalimantan",
-    "lat": -3.44,
-    "lon": 114.83
-  },
-  {
-    "name": "Balangan (Paringin)",
-    "province": "Kalimantan Selatan",
-    "region": "Kalimantan",
-    "lat": -2.3333,
-    "lon": 115.4667
-  },
-  {
-    "name": "Banjar (Martapura)",
-    "province": "Kalimantan Selatan",
-    "region": "Kalimantan",
-    "lat": -3.4167,
-    "lon": 114.85
-  },
-  {
-    "name": "Barito Kuala (Marabahan)",
-    "province": "Kalimantan Selatan",
-    "region": "Kalimantan",
-    "lat": -2.9833,
-    "lon": 114.7667
-  },
-  {
-    "name": "Hulu Sungai Selatan (Kandangan)",
-    "province": "Kalimantan Selatan",
-    "region": "Kalimantan",
-    "lat": -2.7833,
-    "lon": 115.2667
-  },
-  {
-    "name": "Hulu Sungai Tengah (Barabai)",
-    "province": "Kalimantan Selatan",
-    "region": "Kalimantan",
-    "lat": -2.5833,
-    "lon": 115.3833
-  },
-  {
-    "name": "Hulu Sungai Utara (Amuntai)",
-    "province": "Kalimantan Selatan",
-    "region": "Kalimantan",
-    "lat": -2.4167,
-    "lon": 115.25
-  },
-  {
-    "name": "Kotabaru",
-    "province": "Kalimantan Selatan",
-    "region": "Kalimantan",
-    "lat": -3.25,
-    "lon": 116.2167
-  },
-  {
-    "name": "Tabalong (Tanjung)",
-    "province": "Kalimantan Selatan",
-    "region": "Kalimantan",
-    "lat": -2.1833,
-    "lon": 115.3833
-  },
-  {
-    "name": "Tanah Bumbu (Batulicin)",
-    "province": "Kalimantan Selatan",
-    "region": "Kalimantan",
-    "lat": -3.45,
-    "lon": 116
-  },
-  {
-    "name": "Tanah Laut (Pelaihari)",
-    "province": "Kalimantan Selatan",
-    "region": "Kalimantan",
-    "lat": -3.8,
-    "lon": 114.7667
-  },
-  {
-    "name": "Tapin (Rantau)",
-    "province": "Kalimantan Selatan",
-    "region": "Kalimantan",
-    "lat": -2.9333,
-    "lon": 115.15
-  },
-  {
-    "name": "Samarinda",
-    "province": "Kalimantan Timur",
-    "region": "Kalimantan",
-    "lat": -0.5022,
-    "lon": 117.1536
-  },
-  {
-    "name": "Balikpapan",
-    "province": "Kalimantan Timur",
-    "region": "Kalimantan",
-    "lat": -1.2654,
-    "lon": 116.8312
-  },
-  {
-    "name": "Bontang",
-    "province": "Kalimantan Timur",
-    "region": "Kalimantan",
-    "lat": 0.1333,
-    "lon": 117.5
-  },
-  {
-    "name": "Nusantara (IKN Sepaku)",
-    "province": "Kalimantan Timur",
-    "region": "Kalimantan",
-    "lat": -0.97,
-    "lon": 116.7
-  },
-  {
-    "name": "Berau (Tanjung Redeb)",
-    "province": "Kalimantan Timur",
-    "region": "Kalimantan",
-    "lat": 2.15,
-    "lon": 117.5
-  },
-  {
-    "name": "Kutai Barat (Sendawar)",
-    "province": "Kalimantan Timur",
-    "region": "Kalimantan",
-    "lat": -0.2333,
-    "lon": 115.7
-  },
-  {
-    "name": "Kutai Kartanegara (Tenggarong)",
-    "province": "Kalimantan Timur",
-    "region": "Kalimantan",
-    "lat": -0.4167,
-    "lon": 116.9833
-  },
-  {
-    "name": "Kutai Timur (Sangatta)",
-    "province": "Kalimantan Timur",
-    "region": "Kalimantan",
-    "lat": 0.5,
-    "lon": 117.55
-  },
-  {
-    "name": "Mahakam Ulu (Ujoh Bilang)",
-    "province": "Kalimantan Timur",
-    "region": "Kalimantan",
-    "lat": 0.6333,
-    "lon": 114.85
-  },
-  {
-    "name": "Paser (Tanah Grogot)",
-    "province": "Kalimantan Timur",
-    "region": "Kalimantan",
-    "lat": -1.9,
-    "lon": 116.2
-  },
-  {
-    "name": "Penajam Paser Utara (Penajam)",
-    "province": "Kalimantan Timur",
-    "region": "Kalimantan",
-    "lat": -1.3333,
-    "lon": 116.75
-  },
-  {
-    "name": "Tarakan",
-    "province": "Kalimantan Utara",
-    "region": "Kalimantan",
-    "lat": 3.3,
-    "lon": 117.6333
-  },
-  {
-    "name": "Bulungan (Tanjung Selor)",
-    "province": "Kalimantan Utara",
-    "region": "Kalimantan",
-    "lat": 2.85,
-    "lon": 117.3667
-  },
-  {
-    "name": "Malinau",
-    "province": "Kalimantan Utara",
-    "region": "Kalimantan",
-    "lat": 3.5833,
-    "lon": 116.6333
-  },
-  {
-    "name": "Nunukan",
-    "province": "Kalimantan Utara",
-    "region": "Kalimantan",
-    "lat": 4.1333,
-    "lon": 117.65
-  },
-  {
-    "name": "Tana Tidung (Tideng Pale)",
-    "province": "Kalimantan Utara",
-    "region": "Kalimantan",
-    "lat": 3.55,
-    "lon": 117.25
-  },
-  {
-    "name": "Manado",
-    "province": "Sulawesi Utara",
-    "region": "Sulawesi",
-    "lat": 1.4748,
-    "lon": 124.8428
-  },
-  {
-    "name": "Bitung",
-    "province": "Sulawesi Utara",
-    "region": "Sulawesi",
-    "lat": 1.4451,
-    "lon": 125.1889
-  },
-  {
-    "name": "Kotamobagu",
-    "province": "Sulawesi Utara",
-    "region": "Sulawesi",
-    "lat": 0.7306,
-    "lon": 124.3139
-  },
-  {
-    "name": "Tomohon",
-    "province": "Sulawesi Utara",
-    "region": "Sulawesi",
-    "lat": 1.3289,
-    "lon": 124.8392
-  },
-  {
-    "name": "Bolaang Mongondow (Lolak)",
-    "province": "Sulawesi Utara",
-    "region": "Sulawesi",
-    "lat": 0.8833,
-    "lon": 124.0167
-  },
-  {
-    "name": "Bolaang Mongondow Selatan (Bolaang Uki)",
-    "province": "Sulawesi Utara",
-    "region": "Sulawesi",
-    "lat": 0.35,
-    "lon": 123.9
-  },
-  {
-    "name": "Bolaang Mongondow Timur (Tutuyan)",
-    "province": "Sulawesi Utara",
-    "region": "Sulawesi",
-    "lat": 0.7667,
-    "lon": 124.6
-  },
-  {
-    "name": "Bolaang Mongondow Utara (Boroko)",
-    "province": "Sulawesi Utara",
-    "region": "Sulawesi",
-    "lat": 0.9333,
-    "lon": 123.3167
-  },
-  {
-    "name": "Kepulauan Sangihe (Tahuna)",
-    "province": "Sulawesi Utara",
-    "region": "Sulawesi",
-    "lat": 3.6167,
-    "lon": 125.4833
-  },
-  {
-    "name": "Kepulauan Siau Tagulandang Biaro - Sitaro (Ondong)",
-    "province": "Sulawesi Utara",
-    "region": "Sulawesi",
-    "lat": 2.75,
-    "lon": 125.4
-  },
-  {
-    "name": "Kepulauan Talaud (Melonguane)",
-    "province": "Sulawesi Utara",
-    "region": "Sulawesi",
-    "lat": 4,
-    "lon": 126.7
-  },
-  {
-    "name": "Minahasa (Tondano)",
-    "province": "Sulawesi Utara",
-    "region": "Sulawesi",
-    "lat": 1.3,
-    "lon": 124.9167
-  },
-  {
-    "name": "Minahasa Selatan (Amurang)",
-    "province": "Sulawesi Utara",
-    "region": "Sulawesi",
-    "lat": 1.1833,
-    "lon": 124.5667
-  },
-  {
-    "name": "Minahasa Tenggara (Ratahan)",
-    "province": "Sulawesi Utara",
-    "region": "Sulawesi",
-    "lat": 1.05,
-    "lon": 124.8
-  },
-  {
-    "name": "Minahasa Utara (Airmadidi)",
-    "province": "Sulawesi Utara",
-    "region": "Sulawesi",
-    "lat": 1.4167,
-    "lon": 124.9833
-  },
-  {
-    "name": "Kota Gorontalo",
-    "province": "Gorontalo",
-    "region": "Sulawesi",
-    "lat": 0.5435,
-    "lon": 123.0568
-  },
-  {
-    "name": "Boalemo (Tilamuta)",
-    "province": "Gorontalo",
-    "region": "Sulawesi",
-    "lat": 0.5333,
-    "lon": 122.3333
-  },
-  {
-    "name": "Bone Bolango (Suwawa)",
-    "province": "Gorontalo",
-    "region": "Sulawesi",
-    "lat": 0.55,
-    "lon": 123.15
-  },
-  {
-    "name": "Gorontalo (Limboto)",
-    "province": "Gorontalo",
-    "region": "Sulawesi",
-    "lat": 0.6333,
-    "lon": 122.9833
-  },
-  {
-    "name": "Gorontalo Utara (Kwandang)",
-    "province": "Gorontalo",
-    "region": "Sulawesi",
-    "lat": 0.8333,
-    "lon": 122.9167
-  },
-  {
-    "name": "Pohuwato (Marisa)",
-    "province": "Gorontalo",
-    "region": "Sulawesi",
-    "lat": 0.45,
-    "lon": 121.9333
-  },
-  {
-    "name": "Palu",
-    "province": "Sulawesi Tengah",
-    "region": "Sulawesi",
-    "lat": -0.8917,
-    "lon": 119.8707
-  },
-  {
-    "name": "Banggai (Luwuk)",
-    "province": "Sulawesi Tengah",
-    "region": "Sulawesi",
-    "lat": -0.95,
-    "lon": 122.7833
-  },
-  {
-    "name": "Banggai Kepulauan (Salakan)",
-    "province": "Sulawesi Tengah",
-    "region": "Sulawesi",
-    "lat": -1.3333,
-    "lon": 123.1667
-  },
-  {
-    "name": "Banggai Laut (Banggai)",
-    "province": "Sulawesi Tengah",
-    "region": "Sulawesi",
-    "lat": -1.6,
-    "lon": 123.5
-  },
-  {
-    "name": "Buol",
-    "province": "Sulawesi Tengah",
-    "region": "Sulawesi",
-    "lat": 1.1667,
-    "lon": 121.4167
-  },
-  {
-    "name": "Donggala (Banawa)",
-    "province": "Sulawesi Tengah",
-    "region": "Sulawesi",
-    "lat": -0.6833,
-    "lon": 119.75
-  },
-  {
-    "name": "Morowali (Bungku)",
-    "province": "Sulawesi Tengah",
-    "region": "Sulawesi",
-    "lat": -2.5333,
-    "lon": 121.9667
-  },
-  {
-    "name": "Morowali Utara (Kolonodale)",
-    "province": "Sulawesi Tengah",
-    "region": "Sulawesi",
-    "lat": -1.9833,
-    "lon": 121.3333
-  },
-  {
-    "name": "Parigi Moutong (Parigi)",
-    "province": "Sulawesi Tengah",
-    "region": "Sulawesi",
-    "lat": -0.8,
-    "lon": 120.1833
-  },
-  {
-    "name": "Poso",
-    "province": "Sulawesi Tengah",
-    "region": "Sulawesi",
-    "lat": -1.3986,
-    "lon": 120.7533
-  },
-  {
-    "name": "Sigi (Sigi Biromaru)",
-    "province": "Sulawesi Tengah",
-    "region": "Sulawesi",
-    "lat": -1.0167,
-    "lon": 119.9333
-  },
-  {
-    "name": "Tojo Una-Una (Ampana)",
-    "province": "Sulawesi Tengah",
-    "region": "Sulawesi",
-    "lat": -0.8667,
-    "lon": 121.5833
-  },
-  {
-    "name": "Tolitoli",
-    "province": "Sulawesi Tengah",
-    "region": "Sulawesi",
-    "lat": 1.05,
-    "lon": 120.8
-  },
-  {
-    "name": "Mamuju",
-    "province": "Sulawesi Barat",
-    "region": "Sulawesi",
-    "lat": -2.6748,
-    "lon": 118.8888
-  },
-  {
-    "name": "Majene",
-    "province": "Sulawesi Barat",
-    "region": "Sulawesi",
-    "lat": -3.5333,
-    "lon": 118.9667
-  },
-  {
-    "name": "Mamasa",
-    "province": "Sulawesi Barat",
-    "region": "Sulawesi",
-    "lat": -2.9333,
-    "lon": 119.3833
-  },
-  {
-    "name": "Mamuju Tengah (Tobadak)",
-    "province": "Sulawesi Barat",
-    "region": "Sulawesi",
-    "lat": -2.1,
-    "lon": 119.4
-  },
-  {
-    "name": "Pasangkayu",
-    "province": "Sulawesi Barat",
-    "region": "Sulawesi",
-    "lat": -1.1833,
-    "lon": 119.3833
-  },
-  {
-    "name": "Polewali Mandar (Polewali)",
-    "province": "Sulawesi Barat",
-    "region": "Sulawesi",
-    "lat": -3.4333,
-    "lon": 119.35
-  },
-  {
-    "name": "Makassar",
-    "province": "Sulawesi Selatan",
-    "region": "Sulawesi",
-    "lat": -5.1477,
-    "lon": 119.4327
-  },
-  {
-    "name": "Palopo",
-    "province": "Sulawesi Selatan",
-    "region": "Sulawesi",
-    "lat": -2.9944,
-    "lon": 120.1969
-  },
-  {
-    "name": "Parepare",
-    "province": "Sulawesi Selatan",
-    "region": "Sulawesi",
-    "lat": -4.0133,
-    "lon": 119.6272
-  },
-  {
-    "name": "Bantaeng",
-    "province": "Sulawesi Selatan",
-    "region": "Sulawesi",
-    "lat": -5.55,
-    "lon": 119.95
-  },
-  {
-    "name": "Barru",
-    "province": "Sulawesi Selatan",
-    "region": "Sulawesi",
-    "lat": -4.4167,
-    "lon": 119.6833
-  },
-  {
-    "name": "Bone (Watampone)",
-    "province": "Sulawesi Selatan",
-    "region": "Sulawesi",
-    "lat": -4.5386,
-    "lon": 120.3278
-  },
-  {
-    "name": "Bulukumba",
-    "province": "Sulawesi Selatan",
-    "region": "Sulawesi",
-    "lat": -5.55,
-    "lon": 120.1833
-  },
-  {
-    "name": "Enrekang",
-    "province": "Sulawesi Selatan",
-    "region": "Sulawesi",
-    "lat": -3.5667,
-    "lon": 119.7833
-  },
-  {
-    "name": "Gowa (Sungguminasa)",
-    "province": "Sulawesi Selatan",
-    "region": "Sulawesi",
-    "lat": -5.2,
-    "lon": 119.45
-  },
-  {
-    "name": "Jeneponto (Bontosunggu)",
-    "province": "Sulawesi Selatan",
-    "region": "Sulawesi",
-    "lat": -5.6833,
-    "lon": 119.7333
-  },
-  {
-    "name": "Kepulauan Selayar (Benteng)",
-    "province": "Sulawesi Selatan",
-    "region": "Sulawesi",
-    "lat": -6.1167,
-    "lon": 120.4667
-  },
-  {
-    "name": "Luwu (Belopa)",
-    "province": "Sulawesi Selatan",
-    "region": "Sulawesi",
-    "lat": -3.3667,
-    "lon": 120.35
-  },
-  {
-    "name": "Luwu Timur (Malili)",
-    "province": "Sulawesi Selatan",
-    "region": "Sulawesi",
-    "lat": -2.6,
-    "lon": 121.1
-  },
-  {
-    "name": "Luwu Utara (Masamba)",
-    "province": "Sulawesi Selatan",
-    "region": "Sulawesi",
-    "lat": -2.55,
-    "lon": 120.3167
-  },
-  {
-    "name": "Maros (Turikale)",
-    "province": "Sulawesi Selatan",
-    "region": "Sulawesi",
-    "lat": -5,
-    "lon": 119.5833
-  },
-  {
-    "name": "Pangkajene dan Kepulauan - Pangkep",
-    "province": "Sulawesi Selatan",
-    "region": "Sulawesi",
-    "lat": -4.8167,
-    "lon": 119.55
-  },
-  {
-    "name": "Pinrang",
-    "province": "Sulawesi Selatan",
-    "region": "Sulawesi",
-    "lat": -3.7833,
-    "lon": 119.65
-  },
-  {
-    "name": "Sidenreng Rappang - Sidrap (Pangkajene)",
-    "province": "Sulawesi Selatan",
-    "region": "Sulawesi",
-    "lat": -3.9333,
-    "lon": 119.8
-  },
-  {
-    "name": "Sinjai",
-    "province": "Sulawesi Selatan",
-    "region": "Sulawesi",
-    "lat": -5.1333,
-    "lon": 120.25
-  },
-  {
-    "name": "Soppeng (Watansoppeng)",
-    "province": "Sulawesi Selatan",
-    "region": "Sulawesi",
-    "lat": -4.35,
-    "lon": 119.8833
-  },
-  {
-    "name": "Takalar (Pattallassang)",
-    "province": "Sulawesi Selatan",
-    "region": "Sulawesi",
-    "lat": -5.4167,
-    "lon": 119.45
-  },
-  {
-    "name": "Tana Toraja (Makale)",
-    "province": "Sulawesi Selatan",
-    "region": "Sulawesi",
-    "lat": -3.1,
-    "lon": 119.8667
-  },
-  {
-    "name": "Toraja Utara (Rantepao)",
-    "province": "Sulawesi Selatan",
-    "region": "Sulawesi",
-    "lat": -2.9667,
-    "lon": 119.9
-  },
-  {
-    "name": "Wajo (Sengkang)",
-    "province": "Sulawesi Selatan",
-    "region": "Sulawesi",
-    "lat": -4.1333,
-    "lon": 120.0333
-  },
-  {
-    "name": "Kendari",
-    "province": "Sulawesi Tenggara",
-    "region": "Sulawesi",
-    "lat": -3.9985,
-    "lon": 122.5126
-  },
-  {
-    "name": "Baubau",
-    "province": "Sulawesi Tenggara",
-    "region": "Sulawesi",
-    "lat": -5.4633,
-    "lon": 122.6022
-  },
-  {
-    "name": "Bombana (Rumbia)",
-    "province": "Sulawesi Tenggara",
-    "region": "Sulawesi",
-    "lat": -4.75,
-    "lon": 121.8333
-  },
-  {
-    "name": "Buton (Pasarwajo)",
-    "province": "Sulawesi Tenggara",
-    "region": "Sulawesi",
-    "lat": -5.3167,
-    "lon": 122.85
-  },
-  {
-    "name": "Buton Selatan (Batauga)",
-    "province": "Sulawesi Tenggara",
-    "region": "Sulawesi",
-    "lat": -5.5833,
-    "lon": 122.7
-  },
-  {
-    "name": "Buton Tengah (Labungkari)",
-    "province": "Sulawesi Tenggara",
-    "region": "Sulawesi",
-    "lat": -5.3333,
-    "lon": 122.45
-  },
-  {
-    "name": "Buton Utara (Buranga)",
-    "province": "Sulawesi Tenggara",
-    "region": "Sulawesi",
-    "lat": -4.8333,
-    "lon": 122.95
-  },
-  {
-    "name": "Kolaka",
-    "province": "Sulawesi Tenggara",
-    "region": "Sulawesi",
-    "lat": -4.05,
-    "lon": 121.6
-  },
-  {
-    "name": "Kolaka Timur (Tirawuta)",
-    "province": "Sulawesi Tenggara",
-    "region": "Sulawesi",
-    "lat": -4.1333,
-    "lon": 121.9
-  },
-  {
-    "name": "Kolaka Utara (Lasusua)",
-    "province": "Sulawesi Tenggara",
-    "region": "Sulawesi",
-    "lat": -3.3667,
-    "lon": 121.05
-  },
-  {
-    "name": "Konawe (Unaaha)",
-    "province": "Sulawesi Tenggara",
-    "region": "Sulawesi",
-    "lat": -3.8667,
-    "lon": 122.0667
-  },
-  {
-    "name": "Konawe Kepulauan (Langara)",
-    "province": "Sulawesi Tenggara",
-    "region": "Sulawesi",
-    "lat": -4.0167,
-    "lon": 123.0167
-  },
-  {
-    "name": "Konawe Selatan (Andoolo)",
-    "province": "Sulawesi Tenggara",
-    "region": "Sulawesi",
-    "lat": -4.3333,
-    "lon": 122.25
-  },
-  {
-    "name": "Konawe Utara (Wanggudu)",
-    "province": "Sulawesi Tenggara",
-    "region": "Sulawesi",
-    "lat": -3.4833,
-    "lon": 122.1333
-  },
-  {
-    "name": "Muna (Raha)",
-    "province": "Sulawesi Tenggara",
-    "region": "Sulawesi",
-    "lat": -4.85,
-    "lon": 122.7167
-  },
-  {
-    "name": "Muna Barat (Sawerigadi)",
-    "province": "Sulawesi Tenggara",
-    "region": "Sulawesi",
-    "lat": -4.8333,
-    "lon": 122.4667
-  },
-  {
-    "name": "Wakatobi (Wangi-Wangi)",
-    "province": "Sulawesi Tenggara",
-    "region": "Sulawesi",
-    "lat": -5.3167,
-    "lon": 123.5833
-  },
-  {
-    "name": "Ambon",
-    "province": "Maluku",
-    "region": "Maluku & Papua",
-    "lat": -3.6554,
-    "lon": 128.1908
-  },
-  {
-    "name": "Tual",
-    "province": "Maluku",
-    "region": "Maluku & Papua",
-    "lat": -5.6333,
-    "lon": 132.75
-  },
-  {
-    "name": "Buru (Namlea)",
-    "province": "Maluku",
-    "region": "Maluku & Papua",
-    "lat": -3.25,
-    "lon": 127.1
-  },
-  {
-    "name": "Buru Selatan (Namrole)",
-    "province": "Maluku",
-    "region": "Maluku & Papua",
-    "lat": -3.85,
-    "lon": 126.75
-  },
-  {
-    "name": "Kepulauan Aru (Dobo)",
-    "province": "Maluku",
-    "region": "Maluku & Papua",
-    "lat": -5.7667,
-    "lon": 134.2167
-  },
-  {
-    "name": "Kepulauan Tanimbar (Saumlaki)",
-    "province": "Maluku",
-    "region": "Maluku & Papua",
-    "lat": -7.9833,
-    "lon": 131.3
-  },
-  {
-    "name": "Maluku Barat Daya (Tiakur)",
-    "province": "Maluku",
-    "region": "Maluku & Papua",
-    "lat": -8.1333,
-    "lon": 127.9167
-  },
-  {
-    "name": "Maluku Tengah (Masohi)",
-    "province": "Maluku",
-    "region": "Maluku & Papua",
-    "lat": -3.3,
-    "lon": 128.95
-  },
-  {
-    "name": "Maluku Tenggara (Langgur)",
-    "province": "Maluku",
-    "region": "Maluku & Papua",
-    "lat": -5.65,
-    "lon": 132.7333
-  },
-  {
-    "name": "Seram Bagian Barat (Piru)",
-    "province": "Maluku",
-    "region": "Maluku & Papua",
-    "lat": -3.0667,
-    "lon": 128.1833
-  },
-  {
-    "name": "Seram Bagian Timur (Bula)",
-    "province": "Maluku",
-    "region": "Maluku & Papua",
-    "lat": -3.1,
-    "lon": 130.5
-  },
-  {
-    "name": "Ternate",
-    "province": "Maluku Utara",
-    "region": "Maluku & Papua",
-    "lat": 0.7893,
-    "lon": 127.361
-  },
-  {
-    "name": "Tidore Kepulauan",
-    "province": "Maluku Utara",
-    "region": "Maluku & Papua",
-    "lat": 0.6833,
-    "lon": 127.4
-  },
-  {
-    "name": "Halmahera Barat (Jailolo)",
-    "province": "Maluku Utara",
-    "region": "Maluku & Papua",
-    "lat": 1.0667,
-    "lon": 127.4667
-  },
-  {
-    "name": "Halmahera Tengah (Weda)",
-    "province": "Maluku Utara",
-    "region": "Maluku & Papua",
-    "lat": 0.3333,
-    "lon": 127.8833
-  },
-  {
-    "name": "Halmahera Timur (Maba)",
-    "province": "Maluku Utara",
-    "region": "Maluku & Papua",
-    "lat": 0.7,
-    "lon": 128.3
-  },
-  {
-    "name": "Halmahera Selatan (Labuha)",
-    "province": "Maluku Utara",
-    "region": "Maluku & Papua",
-    "lat": -0.6333,
-    "lon": 127.4833
-  },
-  {
-    "name": "Halmahera Utara (Tobelo)",
-    "province": "Maluku Utara",
-    "region": "Maluku & Papua",
-    "lat": 1.7333,
-    "lon": 128.0167
-  },
-  {
-    "name": "Kepulauan Sula (Sanana)",
-    "province": "Maluku Utara",
-    "region": "Maluku & Papua",
-    "lat": -2.05,
-    "lon": 125.9833
-  },
-  {
-    "name": "Pulau Morotai (Daruba)",
-    "province": "Maluku Utara",
-    "region": "Maluku & Papua",
-    "lat": 2.05,
-    "lon": 128.2833
-  },
-  {
-    "name": "Pulau Taliabu (Bobong)",
-    "province": "Maluku Utara",
-    "region": "Maluku & Papua",
-    "lat": -1.9167,
-    "lon": 124.3833
-  },
-  {
-    "name": "Jayapura",
-    "province": "Papua",
-    "region": "Maluku & Papua",
-    "lat": -2.5337,
-    "lon": 140.7181
-  },
-  {
-    "name": "Kab. Jayapura (Sentani)",
-    "province": "Papua",
-    "region": "Maluku & Papua",
-    "lat": -2.5667,
-    "lon": 140.5167
-  },
-  {
-    "name": "Biak Numfor",
-    "province": "Papua",
-    "region": "Maluku & Papua",
-    "lat": -1.1833,
-    "lon": 136.0833
-  },
-  {
-    "name": "Keerom (Waris)",
-    "province": "Papua",
-    "region": "Maluku & Papua",
-    "lat": -3.2833,
-    "lon": 140.7833
-  },
-  {
-    "name": "Kepulauan Yapen (Serui)",
-    "province": "Papua",
-    "region": "Maluku & Papua",
-    "lat": -1.8667,
-    "lon": 136.2333
-  },
-  {
-    "name": "Mamberamo Raya (Burmeso)",
-    "province": "Papua",
-    "region": "Maluku & Papua",
-    "lat": -2.1833,
-    "lon": 138.1667
-  },
-  {
-    "name": "Sarmi",
-    "province": "Papua",
-    "region": "Maluku & Papua",
-    "lat": -1.8667,
-    "lon": 138.75
-  },
-  {
-    "name": "Supiori (Sorendiweri)",
-    "province": "Papua",
-    "region": "Maluku & Papua",
-    "lat": -0.7333,
-    "lon": 135.6167
-  },
-  {
-    "name": "Waropen (Botawa)",
-    "province": "Papua",
-    "region": "Maluku & Papua",
-    "lat": -2.6333,
-    "lon": 136.75
-  },
-  {
-    "name": "Manokwari",
-    "province": "Papua Barat",
-    "region": "Maluku & Papua",
-    "lat": -0.8615,
-    "lon": 134.062
-  },
-  {
-    "name": "Fakfak",
-    "province": "Papua Barat",
-    "region": "Maluku & Papua",
-    "lat": -2.9167,
-    "lon": 132.3
-  },
-  {
-    "name": "Kaimana",
-    "province": "Papua Barat",
-    "region": "Maluku & Papua",
-    "lat": -3.6667,
-    "lon": 133.7667
-  },
-  {
-    "name": "Manokwari Selatan (Ransiki)",
-    "province": "Papua Barat",
-    "region": "Maluku & Papua",
-    "lat": -1.5,
-    "lon": 134.1833
-  },
-  {
-    "name": "Pegunungan Arfak (Anggi)",
-    "province": "Papua Barat",
-    "region": "Maluku & Papua",
-    "lat": -1.3667,
-    "lon": 133.9167
-  },
-  {
-    "name": "Teluk Bintuni (Bintuni)",
-    "province": "Papua Barat",
-    "region": "Maluku & Papua",
-    "lat": -2.1333,
-    "lon": 133.5167
-  },
-  {
-    "name": "Teluk Wondama (Rasiei)",
-    "province": "Papua Barat",
-    "region": "Maluku & Papua",
-    "lat": -2.7,
-    "lon": 134.5
-  },
-  {
-    "name": "Sorong",
-    "province": "Papua Barat Daya",
-    "region": "Maluku & Papua",
-    "lat": -0.8762,
-    "lon": 131.2558
-  },
-  {
-    "name": "Kab. Sorong (Aimas)",
-    "province": "Papua Barat Daya",
-    "region": "Maluku & Papua",
-    "lat": -0.9667,
-    "lon": 131.3333
-  },
-  {
-    "name": "Raja Ampat (Waisai)",
-    "province": "Papua Barat Daya",
-    "region": "Maluku & Papua",
-    "lat": -0.4333,
-    "lon": 130.8167
-  },
-  {
-    "name": "Sorong Selatan (Teminabuan)",
-    "province": "Papua Barat Daya",
-    "region": "Maluku & Papua",
-    "lat": -1.4833,
-    "lon": 132.0167
-  },
-  {
-    "name": "Tambrauw (Fef)",
-    "province": "Papua Barat Daya",
-    "region": "Maluku & Papua",
-    "lat": -0.6333,
-    "lon": 132.4833
-  },
-  {
-    "name": "Maybrat (Kumurkek)",
-    "province": "Papua Barat Daya",
-    "region": "Maluku & Papua",
-    "lat": -1.2833,
-    "lon": 132.3667
-  },
-  {
-    "name": "Merauke",
-    "province": "Papua Selatan",
-    "region": "Maluku & Papua",
-    "lat": -8.4991,
-    "lon": 140.4018
-  },
-  {
-    "name": "Asmat (Agats)",
-    "province": "Papua Selatan",
-    "region": "Maluku & Papua",
-    "lat": -5.5333,
-    "lon": 138.1333
-  },
-  {
-    "name": "Boven Digoel (Tanah Merah)",
-    "province": "Papua Selatan",
-    "region": "Maluku & Papua",
-    "lat": -6.1,
-    "lon": 140.3
-  },
-  {
-    "name": "Mappi (Kepi)",
-    "province": "Papua Selatan",
-    "region": "Maluku & Papua",
-    "lat": -6.5,
-    "lon": 139.3167
-  },
-  {
-    "name": "Nabire",
-    "province": "Papua Tengah",
-    "region": "Maluku & Papua",
-    "lat": -3.3667,
-    "lon": 135.5
-  },
-  {
-    "name": "Mimika (Timika)",
-    "province": "Papua Tengah",
-    "region": "Maluku & Papua",
-    "lat": -4.5467,
-    "lon": 136.8839
-  },
-  {
-    "name": "Deiyai (Tigi)",
-    "province": "Papua Tengah",
-    "region": "Maluku & Papua",
-    "lat": -4.0167,
-    "lon": 136
-  },
-  {
-    "name": "Dogiyai (Kigamani)",
-    "province": "Papua Tengah",
-    "region": "Maluku & Papua",
-    "lat": -4.05,
-    "lon": 135.75
-  },
-  {
-    "name": "Intan Jaya (Sugapa)",
-    "province": "Papua Tengah",
-    "region": "Maluku & Papua",
-    "lat": -3.75,
-    "lon": 137.0333
-  },
-  {
-    "name": "Paniai (Enarotali)",
-    "province": "Papua Tengah",
-    "region": "Maluku & Papua",
-    "lat": -3.9167,
-    "lon": 136.3667
-  },
-  {
-    "name": "Puncak (Ilaga)",
-    "province": "Papua Tengah",
-    "region": "Maluku & Papua",
-    "lat": -3.9833,
-    "lon": 137.6167
-  },
-  {
-    "name": "Puncak Jaya (Kotamulia)",
-    "province": "Papua Tengah",
-    "region": "Maluku & Papua",
-    "lat": -3.7333,
-    "lon": 137.95
-  },
-  {
-    "name": "Jayawijaya (Wamena)",
-    "province": "Papua Pegunungan",
-    "region": "Maluku & Papua",
-    "lat": -4.0956,
-    "lon": 138.9442
-  },
-  {
-    "name": "Lanny Jaya (Tiom)",
-    "province": "Papua Pegunungan",
-    "region": "Maluku & Papua",
-    "lat": -3.9,
-    "lon": 138.45
-  },
-  {
-    "name": "Mamberamo Tengah (Kobakma)",
-    "province": "Papua Pegunungan",
-    "region": "Maluku & Papua",
-    "lat": -3.4,
-    "lon": 139.1
-  },
-  {
-    "name": "Nduga (Kenyam)",
-    "province": "Papua Pegunungan",
-    "region": "Maluku & Papua",
-    "lat": -4.4167,
-    "lon": 138.5667
-  },
-  {
-    "name": "Pegunungan Bintang (Oksibil)",
-    "province": "Papua Pegunungan",
-    "region": "Maluku & Papua",
-    "lat": -4.9,
-    "lon": 140.6333
-  },
-  {
-    "name": "Tolikara (Karubaga)",
-    "province": "Papua Pegunungan",
-    "region": "Maluku & Papua",
-    "lat": -3.6167,
-    "lon": 138.65
-  },
-  {
-    "name": "Yahukimo (Dekai)",
-    "province": "Papua Pegunungan",
-    "region": "Maluku & Papua",
-    "lat": -4.8333,
-    "lon": 139.5
-  },
-  {
-    "name": "Yalimo (Elelim)",
-    "province": "Papua Pegunungan",
-    "region": "Maluku & Papua",
-    "lat": -3.7833,
-    "lon": 139.4
-  }
-];
+function _urai(row, i) {
+  const [kunci, lat, lon] = row;
+  const [name, province, region] = kunci.split('|');
+  return { name, province, region, lat, lon };
+}
+export const INDONESIA_CITIES = _TABEL.map(_urai);
+function _slug(s = '') { return String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''); }
+function _tier(region = '') {
+  if (/jawa/i.test(region)) return 'padat';
+  if (/sumatera|sulawesi/i.test(region)) return 'menengah';
+  return 'kepulauan';
+}
+export const KOTA_JAGA = INDONESIA_CITIES.map((k, i) => ({ ...k, id: `jk-${i + 1}-${_slug(k.name)}`, slug: _slug(`${k.name}-${k.province}`), tier: _tier(k.region) }));
+export const PETA_KOTA = new Map(KOTA_JAGA.map((k) => [k.slug, k]));
+export function cariKota(keyword = '', batas = 12) {
+  const q = _slug(keyword);
+  if (!q) return [];
+  const hasil = [];
+  for (const k of KOTA_JAGA) { if (k.slug.includes(q)) { hasil.push(k); if (hasil.length >= batas) break; } }
+  return hasil;
+}
+export const findCity = cariKota;
+export default KOTA_JAGA;

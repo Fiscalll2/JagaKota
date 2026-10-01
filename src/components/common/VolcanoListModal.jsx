@@ -1,236 +1,183 @@
-import React, { useState, useMemo } from 'react';
-import { Flame, X, Search, MapPin } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Mountain, X, Search, MapPin } from 'lucide-react';
 import { getNearbyVolcanoes } from '../../services/volcano';
 
-const REGIONS = ['Semua', 'Jawa', 'Sumatera', 'Bali & Nusa Tenggara', 'Sulawesi', 'Maluku'];
-const STATUS_FILTERS = [
-  { id: 'ALL', label: 'Semua Status' },
-  { id: 'ALERT', label: 'Siaga & Awas (Level III/IV)' },
-  { id: 'WASPADA', label: 'Waspada (Level II)' },
-  { id: 'NORMAL', label: 'Normal (Level I)' }
+// Kawasan + jenjang status versi ringkas JagaKota.
+const KAWASAN_GUNUNG = ['Semua', 'Jawa', 'Sumatera', 'Bali & Nusa Tenggara', 'Sulawesi', 'Maluku'];
+const JENJANG_STATUS = [
+  { id: 'ALL', label: 'Semua' },
+  { id: 'ALERT', label: 'Siaga/Awas' },
+  { id: 'WASPADA', label: 'Waspada' },
+  { id: 'NORMAL', label: 'Normal' },
 ];
 
 export function VolcanoListModal({ isOpen, onClose, userLocation }) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedRegion, setSelectedRegion] = useState('Semua');
-  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [kata, setKata] = useState('');
+  const [kawasan, setKawasan] = useState('Semua');
+  const [jenjang, setJenjang] = useState('ALL');
 
-  const { allVolcanoes } = useMemo(() => {
-    return getNearbyVolcanoes(userLocation?.lat, userLocation?.lon);
-  }, [userLocation?.lat, userLocation?.lon]);
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    setKata('');
+    setKawasan('Semua');
+    setJenjang('ALL');
+    return undefined;
+  }, [isOpen]);
 
-  const filteredVolcanoes = useMemo(() => {
-    return (allVolcanoes || []).filter((v) => {
-      const matchSearch = v.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          v.province.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchRegion = selectedRegion === 'Semua' || v.region === selectedRegion;
-      
-      let matchStatus = true;
-      if (statusFilter === 'ALERT') matchStatus = v.statusLevel >= 3;
-      else if (statusFilter === 'WASPADA') matchStatus = v.statusLevel === 2;
-      else if (statusFilter === 'NORMAL') matchStatus = v.statusLevel === 1;
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    const jagaEsc = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', jagaEsc);
+    return () => window.removeEventListener('keydown', jagaEsc);
+  }, [isOpen, onClose]);
 
-      return matchSearch && matchRegion && matchStatus;
+  const semuaGunung = useMemo(
+    () => getNearbyVolcanoes(userLocation?.lat, userLocation?.lon).allVolcanoes || [],
+    [userLocation?.lat, userLocation?.lon],
+  );
+
+  const hasil = useMemo(() => {
+    const q = kata.toLowerCase().trim();
+    return semuaGunung.filter((gunung) => {
+      const cocokTeks =
+        !q ||
+        gunung.name.toLowerCase().includes(q) ||
+        gunung.province.toLowerCase().includes(q);
+      const cocokKawasan = kawasan === 'Semua' || gunung.region === kawasan;
+      let cocokJenjang = true;
+      if (jenjang === 'ALERT') cocokJenjang = gunung.statusLevel >= 3;
+      else if (jenjang === 'WASPADA') cocokJenjang = gunung.statusLevel === 2;
+      else if (jenjang === 'NORMAL') cocokJenjang = gunung.statusLevel === 1;
+      return cocokTeks && cocokKawasan && cocokJenjang;
     });
-  }, [allVolcanoes, searchTerm, selectedRegion, statusFilter]);
+  }, [semuaGunung, kata, kawasan, jenjang]);
 
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay animate-fade-in" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-slate-950/70 p-0 sm:p-6 backdrop-blur-sm"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Daftar gunung api Indonesia"
+    >
       <div
-        className="modal-content"
+        className="flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl sm:rounded-3xl border-2 border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-700"
         onClick={(e) => e.stopPropagation()}
-        style={{
-          maxWidth: '640px',
-          width: '95%',
-          maxHeight: '90vh',
-          display: 'flex',
-          flexDirection: 'column',
-          padding: 0,
-          overflow: 'hidden'
-        }}
       >
-        {/* Header */}
-        <div style={{
-          padding: '1.25rem 1.5rem',
-          borderBottom: 'var(--border-thick)',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          backgroundColor: 'var(--bg-muted)'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-            <div style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: 'var(--radius-sm)',
-              backgroundColor: '#ef4444',
-              color: '#ffffff',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              <Flame size={20} strokeWidth={2.5} />
-            </div>
-            <div>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: '800', margin: 0, color: 'var(--text-main)' }}>
-                Pemantauan Gunung Api Indonesia
+        <div className="flex items-center justify-between gap-3 border-b-2 border-slate-100 bg-slate-50 px-5 py-4 dark:border-slate-800 dark:bg-slate-800/40">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-red-500 text-white">
+              <Mountain size={20} strokeWidth={2.5} />
+            </span>
+            <div className="min-w-0">
+              <h3 className="truncate text-base font-black text-slate-900 sm:text-lg dark:text-white">
+                Pos Gunung Api Nusantara
               </h3>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0, fontWeight: '600' }}>
-                Status Aktivitas Vulkanik Resmi PVMBG / MAGMA ESDM
+              <p className="truncate text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                Pantauan seismik &amp; visual PVMBG / MAGMA ESDM
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            aria-label="Tutup"
-            className="flat-btn-secondary"
-            style={{ minHeight: '32px', padding: '4px 8px' }}
+            aria-label="Tutup daftar gunung api"
+            className="grid size-9 shrink-0 place-items-center rounded-xl border-2 border-slate-200 text-slate-500 hover:bg-white dark:border-slate-700 dark:hover:bg-slate-900"
           >
-            <X size={16} strokeWidth={2.5} />
+            <X size={17} strokeWidth={2.5} />
           </button>
         </div>
 
-        {/* Filters */}
-        <div style={{ padding: '1rem 1.25rem', borderBottom: 'var(--border-thick)', backgroundColor: 'var(--bg-card)' }}>
-          {/* Search Input */}
-          <div style={{
-            position: 'relative',
-            display: 'flex',
-            alignItems: 'center',
-            marginBottom: '0.75rem'
-          }}>
-            <Search size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '12px' }} />
+        <div className="grid gap-2.5 border-b-2 border-slate-100 px-5 py-3.5 dark:border-slate-800">
+          <div className="relative">
+            <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
-              placeholder="Cari nama gunung api atau provinsi..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '8px 12px 8px 36px',
-                borderRadius: 'var(--radius-sm)',
-                border: 'var(--border-thick)',
-                backgroundColor: 'var(--bg-muted)',
-                color: 'var(--text-main)',
-                fontSize: '0.85rem',
-                fontWeight: '600'
-              }}
+              value={kata}
+              onChange={(e) => setKata(e.target.value)}
+              placeholder="Cari Merapi, Rinjani, atau nama provinsi…"
+              className="w-full rounded-xl border-2 border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-[13px] font-semibold text-slate-800 outline-none placeholder:text-slate-400 focus:border-red-400 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
             />
           </div>
-
-          {/* Region Tabs */}
-          <div style={{ display: 'flex', gap: '0.35rem', overflowX: 'auto', paddingBottom: '0.35rem' }}>
-            {REGIONS.map((r) => (
+          <div className="flex gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {KAWASAN_GUNUNG.map((nama) => (
               <button
-                key={r}
-                onClick={() => setSelectedRegion(r)}
-                className={`flat-btn-secondary ${selectedRegion === r ? 'active' : ''}`}
-                style={{
-                  padding: '4px 10px',
-                  minHeight: '28px',
-                  fontSize: '0.75rem',
-                  whiteSpace: 'nowrap'
-                }}
+                key={nama}
+                onClick={() => setKawasan(nama)}
+                className={
+                  kawasan === nama
+                    ? 'shrink-0 rounded-full bg-slate-900 px-3 py-1 text-[11px] font-extrabold text-white dark:bg-white dark:text-slate-900'
+                    : 'shrink-0 rounded-full border-2 border-slate-200 bg-white px-3 py-1 text-[11px] font-bold text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300'
+                }
               >
-                {r}
+                {nama}
               </button>
             ))}
           </div>
-
-          {/* Status Filter Tabs */}
-          <div style={{ display: 'flex', gap: '0.35rem', overflowX: 'auto', paddingTop: '0.35rem' }}>
-            {STATUS_FILTERS.map((sf) => (
+          <div className="flex gap-1.5 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {JENJANG_STATUS.map((s) => (
               <button
-                key={sf.id}
-                onClick={() => setStatusFilter(sf.id)}
-                style={{
-                  padding: '3px 8px',
-                  borderRadius: 'var(--radius-sm)',
-                  fontSize: '0.7rem',
-                  fontWeight: statusFilter === sf.id ? '800' : '600',
-                  border: statusFilter === sf.id ? '1px solid var(--color-primary)' : 'var(--border-thick)',
-                  backgroundColor: statusFilter === sf.id ? 'var(--color-primary-bg)' : 'var(--bg-muted)',
-                  color: statusFilter === sf.id ? 'var(--color-primary)' : 'var(--text-muted)',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap'
-                }}
+                key={s.id}
+                onClick={() => setJenjang(s.id)}
+                className={
+                  jenjang === s.id
+                    ? 'shrink-0 rounded-lg border-2 border-emerald-500 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-extrabold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300'
+                    : 'shrink-0 rounded-lg border-2 border-slate-200 bg-white px-2.5 py-0.5 text-[11px] font-bold text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400'
+                }
               >
-                {sf.label}
+                {s.label}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Volcano Items List */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '0.75rem 1.25rem' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
-            {filteredVolcanoes.length === 0 ? (
-              <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                Tidak ada gunung api yang sesuai dengan pencarian.
-              </div>
-            ) : (
-              filteredVolcanoes.map((v) => (
-                <div
-                  key={v.id}
-                  style={{
-                    padding: '0.9rem 1rem',
-                    borderRadius: 'var(--radius-md)',
-                    border: 'var(--border-thick)',
-                    backgroundColor: 'var(--bg-card)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '0.4rem'
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.4rem' }}>
-                    <div>
-                      <strong style={{ fontSize: '0.95rem', color: 'var(--text-main)', fontWeight: '800' }}>
-                        {v.name}
-                      </strong>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '0.4rem' }}>
-                        ({v.elevation} mdpl · {v.province})
-                      </span>
-                    </div>
-
-                    <span style={{
-                      padding: '2px 8px',
-                      borderRadius: 'var(--radius-sm)',
-                      backgroundColor: v.status.color,
-                      color: '#ffffff',
-                      fontSize: '0.7rem',
-                      fontWeight: '800'
-                    }}>
-                      {v.status.code} ({v.status.name})
+        <div className="grid flex-1 gap-2.5 overflow-y-auto px-5 py-4">
+          <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">
+            {hasil.length} gunung terpantau
+          </p>
+          {hasil.length === 0 ? (
+            <p className="py-10 text-center text-sm font-semibold text-slate-500">
+              Tidak ada gunung yang cocok dengan saringan.
+            </p>
+          ) : (
+            hasil.map((gunung) => (
+              <article
+                key={gunung.id}
+                className="grid gap-1.5 rounded-2xl border-2 border-slate-100 p-3.5 dark:border-slate-800 dark:bg-slate-800/40"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <strong className="text-sm font-extrabold text-slate-900 dark:text-white">
+                    {gunung.name}
+                    <span className="ml-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                      {gunung.elevation} mdpl · {gunung.province}
                     </span>
-                  </div>
-
-                  <p style={{ fontSize: '0.775rem', color: 'var(--text-main)', margin: 0, fontWeight: '600' }}>
-                    {v.note || v.status.description}
-                  </p>
-
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginTop: '0.25rem',
-                    fontSize: '0.725rem',
-                    color: 'var(--text-muted)',
-                    fontWeight: '600'
-                  }}>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><MapPin size={13} /> Jarak: <strong style={{ color: 'var(--color-primary)' }}>{v.distanceKm} km</strong> dari posisi Anda</span>
-                    <span>Radius bahaya: {v.dangerRadiusKm} km</span>
-                  </div>
+                  </strong>
+                  <span
+                    className="rounded-lg px-2 py-0.5 text-[11px] font-extrabold text-white"
+                    style={{ backgroundColor: gunung.status.color }}
+                  >
+                    {gunung.status.code} · {gunung.status.name}
+                  </span>
                 </div>
-              ))
-            )}
-          </div>
+                <p className="text-xs font-medium leading-relaxed text-slate-600 dark:text-slate-300">
+                  {gunung.note || gunung.status.description}
+                </p>
+                <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                  <span className="inline-flex items-center gap-1">
+                    <MapPin size={12} /> {gunung.distanceKm} km dari Anda
+                  </span>
+                  <span>Zona steril {gunung.dangerRadiusKm} km</span>
+                </div>
+              </article>
+            ))
+          )}
         </div>
 
-        {/* Footer */}
-        <div style={{ padding: '0.75rem 1.25rem', borderTop: 'var(--border-thick)', backgroundColor: 'var(--bg-muted)', fontSize: '0.725rem', color: 'var(--text-muted)', textAlign: 'center', fontWeight: '600' }}>
-          Data diperbarui berdasarkan pengamatan seismik & visual PVMBG Badan Geologi ESDM
+        <div className="border-t-2 border-slate-100 bg-slate-50 px-5 py-3 text-center text-[11px] font-semibold text-slate-500 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-400">
+          Disusun dari data pengamatan PVMBG Badan Geologi ESDM
         </div>
       </div>
     </div>

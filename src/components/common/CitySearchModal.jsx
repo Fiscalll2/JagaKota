@@ -1,11 +1,12 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { Search, X, MapPin, ChevronRight, Compass, Flame } from 'lucide-react';
+import { Search, X, MapPin, ChevronRight, Compass, Star } from 'lucide-react';
 import { INDONESIA_CITIES, REGIONS } from '../../utils/cities';
 import { fetchWeatherData } from '../../services/weather';
 import { fetchAirQualityData } from '../../services/airQuality';
 import { triggerHaptic } from '../../utils/haptics';
 
-const POPULAR_CITIES = [
+// Deretan kota andalan JagaKota untuk akses kilat warga.
+const KOTA_ANDALAN_JAGA = [
   'Jakarta Pusat',
   'Surabaya',
   'Bandung',
@@ -15,315 +16,240 @@ const POPULAR_CITIES = [
   'Makassar',
   'Yogyakarta',
   'Semarang',
-  'Palembang'
+  'Palembang',
 ];
 
 export function CitySearchModal({ isOpen, onClose, onSelectCity, currentCity = {} }) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedRegion, setSelectedRegion] = useState('Semua');
-  const inputRef = useRef(null);
+  const [kataKunci, setKataKunci] = useState('');
+  const [pulauAktif, setPulauAktif] = useState('Semua');
+  const kolomCari = useRef(null);
 
   useEffect(() => {
     if (isOpen) {
-      setTimeout(() => inputRef.current?.focus(), 80);
-    } else {
-      setSearchTerm('');
-      setSelectedRegion('Semua');
+      const t = setTimeout(() => kolomCari.current?.focus(), 90);
+      return () => clearTimeout(t);
     }
+    setKataKunci('');
+    setPulauAktif('Semua');
+    return undefined;
   }, [isOpen]);
 
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape' && isOpen) onClose();
+    if (!isOpen) return undefined;
+    const tutupEsc = (e) => {
+      if (e.key === 'Escape') onClose();
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', tutupEsc);
+    return () => window.removeEventListener('keydown', tutupEsc);
   }, [isOpen, onClose]);
 
-  const filteredCities = useMemo(() => {
-    return INDONESIA_CITIES.filter((city) => {
-      const matchRegion =
-        selectedRegion === 'Semua' ||
-        city.region === selectedRegion ||
-        (selectedRegion === 'Nusantara' && city.name.includes('Nusantara'));
-
-      if (!searchTerm) return matchRegion;
-
-      const q = searchTerm.toLowerCase().trim();
+  const daftarKota = useMemo(() => {
+    const q = kataKunci.toLowerCase().trim();
+    return INDONESIA_CITIES.filter((kota) => {
+      const cocokPulau =
+        pulauAktif === 'Semua' ||
+        kota.region === pulauAktif ||
+        (pulauAktif === 'Nusantara' && kota.name.includes('Nusantara'));
+      if (!cocokPulau) return false;
+      if (!q) return true;
       return (
-        matchRegion &&
-        (city.name.toLowerCase().includes(q) ||
-         city.province.toLowerCase().includes(q) ||
-         city.region.toLowerCase().includes(q))
+        kota.name.toLowerCase().includes(q) ||
+        kota.province.toLowerCase().includes(q) ||
+        kota.region.toLowerCase().includes(q)
       );
     });
-  }, [searchTerm, selectedRegion]);
+  }, [kataKunci, pulauAktif]);
 
-  // Prefetch city data into cache on hover/touch for instant click response
-  const prefetchCityData = (city) => {
-    if (!city?.lat || !city?.lon) return;
-    fetchWeatherData(city.lat, city.lon, false).catch(() => {});
-    fetchAirQualityData(city.lat, city.lon, false).catch(() => {});
+  // Hangatkan cache cuaca + udara saat kursor menyentuh baris kota.
+  const hangatkanKota = (kota) => {
+    if (!kota?.lat || !kota?.lon) return;
+    fetchWeatherData(kota.lat, kota.lon, false).catch(() => {});
+    fetchAirQualityData(kota.lat, kota.lon, false).catch(() => {});
+  };
+
+  const pilihKota = (kota) => {
+    triggerHaptic(12);
+    onSelectCity(kota);
+    onClose();
   };
 
   if (!isOpen) return null;
 
-  const currentCityCleanName = currentCity?.name ? currentCity.name.replace(' (GPS)', '') : '';
+  const namaAktif = currentCity?.name ? currentCity.name.replace(' (GPS)', '') : '';
+  const tampil = daftarKota.slice(0, 80);
 
   return (
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(15, 23, 42, 0.72)',
-        backdropFilter: 'blur(6px)',
-        zIndex: 9999,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '1rem'
-      }}
+      className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-slate-950/70 p-0 sm:p-6 backdrop-blur-sm"
       onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Pencarian kota JagaKota"
     >
       <div
-        className="flat-card animate-fade-in"
-        style={{
-          width: '100%',
-          maxWidth: '600px',
-          maxHeight: '88vh',
-          display: 'flex',
-          flexDirection: 'column',
-          backgroundColor: 'var(--bg-card)',
-          border: 'var(--border-thick)',
-          overflow: 'hidden',
-          padding: 0
-        }}
+        className="flex w-full max-w-2xl max-h-[92vh] flex-col overflow-hidden rounded-t-3xl sm:rounded-3xl border-2 border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-700"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Search Header */}
-        <div style={{ padding: '1.25rem', borderBottom: 'var(--border-thick)', backgroundColor: 'var(--bg-card)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <div style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: 'var(--radius-sm)',
-                backgroundColor: 'var(--color-secondary)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#ffffff'
-              }}>
-                <Compass size={18} strokeWidth={2.5} />
+        {/* Kepala panel: judul + tombol tutup */}
+        <div className="border-b-2 border-slate-100 dark:border-slate-800 px-5 pt-5 pb-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-emerald-500 text-white">
+                <Compass size={20} strokeWidth={2.5} />
+              </span>
+              <div className="min-w-0">
+                <h3 className="truncate text-lg font-black tracking-tight text-slate-900 dark:text-white">
+                  Jelajahi Kota Indonesia
+                </h3>
+                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                  515 kota &amp; kabupaten · 38 provinsi
+                </p>
               </div>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: '800', margin: 0, color: 'var(--text-main)', letterSpacing: '-0.02em' }}>
-                Pilih Kota & Kabupaten
-              </h3>
             </div>
             <button
               onClick={onClose}
-              aria-label="Tutup"
-              className="flat-btn-secondary"
-              style={{ minHeight: '32px', padding: '4px 8px' }}
+              aria-label="Tutup pencarian kota"
+              className="grid size-9 shrink-0 place-items-center rounded-xl border-2 border-slate-200 text-slate-500 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
             >
-              <X size={16} strokeWidth={2.5} />
+              <X size={17} strokeWidth={2.5} />
             </button>
           </div>
 
-          {/* Search Input Bar */}
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-            <Search size={18} style={{ position: 'absolute', left: '12px', color: 'var(--text-muted)' }} strokeWidth={2.5} />
+          {/* Kolom ketik */}
+          <div className="relative mt-4">
+            <Search size={17} strokeWidth={2.5} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
-              ref={inputRef}
+              ref={kolomCari}
               type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Cari 515 kota, kabupaten, atau provinsi..."
-              style={{
-                width: '100%',
-                padding: '0.75rem 2.2rem 0.75rem 2.5rem',
-                borderRadius: 'var(--radius-md)',
-                backgroundColor: 'var(--bg-muted)',
-                border: 'var(--border-thick)',
-                color: 'var(--text-main)',
-                fontSize: '0.9rem',
-                fontWeight: '600',
-                outline: 'none'
-              }}
+              value={kataKunci}
+              onChange={(e) => setKataKunci(e.target.value)}
+              placeholder="Ketik nama kota, kabupaten, atau provinsi…"
+              className="w-full rounded-2xl border-2 border-slate-200 bg-slate-50 py-3 pl-11 pr-11 text-sm font-semibold text-slate-900 outline-none placeholder:text-slate-400 focus:border-emerald-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
             />
-            {searchTerm && (
+            {kataKunci && (
               <button
-                onClick={() => setSearchTerm('')}
-                style={{
-                  position: 'absolute',
-                  right: '12px',
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--text-muted)',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center'
-                }}
+                onClick={() => setKataKunci('')}
+                aria-label="Bersihkan pencarian"
+                className="absolute right-3 top-1/2 grid size-6 -translate-y-1/2 place-items-center rounded-full bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
               >
-                <X size={16} strokeWidth={2.5} />
+                <X size={14} strokeWidth={2.5} />
               </button>
             )}
           </div>
 
-          {/* Quick Popular Pills */}
-          {!searchTerm && selectedRegion === 'Semua' && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', overflowX: 'auto', paddingTop: '0.75rem', scrollbarWidth: 'none' }}>
-              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '2px', flexShrink: 0 }}>
-                <Flame size={13} color="var(--color-accent)" strokeWidth={2.5} /> Populer:
+          {/* Andalan kilat */}
+          {!kataKunci && pulauAktif === 'Semua' && (
+            <div className="mt-3 flex items-center gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <span className="flex shrink-0 items-center gap-1 text-[11px] font-extrabold uppercase tracking-wide text-slate-400">
+                <Star size={12} className="text-amber-500" /> Andalan
               </span>
-              {POPULAR_CITIES.map((name) => {
-                const cityObj = INDONESIA_CITIES.find(c => c.name === name);
-                if (!cityObj) return null;
+              {KOTA_ANDALAN_JAGA.map((nama) => {
+                const objek = INDONESIA_CITIES.find((c) => c.name === nama);
+                if (!objek) return null;
                 return (
                   <button
-                    key={name}
-                    onMouseEnter={() => prefetchCityData(cityObj)}
-                    onTouchStart={() => prefetchCityData(cityObj)}
-                    onClick={() => {
-                      triggerHaptic(12);
-                      onSelectCity(cityObj);
-                      onClose();
-                    }}
-                    style={{
-                      padding: '3px 9px',
-                      borderRadius: 'var(--radius-sm)',
-                      fontSize: '0.725rem',
-                      fontWeight: '700',
-                      whiteSpace: 'nowrap',
-                      cursor: 'pointer',
-                      border: 'var(--border-thick)',
-                      backgroundColor: 'var(--bg-muted)',
-                      color: 'var(--text-main)'
-                    }}
+                    key={nama}
+                    onMouseEnter={() => hangatkanKota(objek)}
+                    onTouchStart={() => hangatkanKota(objek)}
+                    onClick={() => pilihKota(objek)}
+                    className="shrink-0 rounded-full border-2 border-slate-200 bg-white px-3 py-1 text-xs font-bold text-slate-700 hover:border-emerald-500 hover:text-emerald-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                   >
-                    {name.split(' ')[0]}
+                    {nama.split(' ')[0]}
                   </button>
                 );
               })}
             </div>
           )}
 
-          {/* Region Filter Pills */}
-          <div
-            style={{
-              display: 'flex',
-              gap: '0.35rem',
-              overflowX: 'auto',
-              paddingTop: '0.75rem',
-              scrollbarWidth: 'none'
-            }}
-          >
-            {REGIONS.map((r) => (
-              <button
-                key={r}
-                onClick={() => { triggerHaptic(8); setSelectedRegion(r); }}
-                style={{
-                  padding: '4px 10px',
-                  borderRadius: 'var(--radius-full)',
-                  fontSize: '0.75rem',
-                  fontWeight: '700',
-                  whiteSpace: 'nowrap',
-                  cursor: 'pointer',
-                  border: selectedRegion === r ? '2px solid var(--color-secondary)' : 'var(--border-thick)',
-                  backgroundColor: selectedRegion === r ? 'var(--color-secondary-bg)' : 'var(--bg-muted)',
-                  color: selectedRegion === r ? 'var(--color-secondary)' : 'var(--text-main)'
-                }}
-              >
-                {r}
-              </button>
-            ))}
+          {/* Penyaring pulau */}
+          <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {REGIONS.map((pulau) => {
+              const aktif = pulauAktif === pulau;
+              return (
+                <button
+                  key={pulau}
+                  onClick={() => {
+                    triggerHaptic(8);
+                    setPulauAktif(pulau);
+                  }}
+                  className={
+                    aktif
+                      ? 'shrink-0 rounded-full bg-emerald-500 px-3.5 py-1.5 text-xs font-extrabold text-white'
+                      : 'shrink-0 rounded-full border-2 border-slate-200 bg-white px-3.5 py-1.5 text-xs font-bold text-slate-600 hover:border-emerald-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300'
+                  }
+                >
+                  {pulau}
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        {/* Results List */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '0.85rem 1.25rem', backgroundColor: 'var(--bg-card)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.65rem' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)' }}>
-              Menampilkan {Math.min(filteredCities.length, 80)} dari {filteredCities.length} kota & kabupaten
-            </span>
-          </div>
-
-          {filteredCities.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
-              <p style={{ fontSize: '0.95rem', fontWeight: '700', margin: 0, color: 'var(--text-main)' }}>Tidak ditemukan kota "{searchTerm}".</p>
-              <p style={{ fontSize: '0.8rem', marginTop: '0.35rem' }}>
-                Periksa ejaan nama kota/kabupaten Anda atau pilih pulau lain.
+        {/* Hasil */}
+        <div className="flex-1 overflow-y-auto bg-white px-4 py-3 dark:bg-slate-900">
+          <p className="mb-2 px-1 text-[11px] font-bold uppercase tracking-wide text-slate-400">
+            {tampil.length} dari {daftarKota.length} wilayah
+          </p>
+          {daftarKota.length === 0 ? (
+            <div className="px-4 py-12 text-center">
+              <p className="text-sm font-extrabold text-slate-800 dark:text-white">
+                Tidak ketemu “{kataKunci}”.
               </p>
+              <p className="mt-1 text-xs text-slate-500">Coba ejaan lain atau ganti penyaring pulau.</p>
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.45rem' }}>
-              {filteredCities.slice(0, 80).map((city) => {
-                const isSelected = currentCityCleanName ? currentCityCleanName === city.name : false;
+            <ul className="grid gap-2">
+              {tampil.map((kota) => {
+                const sedangAktif = namaAktif ? namaAktif === kota.name : false;
                 return (
-                  <div
-                    key={city.name}
-                    onMouseEnter={() => prefetchCityData(city)}
-                    onTouchStart={() => prefetchCityData(city)}
-                    onClick={() => {
-                      triggerHaptic(12);
-                      onSelectCity(city);
-                      onClose();
-                    }}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '0.75rem 1rem',
-                      borderRadius: 'var(--radius-md)',
-                      backgroundColor: isSelected ? 'var(--color-secondary-bg)' : 'var(--bg-muted)',
-                      border: isSelected ? '2px solid var(--color-secondary)' : 'var(--border-thick)',
-                      cursor: 'pointer',
-                      transition: 'transform var(--anim-fast)'
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', minWidth: 0 }}>
-                      <div style={{
-                        width: '28px',
-                        height: '28px',
-                        borderRadius: 'var(--radius-full)',
-                        backgroundColor: isSelected ? 'var(--color-secondary)' : 'var(--bg-card)',
-                        color: isSelected ? '#fff' : 'var(--color-secondary)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0
-                      }}>
-                        <MapPin size={15} strokeWidth={2.5} />
-                      </div>
-                      <div style={{ minWidth: 0 }}>
-                        <strong style={{ fontSize: '0.9rem', color: isSelected ? 'var(--color-secondary)' : 'var(--text-main)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {city.name}
-                        </strong>
-                        <span style={{ fontSize: '0.725rem', color: 'var(--text-muted)', fontWeight: '600', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {city.province} • {city.region}
+                  <li key={kota.name}>
+                    <button
+                      onMouseEnter={() => hangatkanKota(kota)}
+                      onTouchStart={() => hangatkanKota(kota)}
+                      onClick={() => pilihKota(kota)}
+                      className={
+                        sedangAktif
+                          ? 'flex w-full items-center justify-between gap-3 rounded-2xl border-2 border-emerald-500 bg-emerald-50 px-3.5 py-3 text-left dark:bg-emerald-500/10'
+                          : 'flex w-full items-center justify-between gap-3 rounded-2xl border-2 border-slate-100 bg-slate-50 px-3.5 py-3 text-left hover:border-emerald-400 dark:border-slate-800 dark:bg-slate-800/60'
+                      }
+                    >
+                      <span className="flex min-w-0 items-center gap-3">
+                        <span
+                          className={
+                            sedangAktif
+                              ? 'grid size-9 shrink-0 place-items-center rounded-full bg-emerald-500 text-white'
+                              : 'grid size-9 shrink-0 place-items-center rounded-full bg-white text-emerald-600 border-2 border-slate-100 dark:border-slate-700 dark:bg-slate-900'
+                          }
+                        >
+                          <MapPin size={16} strokeWidth={2.5} />
                         </span>
-                      </div>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexShrink: 0 }}>
-                      {isSelected ? (
-                        <span style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--color-secondary)', padding: '2px 8px', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--color-secondary-bg)', border: '1px solid var(--color-secondary)' }}>
+                        <span className="min-w-0">
+                          <span className="block truncate text-sm font-extrabold text-slate-900 dark:text-white">
+                            {kota.name}
+                          </span>
+                          <span className="block truncate text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                            {kota.province} · {kota.region}
+                          </span>
+                        </span>
+                      </span>
+                      {sedangAktif ? (
+                        <span className="shrink-0 rounded-lg border border-emerald-500 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-extrabold text-emerald-600 dark:text-emerald-400">
                           Aktif
                         </span>
                       ) : (
-                        <ChevronRight size={16} color="var(--text-muted)" strokeWidth={2.5} />
+                        <ChevronRight size={16} className="shrink-0 text-slate-300" strokeWidth={2.5} />
                       )}
-                    </div>
-                  </div>
+                    </button>
+                  </li>
                 );
               })}
-            </div>
+            </ul>
           )}
         </div>
 
-        {/* Footer info */}
-        <div style={{ padding: '0.85rem 1.25rem', borderTop: 'var(--border-thick)', backgroundColor: 'var(--bg-muted)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', fontWeight: '600', color: 'var(--text-muted)' }}>
-          <span>Tekan ESC untuk menutup</span>
-          <span>BMKG Official 38 Provinsi (515 Wilayah)</span>
+        <div className="flex items-center justify-between border-t-2 border-slate-100 bg-slate-50 px-5 py-3 text-[11px] font-semibold text-slate-500 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
+          <span>ESC untuk menutup</span>
+          <span>Sumber: BMKG · 515 wilayah</span>
         </div>
       </div>
     </div>

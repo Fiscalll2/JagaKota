@@ -1,30 +1,39 @@
-export function formatFullCurrentDate(date = new Date()) {
-  const d = date instanceof Date ? date : new Date(date);
-  const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-  const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+// JagaKota — format tanggal v2 (Intl + fallback manual)
+const HARI_PANJANG = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+const BULAN_PANJANG = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
-  const dayName = days[d.getDay()];
-  const dayNum = d.getDate();
-  const monthName = months[d.getMonth()];
-  const year = d.getFullYear();
-  const hours = d.getHours().toString().padStart(2, '0');
-  const minutes = d.getMinutes().toString().padStart(2, '0');
-  const offset = d.getTimezoneOffset();
-  const tzName = offset === -420 ? 'WIB' : offset === -480 ? 'WITA' : offset === -540 ? 'WIT' : 'WIB';
-
-  return `${dayName}, ${dayNum} ${monthName} ${year} • ${hours}.${minutes} ${tzName}`;
+function zonaLokal(d) {
+  const off = d.getTimezoneOffset();
+  if (off === -420) return 'WIB';
+  if (off === -480) return 'WITA';
+  if (off === -540) return 'WIT';
+  return 'WIB';
 }
 
-export function formatShortDate(dateStr) {
-  if (!dateStr) return '-';
+function dua(n) { return String(n).padStart(2, '0'); }
+
+export function tanggalPenuhJaga(masukan = new Date()) {
+  const d = masukan instanceof Date ? masukan : new Date(masukan);
+  if (Number.isNaN(d.getTime())) return '-';
   try {
-    const date = new Date(dateStr);
-    return new Intl.DateTimeFormat('id-ID', {
-      weekday: 'short',
-      day: 'numeric',
-      month: 'short'
-    }).format(date);
+    const f = new Intl.DateTimeFormat('id-ID', {
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+    }).format(d);
+    return `${f} ${zonaLokal(d)}`;
   } catch {
-    return dateStr;
+    return `${HARI_PANJANG[d.getDay()]}, ${d.getDate()} ${BULAN_PANJANG[d.getMonth()]} ${d.getFullYear()} • ${dua(d.getHours())}.${dua(d.getMinutes())} ${zonaLokal(d)}`;
   }
 }
+
+export const formatFullCurrentDate = tanggalPenuhJaga;
+
+export function tanggalRingkasJaga(str) {
+  if (!str) return '-';
+  try {
+    return new Intl.DateTimeFormat('id-ID', { weekday: 'short', day: 'numeric', month: 'short' }).format(new Date(str));
+  } catch { return String(str); }
+}
+
+export const formatShortDate = tanggalRingkasJaga;
+export default tanggalPenuhJaga;

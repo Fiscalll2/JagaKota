@@ -1,203 +1,89 @@
 import React from 'react';
-import { Calendar, Droplets, Sun, ArrowUp, ArrowDown } from 'lucide-react';
-import { getWeatherVisual } from '../../utils/weatherIcons';
-import { formatShortDate } from '../../utils/format';
-import { translations } from '../../utils/i18n';
+import { CalendarDays, Droplets, Sun, ArrowUp, ArrowDown } from 'lucide-react';
+import { visualCuaca } from '../../utils/weatherIcons';
+import { tanggalRingkasJaga, tanggalPenuhJaga } from '../../utils/format';
 
 export function WeatherForecastChart({ dailyData }) {
-  const t = translations;
   if (!dailyData || !dailyData.time) return null;
 
   const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-
-  // Calculate weekly extremes
   const maxTemps = dailyData.temperature_2m_max?.slice(0, 7) || [];
   const minTemps = dailyData.temperature_2m_min?.slice(0, 7) || [];
   const highestTemp = maxTemps.length ? Math.round(Math.max(...maxTemps)) : 33;
   const lowestTemp = minTemps.length ? Math.round(Math.min(...minTemps)) : 23;
 
   return (
-    <div className="flat-card" style={{ padding: '1.5rem' }}>
-      
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
-          <div style={{
-            width: '32px',
-            height: '32px',
-            borderRadius: 'var(--radius-full)',
-            backgroundColor: 'var(--color-primary-bg)',
-            color: 'var(--color-primary)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}>
-            <Calendar size={18} strokeWidth={2.5} />
-          </div>
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2.5">
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+            <CalendarDays size={18} strokeWidth={2.5} />
+          </span>
           <div>
-            <h3 style={{ fontSize: '1.05rem', fontWeight: '800', margin: 0, color: 'var(--text-main)' }}>
-              {t.forecast7Title || 'Prakiraan Cuaca 7 Hari Kedepan'}
-            </h3>
-            <span style={{ fontSize: '0.725rem', color: 'var(--text-muted)', fontWeight: '600' }}>
-              Suhu Siang/Malam · Probabilitas Hujan · Indeks UV Harian
-            </span>
+            <h3 className="text-base font-extrabold tracking-tight text-slate-900 dark:text-white">Bekal Seminggu ke Depan</h3>
+            <p className="text-[11px] font-medium text-slate-500">Biar nggak salah kostum, warga! • {tanggalPenuhJaga(new Date())}</p>
           </div>
         </div>
-
-        {/* Weekly Summary Pill */}
-        <span style={{
-          fontSize: '0.725rem',
-          fontWeight: '700',
-          padding: '4px 10px',
-          borderRadius: 'var(--radius-sm)',
-          backgroundColor: 'var(--bg-muted)',
-          color: 'var(--text-muted)',
-          border: '1px solid var(--border-flat)'
-        }}>
-          Rentang: <strong style={{ color: 'var(--text-main)' }}>{lowestTemp}°C - {highestTemp}°C</strong>
+        <span className="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+          Adem <strong className="text-slate-900 dark:text-white">{lowestTemp}°</strong> – Panas <strong className="text-slate-900 dark:text-white">{highestTemp}°</strong>
         </span>
       </div>
 
-      {/* 7-Day Grid Cards */}
-      <div className="forecast-scroll-container" style={{ gap: '0.65rem' }}>
+      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
         {dailyData.time.slice(0, 7).map((dateStr, idx) => {
           const d = new Date(dateStr);
           const dayName = idx === 0 ? 'Hari Ini' : days[d.getDay()];
-          const formattedDate = formatShortDate(dateStr);
+          const formattedDate = tanggalRingkasJaga(dateStr);
           const maxTemp = Math.round(dailyData.temperature_2m_max?.[idx] ?? 0);
           const minTemp = Math.round(dailyData.temperature_2m_min?.[idx] ?? 0);
           const rainProb = Math.round(dailyData.precipitation_probability_max?.[idx] ?? (dailyData.precipitation_sum?.[idx] > 0 ? 60 : 15));
           const rainSum = (dailyData.precipitation_sum?.[idx] ?? 0).toFixed(1);
           const uvMax = Math.round(dailyData.uv_index_max?.[idx] ?? 6);
           const code = dailyData.weather_code?.[idx] ?? 0;
-          const visual = getWeatherVisual(code);
+          const visual = visualCuaca(code);
           const IconComp = visual.icon;
 
           return (
-            <div
+            <article
               key={dateStr}
-              className="forecast-item"
-              style={{
-                backgroundColor: idx === 0 ? 'var(--color-primary-bg)' : 'var(--bg-muted)',
-                border: idx === 0 ? '1.5px solid var(--color-primary)' : '1px solid var(--border-flat)',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                minWidth: '125px',
-                minHeight: '235px',
-                padding: '0.95rem 0.65rem',
-                borderRadius: 'var(--radius-md)',
-                boxShadow: idx === 0 ? '0 4px 12px rgba(16, 185, 129, 0.12)' : 'none',
-                position: 'relative'
-              }}
+              className={`flex min-h-60 flex-col items-center justify-between rounded-xl border p-3 text-center transition ${idx === 0 ? 'border-emerald-500 bg-emerald-50/70 shadow-sm dark:bg-emerald-950/30' : 'border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/50'}`}
             >
-              {/* Day & Date Header */}
-              <div style={{ textAlign: 'center', width: '100%' }}>
-                <div style={{
-                  fontSize: '0.875rem',
-                  fontWeight: '800',
-                  color: idx === 0 ? 'var(--color-primary)' : 'var(--text-main)',
-                  letterSpacing: '-0.01em'
-                }}>
-                  {dayName}
-                </div>
-                <div style={{
-                  fontSize: '0.725rem',
-                  fontWeight: '600',
-                  color: idx === 0 ? 'var(--color-primary)' : 'var(--text-muted)',
-                  marginTop: '1px'
-                }}>
-                  {formattedDate}
-                </div>
+              <div>
+                <p className={`text-sm font-extrabold ${idx === 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-800 dark:text-slate-100'}`}>{dayName}</p>
+                <p className="mt-0.5 text-[11px] font-semibold text-slate-500">{formattedDate}</p>
               </div>
 
-              {/* Weather Icon Badge */}
-              <div
-                style={{
-                  width: '46px',
-                  height: '46px',
-                  borderRadius: 'var(--radius-full)',
-                  backgroundColor: visual.bg,
-                  border: `1px solid ${visual.color}40`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0.35rem 0'
-                }}
-              >
+              <span className="my-2 flex h-12 w-12 items-center justify-center rounded-full border" style={{ backgroundColor: visual.bg, borderColor: `${visual.color}40` }}>
                 <IconComp size={24} color={visual.color} strokeWidth={2.5} />
+              </span>
+              <p className="flex min-h-7 items-center text-xs font-bold text-slate-700 dark:text-slate-200">{visual.label}</p>
+
+              <div className="mt-1.5 flex w-full items-center justify-center gap-1.5 rounded-lg bg-white px-2 py-1 shadow-sm dark:bg-slate-900">
+                <span className="flex items-center gap-0.5 font-extrabold text-red-500" title={`Paling panas siang ini: ${maxTemp}°C`}>
+                  <ArrowUp size={11} strokeWidth={3} /><span className="text-sm">{maxTemp}°</span>
+                </span>
+                <span className="text-xs text-slate-400">/</span>
+                <span className="flex items-center gap-0.5 font-bold text-sky-600" title={`Paling adem malam nanti: ${minTemp}°C`}>
+                  <ArrowDown size={11} strokeWidth={3} /><span className="text-[13px]">{minTemp}°</span>
+                </span>
               </div>
 
-              {/* Weather Condition Label */}
-              <div style={{
-                fontSize: '0.75rem',
-                fontWeight: '700',
-                color: 'var(--text-main)',
-                textAlign: 'center',
-                lineHeight: 1.25,
-                minHeight: '28px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '0 2px'
-              }}>
-                {visual.label}
+              <div className="mt-2 flex w-full items-center justify-between border-t border-dashed border-slate-200 pt-1.5 text-[11px] font-bold text-slate-500 dark:border-slate-700">
+                <span className={`flex items-center gap-1 ${rainProb >= 40 ? 'text-sky-600' : ''}`} title={`Peluang hujan ${rainProb}%, curah ${rainSum} mm. ${rainProb >= 40 ? 'Bawa payung ya warga!' : 'Aman, langit bersahabat.'}`}>
+                  <Droplets size={11} strokeWidth={2.5} />{rainProb}%
+                </span>
+                <span className={`flex items-center gap-1 ${uvMax >= 8 ? 'text-orange-600' : ''}`} title={`UV maksimum ${uvMax}. ${uvMax >= 8 ? 'Jangan lupa sunscreen!' : 'Santai di luar oke.'}`}>
+                  <Sun size={11} strokeWidth={2.5} />UV {uvMax}
+                </span>
               </div>
-
-              {/* Temperature High / Low with clear labels */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.45rem',
-                backgroundColor: 'var(--bg-card)',
-                padding: '4px 8px',
-                borderRadius: 'var(--radius-sm)',
-                border: 'none', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-                width: '90%',
-                marginTop: '0.2rem'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1px', color: '#ef4444' }} title="Suhu Maksimum (Siang)">
-                  <ArrowUp size={11} strokeWidth={3} />
-                  <strong style={{ fontSize: '0.85rem', fontWeight: '800' }}>{maxTemp}°</strong>
-                </div>
-                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>/</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1px', color: '#0284c7' }} title="Suhu Minimum (Malam)">
-                  <ArrowDown size={11} strokeWidth={3} />
-                  <span style={{ fontSize: '0.8rem', fontWeight: '700' }}>{minTemp}°</span>
-                </div>
-              </div>
-
-              {/* Secondary Details: Rain Probability & UV Max */}
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                width: '100%',
-                marginTop: '0.45rem',
-                paddingTop: '0.4rem',
-                borderTop: '1px dashed var(--border-flat)',
-                fontSize: '0.675rem',
-                fontWeight: '700',
-                color: 'var(--text-muted)'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '2px', color: rainProb >= 40 ? '#0284c7' : 'var(--text-muted)' }} title={`Peluang Hujan: ${rainProb}% (${rainSum} mm)`}>
-                  <Droplets size={11} strokeWidth={2.5} />
-                  <span>{rainProb}%</span>
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '2px', color: uvMax >= 8 ? '#ea580c' : 'var(--text-muted)' }} title={`Indeks UV Maksimum: ${uvMax}`}>
-                  <Sun size={11} strokeWidth={2.5} />
-                  <span>UV {uvMax}</span>
-                </div>
-              </div>
-
-            </div>
+            </article>
           );
         })}
       </div>
 
-    </div>
+      <p className="mt-3 text-[11px] font-medium text-slate-400">
+        Tips warga: payung lipat di tas itu penyelamat. Kalau UV 8+, topi + sunscreen wajib hukumnya.
+      </p>
+    </section>
   );
 }

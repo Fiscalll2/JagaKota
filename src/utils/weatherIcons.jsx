@@ -1,84 +1,36 @@
 import React from 'react';
 import {
-  Sun,
-  SunMedium,
-  CloudSun,
-  Cloud,
-  CloudFog,
-  CloudDrizzle,
-  CloudRain,
-  CloudRainWind,
-  CloudLightning,
-  CloudSnow
+  Sun, Sunrise, CloudSun, Cloudy, CloudFog, CloudDrizzle,
+  CloudRain, CloudRainWind, CloudLightning, Snowflake,
 } from 'lucide-react';
 
-/**
- * Pemetaan Kode Cuaca WMO (World Meteorological Organization)
- * Disesuaikan dengan Standar Nomenklatur Resmi BMKG Indonesia
- */
-export function getWeatherVisual(code) {
-  const c = Number(code) || 0;
+// JagaKota v2 — tabel WMO gaya warga (label lebih pendek, palet sendiri)
+const TABEL = [
+  { kode: [0], label: 'Terik Cerah', icon: Sun, warna: '#d97706', bg: '#fffbeb' },
+  { kode: [1], label: 'Cerah Berawan', icon: Sunrise, warna: '#d97706', bg: '#fffbeb' },
+  { kode: [2], label: 'Mendung Tipis', icon: CloudSun, warna: '#2563eb', bg: '#eff6ff' },
+  { kode: [3], label: 'Mendung Tebal', icon: Cloudy, warna: '#475569', bg: '#f1f5f9' },
+  { kode: [45, 48], label: 'Kabut Pagi', icon: CloudFog, warna: '#64748b', bg: '#f8fafc' },
+  { kode: [51, 53, 55, 56, 57], label: 'Rintik', icon: CloudDrizzle, warna: '#0284c7', bg: '#f0f9ff' },
+  { kode: [61], label: 'Hujan Rintik', icon: CloudRain, warna: '#1d4ed8', bg: '#eff6ff' },
+  { kode: [63], label: 'Hujan Sedang', icon: CloudRain, warna: '#1e40af', bg: '#dbeafe' },
+  { kode: [65, 66, 67], label: 'Hujan Lebat', icon: CloudRainWind, warna: '#1e3a8a', bg: '#dbeafe' },
+  { kode: [71, 73, 75, 77], label: 'Salju Puncak', icon: Snowflake, warna: '#0284c7', bg: '#f0f9ff' },
+  { kode: [80], label: 'Hujan Lokal', icon: CloudRain, warna: '#1d4ed8', bg: '#eff6ff' },
+  { kode: [81, 82], label: 'Hujan Deras', icon: CloudRainWind, warna: '#1e40af', bg: '#dbeafe' },
+  { kode: [85, 86], label: 'Hujan Es', icon: Snowflake, warna: '#0284c7', bg: '#f0f9ff' },
+  { kode: [95], label: 'Petir', icon: CloudLightning, warna: '#6d28d9', bg: '#f5f3ff' },
+  { kode: [96, 99], label: 'Badai Petir', icon: CloudLightning, warna: '#5b21b6', bg: '#ede9fe' },
+];
 
-  // 0: Cerah (Clear sky)
-  if (c === 0) {
-    return { label: 'Cerah', icon: Sun, color: '#f59e0b', bg: '#fffbeb' };
-  }
-  // 1: Cerah Berawan (Mainly clear)
-  if (c === 1) {
-    return { label: 'Cerah Berawan', icon: SunMedium, color: '#f59e0b', bg: '#fffbeb' };
-  }
-  // 2: Berawan (Partly cloudy)
-  if (c === 2) {
-    return { label: 'Berawan', icon: CloudSun, color: '#3b82f6', bg: '#eff6ff' };
-  }
-  // 3: Berawan Tebal (Overcast)
-  if (c === 3) {
-    return { label: 'Berawan Tebal', icon: Cloud, color: '#64748b', bg: '#f1f5f9' };
-  }
-  // 45, 48: Berkabut (Fog / Depositing rime fog)
-  if (c === 45 || c === 48) {
-    return { label: 'Berkabut', icon: CloudFog, color: '#94a3b8', bg: '#f8fafc' };
-  }
-  // 51, 53, 55: Gerimis / Rintik (Drizzle: Light, Moderate, Dense)
-  if (c >= 51 && c <= 57) {
-    return { label: 'Gerimis', icon: CloudDrizzle, color: '#0ea5e9', bg: '#f0f9ff' };
-  }
-  // 61: Hujan Ringan
-  if (c === 61) {
-    return { label: 'Hujan Ringan', icon: CloudRain, color: '#2563eb', bg: '#eff6ff' };
-  }
-  // 63: Hujan Sedang
-  if (c === 63) {
-    return { label: 'Hujan Sedang', icon: CloudRain, color: '#1d4ed8', bg: '#eff6ff' };
-  }
-  // 65, 66, 67: Hujan Lebat
-  if (c >= 65 && c <= 67) {
-    return { label: 'Hujan Lebat', icon: CloudRainWind, color: '#1e40af', bg: '#eff6ff' };
-  }
-  // 71 - 77: Salju (Puncak Jayawijaya Papua)
-  if (c >= 71 && c <= 77) {
-    return { label: 'Salju', icon: CloudSnow, color: '#38bdf8', bg: '#f0f9ff' };
-  }
-  // 80: Hujan Lokal Ringan (Showers)
-  if (c === 80) {
-    return { label: 'Hujan Lokal', icon: CloudRain, color: '#2563eb', bg: '#eff6ff' };
-  }
-  // 81, 82: Hujan Deras Lokal
-  if (c === 81 || c === 82) {
-    return { label: 'Hujan Deras', icon: CloudRainWind, color: '#1d4ed8', bg: '#eff6ff' };
-  }
-  // 85, 86: Hujan Salju Lokal
-  if (c === 85 || c === 86) {
-    return { label: 'Hujan Salju', icon: CloudSnow, color: '#38bdf8', bg: '#f0f9ff' };
-  }
-  // 95: Hujan Petir (Thunderstorm)
-  if (c === 95) {
-    return { label: 'Hujan Petir', icon: CloudLightning, color: '#7c3aed', bg: '#f5f3ff' };
-  }
-  // 96, 99: Hujan Badai Petir
-  if (c >= 96) {
-    return { label: 'Hujan Badai Petir', icon: CloudLightning, color: '#6d28d9', bg: '#f5f3ff' };
-  }
+const JATUH = { label: 'Cerah Berawan', icon: CloudSun, color: '#2563eb', bg: '#eff6ff' };
 
-  return { label: 'Cerah Berawan', icon: CloudSun, color: '#3b82f6', bg: '#eff6ff' };
+export function visualCuaca(kode) {
+  const c = Number(kode) || 0;
+  const baris = TABEL.find((b) => b.kode.includes(c));
+  if (!baris) return JATUH;
+  return { label: baris.label, icon: baris.icon, color: baris.warna, bg: baris.bg };
 }
+
+export const getWeatherVisual = visualCuaca;
+export default visualCuaca;

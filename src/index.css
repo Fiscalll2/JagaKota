@@ -1,32 +1,32 @@
-/* Tailwind CSS v4 (utilities + preflight untuk komponen shadcn) */
+/* JagaKota v2 — sistem flat teal (khas warga, bukan biru Sekitarku) */
 @import "tailwindcss";
 
 /* ==========================================================================
-   JAGAKOTA - FLAT DESIGN SYSTEM
-   Zero Artificial Depth • Color as Structure • Bold Graphic Typography
+   JAGAKOTA v2 — WARNA SEBAGAI STRUKTUR
+   Teal sebagai aksi utama • Emerald siaga • Amber waspada
    ========================================================================== */
 
 :root {
-  /* Flat Light Palette (Primary Canonical Canvas) */
+  /* Kanvas terang */
   --bg-canvas: #ffffff;
-  --bg-muted: #f3f4f6;
-  --bg-subtle: #f9fafb;
+  --bg-muted: #f1f5f9;
+  --bg-subtle: #f8fafc;
   --bg-card: #ffffff;
-  --bg-card-hover: #f9fafb;
+  --bg-card-hover: #f8fafc;
 
-  --text-main: #111827;
-  --text-muted: #6b7280;
-  --text-subtle: #9ca3af;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --text-subtle: #94a3b8;
   --text-inverse: #ffffff;
 
-  /* Vibrant Flat Action Accents */
-  --color-primary: #3b82f6;      /* Blue 500 */
-  --color-primary-hover: #2563eb;/* Blue 600 */
-  --color-primary-bg: #eff6ff;   /* Blue 50 */
+  /* Aksi utama JagaKota: teal */
+  --color-primary: #0d9488;
+  --color-primary-hover: #0f766e;
+  --color-primary-bg: #ccfbf1;
 
-  --color-secondary: #10b981;    /* Emerald 500 */
-  --color-secondary-hover: #059669;
-  --color-secondary-bg: #ecfdf5; /* Emerald 50 */
+  --color-secondary: #059669;
+  --color-secondary-hover: #047857;
+  --color-secondary-bg: #d1fae5;
 
   --color-accent: #f59e0b;       /* Amber 500 */
   --color-accent-hover: #d97706;
@@ -87,13 +87,15 @@
   --border-focus: 2px solid #3b82f6;
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  /* ABSOLUTELY NO BOX SHADOWS */
-  box-shadow: none !important;
-  text-shadow: none !important;
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    /* ABSOLUTELY NO BOX SHADOWS */
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
 }
 
 html, body {

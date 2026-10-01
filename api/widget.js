@@ -1,87 +1,63 @@
-export const config = {
-  runtime: 'edge',
-};
+export const config = { runtime: 'edge' };
 
-function escapeText(str) {
-  if (!str) return '';
-  return String(str).replace(/[<>"]/g, '').slice(0, 50);
+function bersih(v) {
+  if (!v) return '';
+  return String(v).replace(/[<>"]/g, '').slice(0, 48);
 }
 
-export default async function handler(request) {
-  const { searchParams } = new URL(request.url);
+function statusUdara(aqi) {
+  if (aqi > 300) return ['Darurat Asap', '#7f1d1d'];
+  if (aqi > 200) return ['Pekat', '#7c3aed'];
+  if (aqi > 150) return ['Pengap', '#dc2626'];
+  if (aqi > 100) return ['Pengap Ringan', '#ea580c'];
+  if (aqi > 50) return ['Lumayan', '#b45309'];
+  return ['Segar', '#059669'];
+}
 
-  const city = escapeText(searchParams.get('city')) || 'Jakarta';
-  const lat = parseFloat(searchParams.get('lat')) || -6.2088;
-  const lon = parseFloat(searchParams.get('lon')) || 106.8456;
+export default async function handler(req) {
+  const q = new URL(req.url).searchParams;
+  const kota = bersih(q.get('kota') || q.get('city')) || 'Jakarta';
+  const lat = parseFloat(q.get('lat')) || -6.2;
+  const lon = parseFloat(q.get('lon')) || 106.85;
+
+  const jawab = (badan, umur = 60) => new Response(JSON.stringify(badan, null, 2), {
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Cache-Control': `public, max-age=${umur}, s-maxage=300, stale-while-revalidate=600`,
+      'Access-Control-Allow-Origin': '*', 'X-JagaKota': 'widget-v2',
+    },
+  });
 
   try {
-    // Fetch Open-Meteo current weather and air quality in parallel
-    const [weatherRes, aqiRes] = await Promise.all([
-      fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,precipitation,cloud_cover&timezone=auto&models=best_match`),
-      fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi,pm2_5&timezone=auto`)
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 5000);
+    const [cuacaRes, udaraRes] = await Promise.all([
+      fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&timezone=auto`, { signal: ctrl.signal }),
+      fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi,pm2_5&timezone=auto`, { signal: ctrl.signal }),
     ]);
+    clearTimeout(t);
+    const cuaca = cuacaRes.ok ? await cuacaRes.json() : null;
+    const udara = udaraRes.ok ? await udaraRes.json() : null;
 
-    const weatherData = weatherRes.ok ? await weatherRes.json() : null;
-    const aqiData = aqiRes.ok ? await aqiRes.json() : null;
+    const suhu = Math.round(cuaca?.current?.temperature_2m ?? 30);
+    const lembap = Math.round(cuaca?.current?.relative_humidity_2m ?? 72);
+    const angin = Math.round(cuaca?.current?.wind_speed_10m ?? 10);
+    const aqi = Math.round(udara?.current?.us_aqi ?? 42);
+    const pm25 = Math.round((udara?.current?.pm2_5 ?? 12) * 10) / 10;
+    const [label, warna] = statusUdara(aqi);
 
-    const temp = Math.round(weatherData?.current?.temperature_2m ?? 30);
-    const humidity = Math.round(weatherData?.current?.relative_humidity_2m ?? 75);
-    const windSpeed = Math.round(weatherData?.current?.wind_speed_10m ?? 12);
-    const aqi = Math.round(aqiData?.current?.us_aqi ?? 42);
-    const pm25 = Math.round((aqiData?.current?.pm2_5 ?? 15) * 10) / 10;
-
-    let aqiStatus = 'Baik';
-    let aqiColor = '#10b981';
-    if (aqi > 300) { aqiStatus = 'Berbahaya'; aqiColor = '#881337'; }
-    else if (aqi > 200) { aqiStatus = 'Sangat Tidak Sehat'; aqiColor = '#a855f7'; }
-    else if (aqi > 150) { aqiStatus = 'Tidak Sehat'; aqiColor = '#ef4444'; }
-    else if (aqi > 100) { aqiStatus = 'Sensitif'; aqiColor = '#f97316'; }
-    else if (aqi > 50) { aqiStatus = 'Sedang'; aqiColor = '#eab308'; }
-
-    const responsePayload = {
-      app: 'JagaKota',
-      city,
-      temp,
-      tempLabel: `${temp}°C`,
-      aqi,
-      aqiStatus,
-      aqiColor,
-      pm25,
-      humidity: `${humidity}%`,
-      windSpeed: `${windSpeed} km/h`,
-      source: 'BMKG & Open-Meteo',
-      updatedAt: new Date().toISOString()
-    };
-
-    return new Response(JSON.stringify(responsePayload, null, 2), {
-      headers: {
-        'Content-Type': 'application/json; charset=utf-8',
-        'Cache-Control': 'public, max-age=60, s-maxage=300, stale-while-revalidate=600',
-        'Access-Control-Allow-Origin': '*'
-      }
+    return jawab({
+      aplikasi: 'JagaKota', versi: 2, kota: kota,
+      suhu, suhuTeks: `${suhu}°C`, kelembapan: `${lembap}%`, angin: `${angin} km/h`,
+      aqi, statusUdara: label, warnaUdara: warna, pm25,
+      sumber: 'JagaKota • Open-Meteo', updatedAt: new Date().toISOString(),
     });
   } catch {
-    const fallbackPayload = {
-      app: 'JagaKota',
-      city,
-      temp: 30,
-      tempLabel: '30°C',
-      aqi: 42,
-      aqiStatus: 'Baik',
-      aqiColor: '#10b981',
-      pm25: 15,
-      humidity: '75%',
-      windSpeed: '12 km/h',
-      source: 'BMKG & Open-Meteo',
-      updatedAt: new Date().toISOString()
-    };
-
-    return new Response(JSON.stringify(fallbackPayload, null, 2), {
-      headers: {
-        'Content-Type': 'application/json; charset=utf-8',
-        'Cache-Control': 'public, max-age=60, s-maxage=300',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
+    return jawab({
+      aplikasi: 'JagaKota', versi: 2, kota, suhu: 30, suhuTeks: '30°C',
+      kelembapan: '72%', angin: '10 km/h', aqi: 42, statusUdara: 'Segar',
+      warnaUdara: '#059669', pm25: 12, sumber: 'cache-lokal',
+      updatedAt: new Date().toISOString(),
+    }, 30);
   }
 }

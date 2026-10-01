@@ -2,158 +2,68 @@ import React from 'react';
 import { ExternalLink, Wind, Droplets } from 'lucide-react';
 import { getAqiInfo } from '../../utils/aqi';
 
-export function WidgetEmbedView({ location, weatherData, airQualityData }) {
-  const cityName = location?.name || 'DKI Jakarta';
-  const aqiVal = airQualityData?.current?.aqi || 42;
-  const aqiInfo = getAqiInfo(aqiVal);
-  const temp = Math.round(weatherData?.current?.temperature || weatherData?.current?.temperature_2m || 30);
-  const weatherLabel = weatherData?.current?.weatherCodeInfo?.label || 'Cerah Berawan';
-  const humidity = weatherData?.current?.relative_humidity_2m || 75;
-  const windSpeed = Math.round(weatherData?.current?.wind_speed_10m || 12);
+// Kartu mungil JagaKota untuk mode sematan iframe (?embed=true).
+// Sengaja ringan: Tailwind + sedikit gaya injeksi agar tetap rapi di situs luar.
+export function WidgetEmbedView({ location, weatherData, airQualityData, ...sisa }) {
+  void sisa;
+  const namaKota = location?.name || 'DKI Jakarta';
+  const angkaAqi = airQualityData?.current?.aqi || 42;
+  const statusAqi = getAqiInfo(angkaAqi);
+  const suhu = Math.round(weatherData?.current?.temperature || weatherData?.current?.temperature_2m || 30);
+  const infoCuaca = weatherData?.current?.weatherCodeInfo?.label || 'Cerah Berawan';
+  const lembap = weatherData?.current?.relative_humidity_2m || 75;
+  const angin = Math.round(weatherData?.current?.wind_speed_10m || 12);
 
-  const appUrl = typeof window !== 'undefined' 
-    ? `${window.location.origin}/?city=${encodeURIComponent(cityName)}` 
-    : `https://jagakota.vercel.app/?city=${encodeURIComponent(cityName)}`;
+  const tautanApp =
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/?city=${encodeURIComponent(namaKota)}`
+      : `https://jagakota.vercel.app/?city=${encodeURIComponent(namaKota)}`;
 
   return (
-    <div
-      style={{
-        width: '100vw',
-        height: '100vh',
-        boxSizing: 'border-box',
-        margin: 0,
-        padding: '0.85rem',
-        fontFamily: 'Plus Jakarta Sans, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif',
-        backgroundColor: 'var(--bg-card, #ffffff)',
-        color: 'var(--text-main, #0f172a)',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        overflow: 'hidden',
-        userSelect: 'none'
-      }}
-    >
-      {/* Top Row: Brand & City */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <a
-          href={appUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '5px',
-            textDecoration: 'none',
-            color: 'inherit'
-          }}
-        >
-          <div
-            style={{
-              width: '8px',
-              height: '8px',
-              borderRadius: '50%',
-              backgroundColor: '#10b981',
-              boxShadow: '0 0 6px #10b981'
-            }}
-          />
-          <span style={{ fontSize: '0.85rem', fontWeight: '800', letterSpacing: '-0.2px' }}>
-            JagaKota
-          </span>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted, #64748b)', fontWeight: '600' }}>
-            • {cityName}
-          </span>
+    <div className="flex h-screen w-screen flex-col justify-between gap-2 overflow-hidden bg-white p-3 font-sans text-slate-900 select-none dark:bg-slate-900 dark:text-white">
+      {/* Baris atas: merek + lencana AQI */}
+      <div className="flex items-center justify-between gap-2">
+        <a href={tautanApp} target="_blank" rel="noopener noreferrer" className="flex min-w-0 items-center gap-1.5">
+          <span className="size-2 shrink-0 rounded-full bg-emerald-500 shadow-[0_0_6px_#10b981]" />
+          <span className="text-[13px] font-black tracking-tight">JagaKota</span>
+          <span className="truncate text-xs font-semibold text-slate-500">· {namaKota}</span>
         </a>
-
-        {/* AQI Pill */}
         <span
-          style={{
-            fontSize: '0.7rem',
-            padding: '2px 8px',
-            borderRadius: '999px',
-            backgroundColor: aqiInfo.bg,
-            color: aqiInfo.color,
-            fontWeight: '800',
-            border: `1px solid ${aqiInfo.color}33`,
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '4px'
-          }}
+          className="inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[11px] font-extrabold"
+          style={{ backgroundColor: statusAqi.bg, color: statusAqi.color, borderColor: `${statusAqi.color}33` }}
         >
-          AQI {aqiVal} ({aqiInfo.label})
+          AQI {angkaAqi} ({statusAqi.label})
         </span>
       </div>
 
-      {/* Main Metric Row: Temperature & Key Stats */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          backgroundColor: 'var(--bg-muted, #f8fafc)',
-          padding: '0.55rem 0.85rem',
-          borderRadius: '10px',
-          border: '1px solid rgba(0,0,0,0.06)'
-        }}
-      >
-        {/* Left: Temp & Weather Condition */}
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-          <span style={{ fontSize: '1.45rem', fontWeight: '900', lineHeight: 1 }}>
-            {temp}°C
-          </span>
-          <span
-            style={{
-              fontSize: '0.75rem',
-              color: 'var(--text-muted, #64748b)',
-              fontWeight: '600',
-              maxWidth: '120px',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            {weatherLabel}
+      {/* Baris tengah: suhu + kelembapan/angin */}
+      <div className="flex items-center justify-between gap-2 rounded-2xl border border-slate-200/70 bg-slate-50 px-3.5 py-2.5 dark:border-slate-700 dark:bg-slate-800/60">
+        <div className="flex min-w-0 items-baseline gap-1.5">
+          <span className="text-2xl font-black leading-none">{suhu}°C</span>
+          <span className="max-w-[130px] truncate text-xs font-semibold text-slate-500 dark:text-slate-400">
+            {infoCuaca}
           </span>
         </div>
-
-        {/* Right: PM2.5 & Humidity */}
-        <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.7rem', color: 'var(--text-muted, #64748b)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-            <Droplets size={12} color="#0284c7" />
-            <span style={{ fontWeight: '700' }}>{humidity}%</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-            <Wind size={12} color="#10b981" />
-            <span style={{ fontWeight: '700' }}>{windSpeed} km/h</span>
-          </div>
+        <div className="flex shrink-0 items-center gap-3 text-[11px] font-bold text-slate-500 dark:text-slate-400">
+          <span className="inline-flex items-center gap-1">
+            <Droplets size={12} className="text-sky-600" /> {lembap}%
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <Wind size={12} className="text-emerald-500" /> {angin} km/h
+          </span>
         </div>
       </div>
 
-      {/* Bottom Row: Source & Full App Link */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          fontSize: '0.675rem',
-          color: 'var(--text-muted, #64748b)'
-        }}
-      >
-        <span>Data: BMKG & Open-Meteo</span>
+      {/* Baris bawah: sumber + tautan penuh */}
+      <div className="flex items-center justify-between text-[11px] font-medium text-slate-500 dark:text-slate-400">
+        <span>Data: BMKG &amp; Open-Meteo</span>
         <a
-          href={appUrl}
+          href={tautanApp}
           target="_blank"
           rel="noopener noreferrer"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '3px',
-            color: 'var(--color-primary, #059669)',
-            fontWeight: '700',
-            textDecoration: 'none'
-          }}
+          className="inline-flex items-center gap-1 font-bold text-emerald-600"
         >
-          <span>Buka Pantauan Lengkap</span>
-          <ExternalLink size={11} />
+          Pantauan lengkap <ExternalLink size={11} />
         </a>
       </div>
     </div>

@@ -1,844 +1,376 @@
 import React, { useState } from 'react';
-import {
-  Share2,
-  Download,
-  Copy,
-  Check,
-  X,
-  Sparkles,
-  Calendar,
-  Flame,
-  Zap,
-  AlertTriangle,
-  ShieldCheck,
-  Cigarette
-} from 'lucide-react';
+import { Share2, ImageDown, ClipboardCopy, Check, X, MapPin, Thermometer, Wind, Flame, Activity } from 'lucide-react';
 import { getAqiInfo } from '../../utils/aqi.js';
-import { calculateEcoHealthScore } from '../../utils/healthIndex.js';
+import { calculateKotaSiaga } from '../../utils/kotaScore.js';
 import { getWeatherVisual } from '../../utils/weatherIcons.jsx';
 import { formatFullCurrentDate } from '../../utils/format.js';
 import { calculateFdrs, getNearbyHotspots, getHazeStatus } from '../../utils/karhutla.js';
-import { translations } from '../../utils/i18n.js';
 
 export function ShareCardModal({ isOpen, onClose, location, airQualityData, weatherData, latestEarthquake, karhutlaData }) {
-  const [copied, setCopied] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [tersalin, setTersalin] = useState(false);
+  const [sibuk, setSibuk] = useState(false);
 
   if (!isOpen) return null;
 
-  const t = translations;
-
-  const locationName = location?.name || location?.city || 'Indonesia';
-  const locationProvince = location?.province || 'Indonesia';
+  const namaKota = location?.name || location?.city || 'Indonesia';
+  const namaProvinsi = location?.province || 'Indonesia';
 
   const aqi = Number(airQualityData?.current?.aqi) || 0;
   const pm25 = Number(airQualityData?.current?.pm25 ?? airQualityData?.current?.pm2_5) || 0;
-  const temp = Number(weatherData?.current?.temp ?? weatherData?.current?.temperature ?? 28);
-  const humidity = Number(weatherData?.current?.humidity ?? 70);
-  const uvIndex = Number(weatherData?.current?.uvIndex ?? 0);
-  const weatherCode = Number(weatherData?.current?.weatherCode ?? 0);
+  const suhu = Number(weatherData?.current?.temp ?? weatherData?.current?.temperature ?? 28);
+  const lembap = Number(weatherData?.current?.humidity ?? 70);
+  const uv = Number(weatherData?.current?.uvIndex ?? 0);
+  const kodeCuaca = Number(weatherData?.current?.weatherCode ?? 0);
 
-  const aqiInfo = getAqiInfo(aqi);
-  const health = calculateEcoHealthScore(aqi, temp, humidity, uvIndex, pm25);
-  const weatherVisual = getWeatherVisual(weatherCode);
-  const dateFormatted = formatFullCurrentDate(new Date());
+  const infoAqi = getAqiInfo(aqi);
+  const kota = calculateKotaSiaga({ aqi, pm25, temp: suhu, humidity: lembap, uvIndex: uv });
+  const visualCuaca = getWeatherVisual(kodeCuaca);
+  const tanggalTampil = formatFullCurrentDate(new Date());
 
-  // Dynamic Infallible Karhutla resolution based on active location coordinates
-  const activeKarhutla = karhutlaData || (location?.lat ? {
-    fdrs: calculateFdrs(weatherData),
-    nearest: getNearbyHotspots(location.lat, location.lon).nearest
-  } : null);
+  const karhutlaAktif = karhutlaData || (location?.lat
+    ? { fdrs: calculateFdrs(weatherData), nearest: getNearbyHotspots(location.lat, location.lon).nearest }
+    : null);
 
-  const fdrs = activeKarhutla?.fdrs || calculateFdrs(weatherData);
-  const nearestFire = activeKarhutla?.nearest || (location?.lat ? getNearbyHotspots(location.lat, location.lon).nearest : null);
-  
-  // Cross-Correlation Kabut Asap
-  const { isHazeActive } = getHazeStatus(nearestFire, aqi, pm25);
+  const fdrs = karhutlaAktif?.fdrs || calculateFdrs(weatherData);
+  const titikApi = karhutlaAktif?.nearest || (location?.lat ? getNearbyHotspots(location.lat, location.lon).nearest : null);
+  const { isHazeActive: asapAktif } = getHazeStatus(titikApi, aqi, pm25);
 
-  const hazeStatusText = isHazeActive ? '⚠️ Terpapar Asap Karhutla' : '🟢 Bebas Asap';
-  const fireProximityText = nearestFire ? ` (Titik Api Terdekat: ${nearestFire.regency}, ${nearestFire.distanceKm} km)` : '';
-  const quakeText = latestEarthquake ? `• Gempa Terkini: M ${latestEarthquake.magnitude} (${latestEarthquake.wilayah})\n` : '';
-  const cigsCount = health.cigs ?? health.cigarettesEquivalent ?? 0;
-  const shareText = `📍 Laporan Lingkungan & Cuaca Real-Time: ${locationName}\n🌱 Kualitas Udara: AQI ${aqi} (${health.category})\n🚬 Paparan Rokok: ${cigsCount} btg/hari\n🌡️ Cuaca: ${temp}°C • ${weatherVisual.label || 'Cerah'}\n⚠️ Status Asap: ${hazeStatusText}${fireProximityText}\n${quakeText}\nPantau selengkapnya di JagaKota: https://jagakota.vercel.app/`;
+  const statusAsap = asapAktif ? 'TERPAPAR asap karhutla' : 'bebas asap karhutla';
+  const infoApi = titikApi ? `Titik api terdekat ${titikApi.regency} (${titikApi.distanceKm} km)` : 'Nihil titik api terpantau';
+  const infoGempa = latestEarthquake ? `Gempa M ${latestEarthquake.magnitude} di ${latestEarthquake.wilayah}. ` : 'Nihil gempa signifikan. ';
 
-  // Draw 9:16 high quality story infographic on HTML5 canvas (1080 x 1920) with mathematically guaranteed bounds
-  const generateCanvasImage = () => {
-    return new Promise((resolve) => {
-      const canvas = document.createElement('canvas');
-      canvas.width = 1080;
-      canvas.height = 1920;
-      const ctx = canvas.getContext('2d');
+  const teksBerbagi = `Laporan JagaKota — ${namaKota}, ${namaProvinsi} (${tanggalTampil})\nSkor KotaSiaga: ${kota.score}/100 — ${kota.label}\nPaparan kretek: ±${kota.paparan} batang/hari (dari PM2.5 ${pm25} ug/m3)\nUdara: AQI ${aqi} (${infoAqi.label}) | Suhu ${suhu}C ${visualCuaca.label || ''} | Lembap ${lembap}%\nAsap: ${statusAsap}. ${infoApi}.\n${infoGempa}Saran warga: ${kota.aksi}\nLihat peta & pantauan: https://jagakota.vercel.app/`;
 
-      // 1. Clean Background
-      ctx.fillStyle = '#F8FAFC';
+  function bungkusTeks(ctx, teks, x, y, lebarMaks, tinggiBaris, maksBaris = 2) {
+    if (!teks) return y;
+    const kata = String(teks).split(' ');
+    let baris = '';
+    let jumlah = 0;
+    let cy = y;
+    for (let i = 0; i < kata.length; i++) {
+      const uji = baris ? `${baris} ${kata[i]}` : kata[i];
+      if (ctx.measureText(uji).width > lebarMaks && i > 0) {
+        jumlah += 1;
+        if (jumlah >= maksBaris) {
+          let potong = baris;
+          while (potong.length > 0 && ctx.measureText(`${potong}...`).width > lebarMaks) potong = potong.slice(0, -1);
+          ctx.fillText(`${potong}...`, x, cy);
+          return cy + tinggiBaris;
+        }
+        ctx.fillText(baris, x, cy);
+        baris = kata[i];
+        cy += tinggiBaris;
+      } else {
+        baris = uji;
+      }
+    }
+    ctx.fillText(baris, x, cy);
+    return cy + tinggiBaris;
+  }
+
+  function gambarKartu(ctx, x, y, w, h, isi, garis) {
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(x, y, w, h, 28);
+    else ctx.rect(x, y, w, h);
+    ctx.fillStyle = isi;
+    ctx.fill();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = garis;
+    ctx.stroke();
+  }
+
+  function gambarHeader(ctx) {
+    const grad = ctx.createLinearGradient(0, 0, 1080, 320);
+    grad.addColorStop(0, '#064E3B');
+    grad.addColorStop(0.55, '#059669');
+    grad.addColorStop(1, '#0D9488');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 1080, 340);
+    ctx.fillStyle = 'rgba(255,255,255,0.16)';
+    ctx.beginPath();
+    ctx.arc(940, 60, 170, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(120, 300, 110, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = '900 64px Outfit, sans-serif';
+    ctx.fillText('JAGAKOTA', 72, 130);
+    ctx.font = '700 27px Outfit, sans-serif';
+    ctx.fillStyle = '#D1FAE5';
+    ctx.fillText('LAPORAN WARGA SIAGA • STORY 9:16', 74, 180);
+    ctx.font = '600 25px Outfit, sans-serif';
+    ctx.fillStyle = '#ECFDF5';
+    bungkusTeks(ctx, tanggalTampil, 74, 232, 930, 32, 1);
+  }
+
+  function gambarBar(ctx, x, y, w, h, persen, warna) {
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(x, y, w, h, h / 2);
+    else ctx.rect(x, y, w, h);
+    ctx.fillStyle = 'rgba(255,255,255,0.14)';
+    ctx.fill();
+    const isi = Math.max(h, Math.round((w * Math.max(0, Math.min(100, persen))) / 100));
+    if (isi > 0) {
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(x, y, isi, h, h / 2);
+      else ctx.rect(x, y, isi, h);
+      ctx.fillStyle = warna;
+      ctx.fill();
+    }
+  }
+
+  function gambarLencana(ctx, teks, x, y) {
+    ctx.font = '800 24px Outfit, sans-serif';
+    const w = Math.min(860, ctx.measureText(teks).width + 52);
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(x, y, w, 58, 29);
+    else ctx.rect(x, y, w, 58);
+    ctx.fillStyle = 'rgba(255,255,255,0.18)';
+    ctx.fill();
+    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+    ctx.stroke();
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillText(teks, x + 26, y + 39);
+    return w;
+  }
+
+  // Urutan gambar BARU: header gelap -> cuaca dulu -> KotaSiaga+bar -> udara -> karhutla -> gempa -> footer
+  function buatGambarCerita() {
+    return new Promise((selesai) => {
+      const kanvas = document.createElement('canvas');
+      kanvas.width = 1080;
+      kanvas.height = 1920;
+      const ctx = kanvas.getContext('2d');
+
+      ctx.fillStyle = '#0B1220';
       ctx.fillRect(0, 0, 1080, 1920);
+      gambarHeader(ctx);
 
-      // Top Decorative Brand Banner
-      ctx.fillStyle = '#10B981';
-      ctx.fillRect(0, 0, 1080, 20);
-
-      // Helper for clean rounded cards
-      const drawCard = (x, y, w, h, fill, border) => {
-        ctx.beginPath();
-        if (ctx.roundRect) {
-          ctx.roundRect(x, y, w, h, 24);
-        } else {
-          ctx.rect(x, y, w, h);
-        }
-        ctx.fillStyle = fill;
-        ctx.fill();
-        ctx.strokeStyle = border || '#E2E8F0';
-        ctx.lineWidth = 3.5;
-        ctx.stroke();
-      };
-
-      // Helper: Draw Wrapped and Truncated Text with Strict Bounds
-      const drawWrappedText = (text, x, y, maxWidth, lineHeight, maxLines = 2) => {
-        if (!text) return y;
-        const words = String(text).split(' ');
-        let line = '';
-        let linesCount = 0;
-        let currentY = y;
-
-        for (let n = 0; n < words.length; n++) {
-          const testLine = line + (line ? ' ' : '') + words[n];
-          const metrics = ctx.measureText(testLine);
-
-          if (metrics.width > maxWidth && n > 0) {
-            linesCount++;
-            if (linesCount >= maxLines) {
-              let truncated = line;
-              while (truncated.length > 0 && ctx.measureText(truncated + '...').width > maxWidth) {
-                truncated = truncated.slice(0, -1);
-              }
-              ctx.fillText(truncated + '...', x, currentY);
-              return currentY + lineHeight;
-            }
-            ctx.fillText(line, x, currentY);
-            line = words[n] + ' ';
-            currentY += lineHeight;
-          } else {
-            line = testLine;
-          }
-        }
-        ctx.fillText(line, x, currentY);
-        return currentY + lineHeight;
-      };
-
-      // Infographic Header
-      ctx.fillStyle = '#0F172A';
-      ctx.font = '800 60px "Outfit", sans-serif';
-      ctx.fillText('JagaKota', 80, 115);
-
-      ctx.fillStyle = '#64748B';
-      ctx.font = '700 26px "Outfit", sans-serif';
-      ctx.fillText('Laporan Lingkungan & Cuaca Real-Time', 80, 160);
-
-      // 1. Location Hero Card (Y=195, H=205)
-      drawCard(80, 195, 920, 205, '#FFFFFF', '#E2E8F0');
-
-      const locFont = locationName.length > 24 ? '800 40px "Outfit", sans-serif' : '800 46px "Outfit", sans-serif';
-      ctx.fillStyle = '#0F172A';
-      ctx.font = locFont;
-      drawWrappedText(locationName, 120, 260, 840, 48, 1);
-
-      ctx.fillStyle = '#64748B';
-      ctx.font = '600 26px "Outfit", sans-serif';
-      drawWrappedText(locationProvince, 120, 312, 840, 32, 1);
-
-      ctx.fillStyle = '#059669';
-      ctx.font = '700 24px "Outfit", sans-serif';
-      ctx.fillText(`${dateFormatted}`, 120, 362);
-
-      // 2. Eco-Health Composite Score Card (Y=425, H=245)
-      drawCard(80, 425, 920, 245, '#FFFFFF', '#E2E8F0');
-
-      ctx.fillStyle = '#64748B';
-      ctx.font = '800 22px "Outfit", sans-serif';
-      ctx.fillText(t.ecoScoreTitle, 120, 470);
-
-      ctx.fillStyle = health.color || '#10B981';
-      ctx.font = '800 84px "Outfit", sans-serif';
-      ctx.fillText(`${health.score}`, 120, 565);
-
-      ctx.fillStyle = '#64748B';
-      ctx.font = '800 38px "Outfit", sans-serif';
-      ctx.fillText('/100', 250, 565);
-
-      // Dynamic Score Badge
-      const badgeText = health.category || 'Baik';
-      ctx.font = '800 28px "Outfit", sans-serif';
-      const badgeTextWidth = ctx.measureText(badgeText).width;
-      const badgeWidth = Math.min(420, Math.max(220, badgeTextWidth + 48));
-      const badgeX = 960 - badgeWidth;
-
-      ctx.beginPath();
-      if (ctx.roundRect) ctx.roundRect(badgeX, 505, badgeWidth, 68, 16);
-      else ctx.rect(badgeX, 505, badgeWidth, 68);
-      ctx.fillStyle = health.color || '#10B981';
-      ctx.fill();
-
+      // A. Lokasi pita
       ctx.fillStyle = '#FFFFFF';
-      ctx.textAlign = 'center';
-      ctx.fillText(badgeText, badgeX + (badgeWidth / 2), 548);
-      ctx.textAlign = 'left';
+      ctx.font = '900 52px Outfit, sans-serif';
+      bungkusTeks(ctx, namaKota, 72, 430, 936, 58, 1);
+      ctx.fillStyle = '#94A3B8';
+      ctx.font = '600 28px Outfit, sans-serif';
+      bungkusTeks(ctx, namaProvinsi, 72, 492, 936, 34, 1);
 
-      ctx.fillStyle = '#334155';
-      ctx.font = '600 24px "Outfit", sans-serif';
-      const cigsVal = health.cigs ?? health.cigarettesEquivalent ?? 0;
-      const cigsNote = `Setara ${cigsVal} batang rokok/hari (Paparan PM2.5)`;
-      drawWrappedText(cigsNote, 120, 635, 840, 30, 1);
+      // B. Cuaca duluan (beda urutan dari versi lama)
+      gambarKartu(ctx, 72, 540, 936, 250, '#111E33', '#1E3A5F');
+      ctx.fillStyle = '#7DD3FC';
+      ctx.font = '800 24px Outfit, sans-serif';
+      ctx.fillText('CUACA & RASA PANAS', 116, 596);
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = '900 88px Outfit, sans-serif';
+      ctx.fillText(`${suhu}°C`, 116, 700);
+      ctx.fillStyle = '#CBD5E1';
+      ctx.font = '700 30px Outfit, sans-serif';
+      bungkusTeks(ctx, `${visualCuaca.label || 'Cerah'} • Lembap ${lembap}% • UV ${uv}`, 420, 640, 520, 36, 2);
 
-      // 3. Grid: AQI & Weather Cards (Y=695, H=310)
-      
-      // AQI Card
-      drawCard(80, 695, 440, 310, '#FFFFFF', '#E2E8F0');
+      // C. Skor KotaSiaga + bar progres + kretek
+      gambarKartu(ctx, 72, 820, 936, 380, kota.color || '#059669', kota.color || '#059669');
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      ctx.font = '800 26px Outfit, sans-serif';
+      ctx.fillText('SKOR KOTASIAGA JAGAKOTA', 116, 884);
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = '900 120px Outfit, sans-serif';
+      ctx.fillText(String(kota.score), 116, 1010);
+      ctx.font = '800 44px Outfit, sans-serif';
+      ctx.fillText('/100', 116 + ctx.measureText(String(kota.score)).width + 140, 1010);
+      gambarLencana(ctx, kota.label || 'Aman', 116, 1032);
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = '700 27px Outfit, sans-serif';
+      bungkusTeks(ctx, `Paparan kretek: ±${kota.paparan} batang/hari • ${kota.aksi || ''}`, 116, 1132, 848, 34, 2);
+      gambarBar(ctx, 116, 1152, 848, 22, kota.score, '#FFFFFF');
 
-      ctx.fillStyle = aqiInfo.color || '#10B981';
-      ctx.font = '800 22px "Outfit", sans-serif';
-      ctx.fillText('KUALITAS UDARA', 120, 745);
-
-      ctx.fillStyle = aqiInfo.color || '#10B981';
-      ctx.font = '800 76px "Outfit", sans-serif';
-      ctx.fillText(`${aqi}`, 120, 835);
-
-      ctx.fillStyle = '#64748B';
-      ctx.font = '700 26px "Outfit", sans-serif';
-      ctx.fillText('AQI US', 265, 835);
-
+      // D. Udara (AQI + PM)
+      gambarKartu(ctx, 72, 1230, 936, 220, '#FFFFFF', '#E2E8F0');
+      ctx.fillStyle = infoAqi.color || '#059669';
+      ctx.font = '800 24px Outfit, sans-serif';
+      ctx.fillText('KUALITAS UDARA (AQI US)', 116, 1286);
+      ctx.font = '900 84px Outfit, sans-serif';
+      ctx.fillText(String(aqi), 116, 1380);
       ctx.fillStyle = '#0F172A';
-      ctx.font = '800 28px "Outfit", sans-serif';
-      drawWrappedText(aqiInfo.label, 120, 900, 360, 32, 1);
-
+      ctx.font = '800 32px Outfit, sans-serif';
+      bungkusTeks(ctx, infoAqi.label || 'Segar', 360, 1352, 580, 38, 1);
       ctx.fillStyle = '#64748B';
-      ctx.font = '600 22px "Outfit", sans-serif';
-      ctx.fillText(`PM2.5: ${pm25} µg/m³`, 120, 960);
+      ctx.font = '600 25px Outfit, sans-serif';
+      ctx.fillText(`PM2.5 ${pm25} µg/m³ • ${infoAqi.advice || ''}`.slice(0, 64), 116, 1416);
 
-      // Weather Card
-      drawCard(560, 695, 440, 310, '#FFFFFF', '#E2E8F0');
+      // E. Karhutla
+      const garisAsap = asapAktif ? '#DC2626' : '#0E9F6E';
+      gambarKartu(ctx, 72, 1478, 936, 190, asapAktif ? '#2A0E0E' : '#0B1F17', garisAsap);
+      ctx.fillStyle = asapAktif ? '#FCA5A5' : '#6EE7B7';
+      ctx.font = '800 24px Outfit, sans-serif';
+      ctx.fillText(asapAktif ? 'AWAS ASAP KARHUTLA' : 'KARHUTLA TERPANTAU AMAN', 116, 1534);
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = '600 26px Outfit, sans-serif';
+      bungkusTeks(ctx, `${statusAsap} — ${infoApi}. FDRS ${fdrs.code || fdrs.level || '-'}`, 116, 1578, 848, 32, 2);
 
-      ctx.fillStyle = '#3B82F6';
-      ctx.font = '800 22px "Outfit", sans-serif';
-      ctx.fillText('CUACA SAAT INI', 600, 745);
-
-      ctx.fillStyle = '#0F172A';
-      ctx.font = '800 76px "Outfit", sans-serif';
-      ctx.fillText(`${temp}°C`, 600, 835);
-
-      ctx.fillStyle = '#0F172A';
-      ctx.font = '800 28px "Outfit", sans-serif';
-      drawWrappedText(weatherVisual.label, 600, 900, 360, 32, 1);
-
-      ctx.fillStyle = '#64748B';
-      ctx.font = '600 22px "Outfit", sans-serif';
-      ctx.fillText(`${t.humidity}: ${humidity}%`, 600, 960);
-
-      // 4. Karhutla & Wildfire Haze Alert Card (Y=1030, H=325)
-      const hazeCardBorder = isHazeActive ? '#EF4444' : '#E2E8F0';
-      drawCard(80, 1030, 920, 325, '#FFFFFF', hazeCardBorder);
-
-      ctx.fillStyle = '#EA580C';
-      ctx.font = '800 22px "Outfit", sans-serif';
-      ctx.fillText(t.karhutlaCardHeader, 120, 1078);
-
-      // Dynamically Sized Badges Row
-      const b1Text = `${t.landLocalBadge}: ${fdrs.code}`;
-      ctx.font = '800 20px "Outfit", sans-serif';
-      const b1TextWidth = ctx.measureText(b1Text).width;
-      const b1Width = Math.max(220, b1TextWidth + 36);
-
-      ctx.beginPath();
-      if (ctx.roundRect) ctx.roundRect(120, 1105, b1Width, 48, 12);
-      else ctx.rect(120, 1105, b1Width, 48);
-      ctx.fillStyle = fdrs.bg || '#ECFDF5';
-      ctx.fill();
-
-      ctx.fillStyle = fdrs.color || '#10B981';
-      ctx.font = '800 20px "Outfit", sans-serif';
-      ctx.fillText(b1Text, 138, 1136);
-
-      // Badge 2: Kabut Asap
-      const hazeBadgeBg = isHazeActive ? '#FEE2E2' : '#ECFDF5';
-      const hazeBadgeColor = isHazeActive ? '#DC2626' : '#059669';
-      const hazeBadgeText = isHazeActive ? 'TERPAPAR KABUT ASAP' : 'Kabut Asap: Bersih';
-      const b2TextWidth = ctx.measureText(hazeBadgeText).width;
-      const b2Width = Math.max(240, b2TextWidth + 36);
-      const b2X = 120 + b1Width + 14;
-
-      ctx.beginPath();
-      if (ctx.roundRect) ctx.roundRect(b2X, 1105, b2Width, 48, 12);
-      else ctx.rect(b2X, 1105, b2Width, 48);
-      ctx.fillStyle = hazeBadgeBg;
-      ctx.fill();
-
-      ctx.fillStyle = hazeBadgeColor;
-      ctx.font = '800 20px "Outfit", sans-serif';
-      ctx.fillText(hazeBadgeText, b2X + 18, 1136);
-
-      // Plain language advisory
-      ctx.fillStyle = isHazeActive ? '#DC2626' : '#334155';
-      ctx.font = isHazeActive ? '700 22px "Outfit", sans-serif' : '600 22px "Outfit", sans-serif';
-      if (isHazeActive) {
-        const hazeWarnText = `Peringatan: Terdeteksi paparan kabut asap (${nearestFire ? `${nearestFire.distanceKm} km dari ${nearestFire.regency}` : 'partikel asap karhutla'}). Gunakan masker N95.`;
-        drawWrappedText(hazeWarnText, 120, 1195, 840, 30, 2);
-      } else {
-        const hazeSafeText = 'Kondisi udara terpantau bersih dari kabut asap karhutla langsung.';
-        drawWrappedText(hazeSafeText, 120, 1195, 840, 30, 2);
-      }
-
-      ctx.fillStyle = '#64748B';
-      ctx.font = '600 21px "Outfit", sans-serif';
-      if (nearestFire) {
-        const hotspotText = `Titik Api Terdekat: ${nearestFire.regency} (${nearestFire.distanceKm} km) • Satelit ${nearestFire.satellite || 'SNPP'}`;
-        drawWrappedText(hotspotText, 120, 1315, 840, 26, 1);
-      } else {
-        const noFireText = 'Tidak terdeteksi titik panas dalam radius pemantauan satelit';
-        drawWrappedText(noFireText, 120, 1315, 840, 26, 1);
-      }
-
-      // 5. Seismic & Earthquake Card (Y=1380, H=265)
+      // F. Gempa / aman
       if (latestEarthquake) {
-        drawCard(80, 1380, 920, 265, '#FFFFFF', '#E2E8F0');
-
-        ctx.fillStyle = '#EF4444';
-        ctx.font = '800 22px "Outfit", sans-serif';
-        ctx.fillText('GEMPA TERKINI (BMKG)', 120, 1428);
-
-        // Magnitude Pill Badge
-        ctx.beginPath();
-        if (ctx.roundRect) ctx.roundRect(120, 1455, 145, 135, 16);
-        else ctx.rect(120, 1455, 145, 135);
-        ctx.fillStyle = '#FEF2F2';
-        ctx.fill();
-        ctx.strokeStyle = '#EF4444';
-        ctx.lineWidth = 3;
-        ctx.stroke();
-
-        ctx.fillStyle = '#EF4444';
-        ctx.font = '800 44px "Outfit", sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(`M ${latestEarthquake.magnitude}`, 192, 1530);
-        ctx.font = '700 19px "Outfit", sans-serif';
-        ctx.fillText(t.magnitude.toUpperCase(), 192, 1565);
-        ctx.textAlign = 'left';
-
-        // Location & Depth with auto-wrap
+        gambarKartu(ctx, 72, 1692, 936, 104, '#FFFFFF', '#E2E8F0');
+        ctx.fillStyle = '#DC2626';
+        ctx.font = '900 40px Outfit, sans-serif';
+        ctx.fillText(`M ${latestEarthquake.magnitude}`, 116, 1760);
         ctx.fillStyle = '#0F172A';
-        ctx.font = '700 25px "Outfit", sans-serif';
-        const nextY = drawWrappedText(latestEarthquake.wilayah || 'Indonesia', 290, 1490, 670, 32, 2);
-
-        ctx.fillStyle = '#64748B';
-        ctx.font = '600 21px "Outfit", sans-serif';
-        const depthStr = latestEarthquake.depth || latestEarthquake.kedalaman || '-';
-        const quakeDetails = `${t.depth}: ${depthStr} • ${latestEarthquake.potensi || 'Tidak berpotensi tsunami'}`;
-        drawWrappedText(quakeDetails, 290, Math.max(1570, nextY + 6), 670, 28, 2);
+        ctx.font = '700 26px Outfit, sans-serif';
+        bungkusTeks(ctx, latestEarthquake.wilayah || 'Indonesia', 340, 1740, 600, 32, 1);
       } else {
-        drawCard(80, 1380, 920, 265, '#FFFFFF', '#E2E8F0');
-
-        ctx.fillStyle = '#10B981';
-        ctx.font = '800 22px "Outfit", sans-serif';
-        ctx.fillText('INFORMASI KESELAMATAN', 120, 1428);
-
-        ctx.fillStyle = '#0F172A';
-        ctx.font = '700 25px "Outfit", sans-serif';
-        ctx.fillText('Tidak ada peringatan bencana kritis saat ini.', 120, 1495);
-
-        ctx.fillStyle = '#64748B';
-        ctx.font = '600 21px "Outfit", sans-serif';
-        ctx.fillText('Tetap pantau pembaruan berkala dari BMKG, KLHK SiPongi+ & JagaKota.', 120, 1550);
+        gambarKartu(ctx, 72, 1692, 936, 104, '#ECFDF5', '#0E9F6E');
+        ctx.fillStyle = '#065F46';
+        ctx.font = '700 26px Outfit, sans-serif';
+        ctx.fillText('Aman: nihil gempa & nihil titik api kritis.', 116, 1756);
       }
 
-      // 6. Footer Branding & Attribution (Y=1710 onwards)
-      ctx.fillStyle = '#0F172A';
-      ctx.font = '800 32px "Outfit", sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('jagakota.vercel.app', 540, 1735);
-
-      ctx.fillStyle = '#64748B';
-      ctx.font = '600 23px "Outfit", sans-serif';
-      ctx.fillText('Data Resmi BMKG, PVMBG, NASA & SiPongi+ • Dipantau Secara Real-Time', 540, 1780);
-
+      ctx.fillStyle = '#94A3B8';
+      ctx.font = '700 26px Outfit, sans-serif';
+      ctx.fillText('jagakota.vercel.app • BMKG • SiPongi+ • NASA', 540, 1862);
       ctx.textAlign = 'left';
 
-      resolve(canvas.toDataURL('image/png', 0.95));
+      selesai(kanvas.toDataURL('image/png', 0.95));
     });
-  };
+  }
 
-  const handleNativeShare = async () => {
-    setIsGenerating(true);
+  async function bagikanGambar() {
+    setSibuk(true);
     try {
-      const dataUrl = await generateCanvasImage();
-      const res = await fetch(dataUrl);
-      const blob = await res.blob();
-      const safeCityName = String(locationName).toLowerCase().replace(/[^a-z0-9]+/g, '-');
-      const file = new File([blob], `jagakota-${safeCityName}.png`, { type: 'image/png' });
-
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          title: `${locationName} - JagaKota`,
-          text: shareText
-        });
+      const url = await buatGambarCerita();
+      const respons = await fetch(url);
+      const gumpalan = await respons.blob();
+      const namaAman = String(namaKota).toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      const berkas = new File([gumpalan], `jagakota-story-${namaAman}.png`, { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [berkas] })) {
+        await navigator.share({ files: [berkas], title: `Laporan JagaKota — ${namaKota}`, text: teksBerbagi });
       } else if (navigator.share) {
-        await navigator.share({
-          title: `${locationName} - JagaKota`,
-          text: shareText,
-          url: window.location.href
-        });
+        await navigator.share({ title: `Laporan JagaKota — ${namaKota}`, text: teksBerbagi, url: window.location.href });
       } else {
-        handleDownloadImage();
+        await unduhGambar();
       }
-    } catch (err) {
-      if (err.name !== 'AbortError') {
-        console.error('Share error:', err);
-        handleDownloadImage();
+    } catch (e) {
+      if (e?.name !== 'AbortError') {
+        console.error(e);
+        await unduhGambar();
       }
     } finally {
-      setIsGenerating(false);
+      setSibuk(false);
     }
-  };
+  }
 
-  const handleDownloadImage = async () => {
-    setIsGenerating(true);
+  async function unduhGambar() {
+    setSibuk(true);
     try {
-      const dataUrl = await generateCanvasImage();
-      const safeCityName = String(locationName).toLowerCase().replace(/[^a-z0-9]+/g, '-');
-      const link = document.createElement('a');
-      link.download = `jagakota-${safeCityName}-${Date.now()}.png`;
-      link.href = dataUrl;
-      link.click();
-    } catch (err) {
-      console.error('Download error:', err);
+      const url = await buatGambarCerita();
+      const namaAman = String(namaKota).toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      const tautan = document.createElement('a');
+      tautan.download = `jagakota-story-${namaAman}-${Date.now()}.png`;
+      tautan.href = url;
+      tautan.click();
+    } catch (e) {
+      console.error(e);
     } finally {
-      setIsGenerating(false);
+      setSibuk(false);
     }
-  };
+  }
 
-  const handleCopyText = () => {
-    navigator.clipboard.writeText(shareText);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+  function salinTeks() {
+    navigator.clipboard.writeText(teksBerbagi);
+    setTersalin(true);
+    setTimeout(() => setTersalin(false), 2000);
+  }
 
-  const cigsVal = health.cigs ?? health.cigarettesEquivalent ?? 0;
-  const depthStr = latestEarthquake?.depth || latestEarthquake?.kedalaman || '-';
+  const dalamGempa = latestEarthquake?.depth || latestEarthquake?.kedalaman || '-';
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(15, 23, 42, 0.75)',
-        backdropFilter: 'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)',
-        zIndex: 9999,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '1rem',
-        animation: 'fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
-      }}
-      onClick={onClose}
-    >
-      <div
-        className="flat-card"
-        style={{
-          width: '100%',
-          maxWidth: '480px',
-          maxHeight: '92vh',
-          display: 'flex',
-          flexDirection: 'column',
-          backgroundColor: 'var(--bg-card)',
-          borderRadius: 'var(--radius-lg)',
-          overflow: 'hidden',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-          animation: 'slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1)'
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Modal Window Header */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: '1rem 1.25rem',
-          borderBottom: 'var(--border-thick)',
-          backgroundColor: 'var(--bg-card)'
-        }}>
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm" onClick={onClose}>
+      <div className="flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-3xl bg-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between gap-3 bg-emerald-600 px-5 py-4 text-white">
           <div>
-            <h3 style={{ fontSize: '1.05rem', fontWeight: '800', margin: 0, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-              <Sparkles size={16} color="var(--color-primary)" />
-              {t.shareModalTitle}
-            </h3>
-            <p style={{ fontSize: '0.775rem', color: 'var(--text-muted)', margin: '2px 0 0 0', fontWeight: '500' }}>
-              {t.shareModalSubtitle}
-            </p>
+            <h3 className="flex items-center gap-2 text-base font-extrabold">Bagikan Laporan JagaKota</h3>
+            <p className="mt-0.5 text-xs font-medium text-emerald-100">Story 9:16 + teks siap tempel ke WA/IG/X</p>
           </div>
-          <button
-            onClick={onClose}
-            aria-label="Tutup modal bagikan"
-            style={{
-              padding: '0.4rem',
-              borderRadius: 'var(--radius-sm)',
-              border: 'none',
-              background: 'var(--bg-muted)',
-              color: 'var(--text-muted)',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
+          <button onClick={onClose} aria-label="Tutup" className="rounded-full bg-white/15 p-2 transition hover:bg-white/25">
             <X size={18} />
           </button>
         </div>
 
-        {/* Modal Body / 1:1 Clean Infographic Preview Container */}
-        <div style={{ padding: '1rem 1.25rem', overflowY: 'auto', flex: 1 }}>
-          
-          {/* Live Preview Canvas Card */}
-          <div style={{
-            borderRadius: '16px',
-            backgroundColor: '#F8FAFC',
-            border: '2px solid #E2E8F0',
-            overflow: 'hidden',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.06)',
-            position: 'relative'
-          }}>
-            {/* Top Decorative Brand Banner */}
-            <div style={{ height: '6px', backgroundColor: '#10B981', width: '100%' }} />
+        <div className="flex-1 overflow-y-auto p-5">
+          <div className="overflow-hidden rounded-2xl bg-slate-950 text-white ring-1 ring-slate-800">
+            <div className="bg-gradient-to-r from-emerald-700 via-emerald-600 to-teal-600 px-5 pb-4 pt-5">
+              <p className="text-[11px] font-extrabold tracking-widest text-emerald-100">LAPORAN JAGAKOTA • STORY 9:16</p>
+              <h4 className="mt-1 flex items-center gap-1.5 text-2xl font-black leading-tight"><MapPin size={20} className="shrink-0" />{namaKota}</h4>
+              <p className="mt-0.5 text-xs font-medium text-emerald-100">{namaProvinsi} • {tanggalTampil}</p>
+            </div>
 
-            <div style={{ padding: '1.15rem' }}>
-              
-              {/* Infographic Header */}
-              <div style={{ marginBottom: '0.85rem' }}>
-                <h4 style={{ fontSize: '1.25rem', fontWeight: '900', color: '#0F172A', margin: 0, lineHeight: 1.15, fontFamily: 'Outfit, sans-serif' }}>
-                  JagaKota
-                </h4>
-                <p style={{ fontSize: '0.75rem', color: '#64748B', margin: '2px 0 0 0', fontWeight: '700', fontFamily: 'Outfit, sans-serif' }}>
-                  Laporan Lingkungan & Cuaca Real-Time
-                </p>
-              </div>
-
-              {/* 1. Location Hero Card */}
-              <div style={{
-                padding: '0.85rem 1rem',
-                borderRadius: '12px',
-                backgroundColor: '#FFFFFF',
-                border: '1.5px solid #E2E8F0',
-                marginBottom: '0.75rem'
-              }}>
-                <h5 style={{ fontSize: '1.05rem', fontWeight: '900', color: '#0F172A', margin: 0, lineHeight: 1.2, fontFamily: 'Outfit, sans-serif' }}>
-                  {locationName}
-                </h5>
-                <p style={{ fontSize: '0.775rem', color: '#64748B', margin: '2px 0 4px 0', fontWeight: '600', fontFamily: 'Outfit, sans-serif' }}>
-                  {locationProvince}
-                </p>
-                <span style={{ fontSize: '0.725rem', color: '#059669', fontWeight: '700', fontFamily: 'Outfit, sans-serif', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                  <Calendar size={13} /> {dateFormatted}
-                </span>
-              </div>
-
-              {/* 2. Eco-Health Composite Score Card */}
-              <div style={{
-                padding: '0.85rem 1rem',
-                borderRadius: '12px',
-                backgroundColor: '#FFFFFF',
-                border: '1.5px solid #E2E8F0',
-                marginBottom: '0.75rem'
-              }}>
-                <div style={{ fontSize: '0.675rem', fontWeight: '800', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.03em', fontFamily: 'Outfit, sans-serif' }}>
-                  {t.ecoScoreTitle}
+            <div className="space-y-3 px-4 py-4">
+              <div className="rounded-2xl bg-slate-900 p-4 ring-1 ring-slate-700">
+                <div className="flex items-center justify-between text-[11px] font-extrabold uppercase tracking-wide text-sky-300">
+                  <span className="flex items-center gap-1"><Thermometer size={13} />Cuaca saat ini</span>
+                  <span>{lembap}% lembap</span>
                 </div>
-                
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '4px 0 6px 0', flexWrap: 'wrap', gap: '6px' }}>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '3px' }}>
-                    <span style={{ fontSize: '1.85rem', fontWeight: '900', color: health.color, lineHeight: 1, fontFamily: 'Outfit, sans-serif' }}>
-                      {health.score}
-                    </span>
-                    <span style={{ fontSize: '0.9rem', fontWeight: '800', color: '#64748B', fontFamily: 'Outfit, sans-serif' }}>
-                      /100
-                    </span>
-                  </div>
-
-                  <span style={{
-                    padding: '4px 10px',
-                    borderRadius: '8px',
-                    backgroundColor: health.color,
-                    color: '#FFFFFF',
-                    fontWeight: '800',
-                    fontSize: '0.75rem',
-                    fontFamily: 'Outfit, sans-serif',
-                    boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
-                  }}>
-                    {health.category}
-                  </span>
-                </div>
-
-                <div style={{ fontSize: '0.725rem', fontWeight: '600', color: '#334155', fontFamily: 'Outfit, sans-serif', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-                  <Cigarette size={14} color="#64748b" /> Setara {cigsVal} batang rokok/hari (Paparan PM2.5)
+                <div className="mt-1 flex items-end justify-between gap-2">
+                  <span className="text-4xl font-black">{suhu}°C</span>
+                  <span className="pb-1 text-right text-sm font-bold text-slate-200">{visualCuaca.label}</span>
                 </div>
               </div>
 
-              {/* 3. Grid: AQI & Weather Cards */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.65rem', marginBottom: '0.75rem' }}>
-                
-                {/* AQI Card */}
-                <div style={{
-                  padding: '0.75rem',
-                  borderRadius: '12px',
-                  backgroundColor: '#FFFFFF',
-                  border: '1.5px solid #E2E8F0'
-                }}>
-                  <div style={{ fontSize: '0.65rem', fontWeight: '800', color: aqiInfo.color, textTransform: 'uppercase', fontFamily: 'Outfit, sans-serif' }}>
-                    KUALITAS UDARA
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', margin: '2px 0' }}>
-                    <span style={{ fontSize: '1.65rem', fontWeight: '900', color: aqiInfo.color, lineHeight: 1.1, fontFamily: 'Outfit, sans-serif' }}>
-                      {aqi}
-                    </span>
-                    <span style={{ fontSize: '0.7rem', fontWeight: '700', color: '#64748B', fontFamily: 'Outfit, sans-serif' }}>
-                      AQI US
-                    </span>
-                  </div>
-                  <div style={{ fontSize: '0.8rem', fontWeight: '800', color: '#0F172A', fontFamily: 'Outfit, sans-serif', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {aqiInfo.label}
-                  </div>
-                  <div style={{ fontSize: '0.675rem', color: '#64748B', fontWeight: '600', marginTop: '2px', fontFamily: 'Outfit, sans-serif' }}>
-                    PM2.5: {pm25} µg/m³
-                  </div>
+              <div className="rounded-2xl p-4 text-white" style={{ backgroundColor: kota.color }}>
+                <p className="text-[11px] font-extrabold uppercase tracking-widest text-white/85">Skor KotaSiaga JagaKota</p>
+                <div className="mt-1 flex items-end justify-between gap-2">
+                  <p className="text-5xl font-black leading-none">{kota.score}<span className="text-lg font-extrabold text-white/80">/100</span></p>
+                  <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-extrabold">{kota.label}</span>
                 </div>
-
-                {/* Weather Card */}
-                <div style={{
-                  padding: '0.75rem',
-                  borderRadius: '12px',
-                  backgroundColor: '#FFFFFF',
-                  border: '1.5px solid #E2E8F0'
-                }}>
-                  <div style={{ fontSize: '0.65rem', fontWeight: '800', color: '#3B82F6', textTransform: 'uppercase', fontFamily: 'Outfit, sans-serif' }}>
-                    CUACA SAAT INI
-                  </div>
-                  <div style={{ fontSize: '1.65rem', fontWeight: '900', color: '#0F172A', margin: '2px 0', lineHeight: 1.1, fontFamily: 'Outfit, sans-serif' }}>
-                    {temp}°C
-                  </div>
-                  <div style={{ fontSize: '0.8rem', fontWeight: '800', color: '#0F172A', fontFamily: 'Outfit, sans-serif', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {weatherVisual.label}
-                  </div>
-                  <div style={{ fontSize: '0.675rem', color: '#64748B', fontWeight: '600', marginTop: '2px', fontFamily: 'Outfit, sans-serif' }}>
-                    {t.humidity}: {humidity}%
-                  </div>
+                <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-black/25">
+                  <div className="h-full rounded-full bg-white" style={{ width: `${Math.max(0, Math.min(100, kota.score))}%` }} />
                 </div>
-
+                <p className="mt-2 text-xs font-semibold leading-relaxed text-white">Paparan kretek: ±{kota.paparan} batang/hari • {kota.aksi}</p>
               </div>
 
-              {/* 4. Karhutla & Kabut Asap Alert Card */}
-              <div style={{
-                padding: '0.85rem 1rem',
-                borderRadius: '12px',
-                backgroundColor: '#FFFFFF',
-                border: `1.5px solid ${isHazeActive ? '#EF4444' : '#E2E8F0'}`,
-                marginBottom: '0.75rem'
-              }}>
-                <div style={{ fontSize: '0.675rem', fontWeight: '800', color: '#EA580C', textTransform: 'uppercase', marginBottom: '0.4rem', fontFamily: 'Outfit, sans-serif', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                  <Flame size={13} /> {t.karhutlaCardHeader.toUpperCase()}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-2xl bg-white p-3 text-slate-900">
+                  <p className="flex items-center gap-1 text-[10px] font-extrabold uppercase" style={{ color: infoAqi.color }}><Wind size={12} />Udara</p>
+                  <p className="mt-0.5 text-3xl font-black" style={{ color: infoAqi.color }}>{aqi}<span className="ml-1 text-[10px] font-bold text-slate-500">AQI</span></p>
+                  <p className="truncate text-xs font-extrabold">{infoAqi.label}</p>
+                  <p className="text-[11px] font-medium text-slate-500">PM2.5 {pm25}</p>
                 </div>
-
-                {/* Status Badges Row */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', marginBottom: '0.45rem' }}>
-                  <span style={{
-                    padding: '3px 8px',
-                    borderRadius: '6px',
-                    backgroundColor: fdrs.bg || '#ECFDF5',
-                    color: fdrs.color || '#10B981',
-                    fontSize: '0.68rem',
-                    fontWeight: '800',
-                    fontFamily: 'Outfit, sans-serif'
-                  }}>
-                    {t.landLocalBadge}: {fdrs.code}
-                  </span>
-
-                  <span style={{
-                    padding: '3px 8px',
-                    borderRadius: '6px',
-                    backgroundColor: isHazeActive ? '#FEE2E2' : '#ECFDF5',
-                    color: isHazeActive ? '#DC2626' : '#059669',
-                    fontSize: '0.68rem',
-                    fontWeight: '800',
-                    fontFamily: 'Outfit, sans-serif',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '4px'
-                  }}>
-                    {isHazeActive ? <><AlertTriangle size={11} /> TERPAPAR KABUT ASAP</> : <><ShieldCheck size={11} /> Kabut Asap: Bersih</>}
-                  </span>
-                </div>
-
-                {/* Advisory */}
-                <div style={{
-                  fontSize: '0.7rem',
-                  fontWeight: isHazeActive ? '700' : '600',
-                  color: isHazeActive ? '#DC2626' : '#334155',
-                  lineHeight: 1.35,
-                  marginBottom: '0.35rem',
-                  fontFamily: 'Outfit, sans-serif'
-                }}>
-                  {isHazeActive
-                    ? `Peringatan: Terdeteksi paparan kabut asap (${nearestFire ? `${nearestFire.distanceKm} km dari ${nearestFire.regency}` : 'partikel asap karhutla'}). Gunakan masker N95.`
-                    : 'Kondisi udara terpantau bersih dari kabut asap karhutla langsung.'}
-                </div>
-
-                {/* Hotspot details */}
-                <div style={{ fontSize: '0.68rem', fontWeight: '600', color: '#64748B', fontFamily: 'Outfit, sans-serif' }}>
-                  {nearestFire
-                    ? `Titik Api Terdekat: ${nearestFire.regency} (${nearestFire.distanceKm} km) • Satelit ${nearestFire.satellite || 'SNPP'}`
-                    : 'Tidak terdeteksi titik panas dalam radius pemantauan satelit'}
+                <div className={`rounded-2xl p-3 ring-1 ${asapAktif ? 'bg-red-950 text-red-100 ring-red-800' : 'bg-emerald-50 text-emerald-900 ring-emerald-200'}`}>
+                  <p className="flex items-center gap-1 text-[10px] font-extrabold uppercase"><Flame size={12} />Karhutla</p>
+                  <p className="mt-0.5 text-xs font-extrabold leading-snug">{asapAktif ? 'TERPAPAR ASAP' : 'BEBAS ASAP'}</p>
+                  <p className="mt-1 line-clamp-2 text-[11px] font-medium opacity-80">{titikApi ? `${titikApi.regency} • ${titikApi.distanceKm} km` : 'Nihil hotspot'} • FDRS {fdrs.code || '-'}</p>
                 </div>
               </div>
 
-              {/* 5. Seismic / Earthquake Card */}
-              {latestEarthquake ? (
-                <div style={{
-                  padding: '0.85rem 1rem',
-                  borderRadius: '12px',
-                  backgroundColor: '#FFFFFF',
-                  border: '1.5px solid #E2E8F0',
-                  marginBottom: '0.85rem'
-                }}>
-                  <div style={{ fontSize: '0.675rem', fontWeight: '800', color: '#EF4444', textTransform: 'uppercase', marginBottom: '0.45rem', fontFamily: 'Outfit, sans-serif', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                    <Zap size={13} /> GEMPA TERKINI (BMKG)
-                  </div>
-                  
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <div style={{
-                      backgroundColor: '#FEF2F2',
-                      border: '1.5px solid #EF4444',
-                      borderRadius: '8px',
-                      padding: '4px 8px',
-                      textAlign: 'center',
-                      minWidth: '65px',
-                      flexShrink: 0
-                    }}>
-                      <div style={{ fontSize: '1.05rem', fontWeight: '900', color: '#EF4444', lineHeight: 1.1, fontFamily: 'Outfit, sans-serif' }}>
-                        M {latestEarthquake.magnitude}
-                      </div>
-                      <div style={{ fontSize: '0.55rem', fontWeight: '800', color: '#EF4444', textTransform: 'uppercase', fontFamily: 'Outfit, sans-serif' }}>
-                        {t.magnitude}
-                      </div>
-                    </div>
-
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: '0.775rem', fontWeight: '700', color: '#0F172A', lineHeight: 1.3, fontFamily: 'Outfit, sans-serif', wordBreak: 'break-word' }}>
-                        {latestEarthquake.wilayah}
-                      </div>
-                      <div style={{ fontSize: '0.68rem', color: '#64748B', fontWeight: '600', marginTop: '2px', fontFamily: 'Outfit, sans-serif' }}>
-                        {t.depth}: {depthStr} • {latestEarthquake.potensi || 'Tidak berpotensi tsunami'}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div style={{
-                  padding: '0.85rem 1rem',
-                  borderRadius: '12px',
-                  backgroundColor: '#FFFFFF',
-                  border: '1.5px solid #E2E8F0',
-                  marginBottom: '0.85rem'
-                }}>
-                  <div style={{ fontSize: '0.675rem', fontWeight: '800', color: '#10B981', textTransform: 'uppercase', marginBottom: '0.2rem', fontFamily: 'Outfit, sans-serif' }}>
-                    INFORMASI KESELAMATAN
-                  </div>
-                  <div style={{ fontSize: '0.75rem', fontWeight: '700', color: '#0F172A', fontFamily: 'Outfit, sans-serif' }}>
-                    Tidak ada peringatan bencana kritis saat ini.
-                  </div>
-                  <div style={{ fontSize: '0.68rem', color: '#64748B', fontWeight: '600', fontFamily: 'Outfit, sans-serif' }}>
-                    Tetap pantau pembaruan berkala dari BMKG, KLHK SiPongi+ & JagaKota.
-                  </div>
-                </div>
-              )}
-
-              {/* 6. Footer Branding */}
-              <div style={{ textAlign: 'center', paddingTop: '0.25rem' }}>
-                <div style={{ fontSize: '0.825rem', fontWeight: '900', color: '#0F172A', fontFamily: 'Outfit, sans-serif' }}>
-                  jagakota.vercel.app
-                </div>
-                <div style={{ fontSize: '0.65rem', color: '#64748B', fontWeight: '600', marginTop: '1px', fontFamily: 'Outfit, sans-serif' }}>
-                  Data Resmi BMKG, PVMBG, NASA & SiPongi+ • Dipantau Secara Real-Time
+              <div className="flex items-center gap-3 rounded-2xl bg-white p-3 text-slate-900">
+                <span className="grid h-11 w-14 shrink-0 place-items-center rounded-xl bg-red-50 text-sm font-black text-red-600 ring-1 ring-red-200">{latestEarthquake ? `M ${latestEarthquake.magnitude}` : 'Aman'}</span>
+                <div className="min-w-0">
+                  <p className="flex items-center gap-1 text-[10px] font-extrabold uppercase text-slate-500"><Activity size={11} />{latestEarthquake ? 'Gempa BMKG' : 'Status siaga'}</p>
+                  <p className="truncate text-xs font-bold">{latestEarthquake ? latestEarthquake.wilayah : 'Nihil peringatan kritis'}</p>
+                  <p className="truncate text-[11px] text-slate-500">{latestEarthquake ? `Kedalaman ${dalamGempa} • ${latestEarthquake.potensi || 'Waspada'}` : 'BMKG • SiPongi+ • JagaKota'}</p>
                 </div>
               </div>
 
+              <p className="pb-1 text-center text-[11px] font-semibold text-slate-400">jagakota.vercel.app • BMKG • SiPongi+ • NASA</p>
             </div>
           </div>
 
-          {/* Action Sharing Buttons Grid */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', marginTop: '1.15rem' }}>
-            
-            {/* Primary Action: Bagikan */}
-            <button
-              onClick={handleNativeShare}
-              disabled={isGenerating}
-              className="flat-btn-primary"
-              style={{
-                width: '100%',
-                backgroundColor: 'var(--color-primary)',
-                gap: '0.5rem',
-                minHeight: '46px',
-                fontSize: '0.95rem',
-                fontWeight: '800',
-                justifyContent: 'center',
-                boxShadow: '0 4px 14px rgba(16, 185, 129, 0.3)'
-              }}
-            >
-              <Share2 size={18} strokeWidth={2.5} />
-              <span>{isGenerating ? 'Menyiapkan Gambar...' : t.shareBtn}</span>
+          <div className="mt-4 flex flex-col gap-2">
+            <button onClick={bagikanGambar} disabled={sibuk} className="flex min-h-[46px] w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 text-sm font-extrabold text-white shadow-lg shadow-emerald-600/25 transition hover:bg-emerald-700 disabled:opacity-60">
+              <Share2 size={18} />{sibuk ? 'Merangkai gambar...' : 'Bagikan Story + Teks'}
             </button>
-
-            {/* Secondary Actions: Simpan PNG & Salin Teks */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem' }}>
-              
-              {/* Download PNG */}
-              <button
-                onClick={handleDownloadImage}
-                disabled={isGenerating}
-                className="flat-btn-secondary"
-                style={{
-                  gap: '0.4rem',
-                  fontSize: '0.8rem',
-                  fontWeight: '700',
-                  padding: '0.65rem 0.5rem',
-                  justifyContent: 'center'
-                }}
-              >
-                <Download size={16} strokeWidth={2.5} />
-                <span>{t.downloadPngBtn}</span>
+            <div className="grid grid-cols-2 gap-2">
+              <button onClick={unduhGambar} disabled={sibuk} className="flex items-center justify-center gap-1.5 rounded-2xl bg-slate-100 px-2 py-3 text-xs font-bold text-slate-800 transition hover:bg-slate-200 disabled:opacity-60">
+                <ImageDown size={16} />Simpan PNG
               </button>
-
-              {/* Copy Text Button */}
-              <button
-                onClick={handleCopyText}
-                className="flat-btn-secondary"
-                style={{
-                  gap: '0.4rem',
-                  fontSize: '0.8rem',
-                  fontWeight: '700',
-                  padding: '0.65rem 0.5rem',
-                  justifyContent: 'center'
-                }}
-              >
-                {copied ? <Check size={16} color="var(--color-secondary)" strokeWidth={2.5} /> : <Copy size={16} strokeWidth={2.2} />}
-                <span>{copied ? t.copiedBtn : t.copyTextBtn}</span>
+              <button onClick={salinTeks} className="flex items-center justify-center gap-1.5 rounded-2xl bg-slate-900 px-2 py-3 text-xs font-bold text-white transition hover:bg-slate-700">
+                {tersalin ? <Check size={16} /> : <ClipboardCopy size={16} />}{tersalin ? 'Tersalin!' : 'Salin Teks'}
               </button>
-
             </div>
-
           </div>
-
         </div>
 
-        {/* Footer info */}
-        <div style={{ padding: '0.65rem 1.25rem', borderTop: 'var(--border-thick)', backgroundColor: 'var(--bg-muted)', fontSize: '0.725rem', fontWeight: '600', color: 'var(--text-muted)', textAlign: 'center' }}>
-          {t.shareSupportHint}
-        </div>
+        <p className="border-t border-slate-100 bg-slate-50 px-5 py-2.5 text-center text-[11px] font-medium text-slate-500">Berfungsi di HP (Web Share) & laptop (unduh otomatis).</p>
       </div>
     </div>
   );

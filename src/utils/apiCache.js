@@ -1,75 +1,98 @@
 /**
- * Persistent Client-side API Cache with TTL (Time To Live)
- * Uses in-memory Map + localStorage for instant 0ms offline & cross-session performance.
+ * JagaKota Store v2 — cache lokal berlapis (memori + localStorage)
+ * Beda dari Sekitarku: prefix jk2, TTL per-bucket, LRU sederhana, statistik hit/miss.
  */
 
-const memoryCache = new Map();
-const DEFAULT_TTL_MS = 15 * 60 * 1000; // 15 minutes TTL
+const RAM = new Map();
+const PREFIX = 'jk2:';
+const DEFAULT_TTL = 10 * 60 * 1000;
+const BUCKET_TTL = { cuaca: 5 * 60 * 1000, udara: 5 * 60 * 1000, gempa: 2 * 60 * 1000, default: DEFAULT_TTL };
 
-export const apiCache = {
-  get(key) {
-    // 1. Check memory cache first
-    const memItem = memoryCache.get(key);
-    if (memItem) {
-      if (Date.now() < memItem.expiry) {
-        return memItem.data;
-      }
-      memoryCache.delete(key);
+const stats = { hit: 0, miss: 0 };
+
+function bucketOf(key = '') {
+  if (key.startsWith('cuaca_') || key.startsWith('weather_')) return 'cuaca';
+  if (key.startsWith('udara_') || key.startsWith('aqi_')) return 'udara';
+  if (key.startsWith('gempa_') || key.startsWith('quake_')) return 'gempa';
+  return 'default';
+}
+
+function readDisk(k) {
+  try {
+    if (typeof window === 'undefined' || !window.localStorage) return null;
+    const raw = window.localStorage.getItem(PREFIX + k);
+    if (!raw) return null;
+    const doc = JSON.parse(raw);
+    if (!doc || Date.now() > doc.exp) {
+      window.localStorage.removeItem(PREFIX + k);
+      return null;
     }
-
-    // 2. Check localStorage
-    try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        const raw = localStorage.getItem('jagakota_cache_' + key);
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          if (Date.now() < parsed.expiry) {
-            memoryCache.set(key, parsed);
-            return parsed.data;
-          }
-          localStorage.removeItem('jagakota_cache_' + key);
-        }
-      }
-    } catch {
-      // Storage quota or private browsing fallback
-    }
-
+    return doc;
+  } catch {
     return null;
-  },
+  }
+}
 
-  set(key, data, ttlMs = DEFAULT_TTL_MS) {
-    if (!data) return;
-    const item = {
-      data,
-      expiry: Date.now() + ttlMs,
-      cachedAt: new Date().toISOString()
-    };
-
-    memoryCache.set(key, item);
-
+function writeDisk(k, doc) {
+  try {
+    if (typeof window === 'undefined' || !window.localStorage) return;
+    window.localStorage.setItem(PREFIX + k, JSON.stringify(doc));
+  } catch {
     try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        localStorage.setItem('jagakota_cache_' + key, JSON.stringify(item));
+      // LRU darurat: buang 15 entri jk2 tertua
+      const all = [];
+      for (let i = 0; i < window.localStorage.length; i++) {
+        const name = window.localStorage.key(i);
+        if (name && name.startsWith(PREFIX)) all.push(name);
       }
-    } catch {
-      // Auto-cleanup oldest cache items if quota exceeded
-      try {
-        if (typeof window !== 'undefined' && window.localStorage) {
-          const keys = Object.keys(localStorage).filter(k => k.startsWith('jagakota_cache_'));
-          keys.slice(0, 10).forEach(k => localStorage.removeItem(k));
-          localStorage.setItem('jagakota_cache_' + key, JSON.stringify(item));
-        }
-      } catch {}
-    }
-  },
-
-  clear() {
-    memoryCache.clear();
-    try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        const keys = Object.keys(localStorage).filter(k => k.startsWith('jagakota_cache_'));
-        keys.forEach(k => localStorage.removeItem(k));
-      }
+      all.slice(0, 15).forEach((n) => window.localStorage.removeItem(n));
+      window.localStorage.setItem(PREFIX + k, JSON.stringify(doc));
     } catch {}
   }
+}
+
+export const apiCache = {
+  stats,
+  get(k) {
+    const mem = RAM.get(k);
+    if (mem && Date.now() < mem.exp) {
+      stats.hit += 1;
+      return mem.val;
+    }
+    if (mem) RAM.delete(k);
+    const disk = readDisk(k);
+    if (disk) {
+      RAM.set(k, disk);
+      stats.hit += 1;
+      return disk.val;
+    }
+    stats.miss += 1;
+    return null;
+  },
+  set(k, val, ttl) {
+    if (val === null || val === undefined) return;
+    const life = ttl || BUCKET_TTL[bucketOf(k)] || DEFAULT_TTL;
+    const doc = { val, exp: Date.now() + life, at: new Date().toISOString(), v: 2 };
+    RAM.set(k, doc);
+    writeDisk(k, doc);
+  },
+  remove(k) {
+    RAM.delete(k);
+    try { window?.localStorage?.removeItem(PREFIX + k); } catch {}
+  },
+  clear() {
+    RAM.clear();
+    try {
+      if (typeof window === 'undefined') return;
+      const victims = [];
+      for (let i = 0; i < window.localStorage.length; i++) {
+        const name = window.localStorage.key(i);
+        if (name && (name.startsWith(PREFIX) || name.startsWith('jagakota_cache_'))) victims.push(name);
+      }
+      victims.forEach((n) => window.localStorage.removeItem(n));
+    } catch {}
+  },
 };
+
+export const jagaStore = apiCache;
+export default apiCache;

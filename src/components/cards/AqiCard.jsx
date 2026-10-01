@@ -1,176 +1,158 @@
 import React from 'react';
-import { Wind } from 'lucide-react';
-import { getAqiInfo } from '../../utils/aqi';
-import { translations } from '../../utils/i18n';
+import { Wind, Leaf, DoorOpen, ShieldCheck } from 'lucide-react';
+import { infoUdara, TINGKAT_UDARA } from '../../utils/aqi.js';
 
 export function AqiCard({ data, loading }) {
-  const t = translations;
-
   if (loading) {
     return (
-      <div className="flat-card animate-pulse" style={{ padding: '1.5rem', minHeight: '220px' }}>
-        <div style={{ height: '24px', width: '45%', backgroundColor: 'var(--bg-muted)', borderRadius: '4px', marginBottom: '1rem' }} />
-        <div style={{ height: '54px', width: '30%', backgroundColor: 'var(--bg-muted)', borderRadius: '6px', marginBottom: '0.85rem' }} />
-        <div style={{ height: '10px', backgroundColor: 'var(--bg-muted)', borderRadius: '999px', marginBottom: '1rem' }} />
-        <div style={{ height: '60px', backgroundColor: 'var(--bg-muted)', borderRadius: '6px' }} />
-      </div>
+      <section className="border-2 border-slate-200 rounded-2xl bg-white p-5 animate-pulse min-h-[240px]">
+        <div className="h-4 w-1/3 bg-slate-200 rounded-full mb-4" />
+        <div className="flex gap-4 mb-4">
+          <div className="w-20 h-20 bg-slate-200 rounded-2xl" />
+          <div className="flex-1 space-y-2">
+            <div className="h-5 w-2/3 bg-slate-200 rounded" />
+            <div className="h-3 w-full bg-slate-200 rounded" />
+          </div>
+        </div>
+        <div className="space-y-2">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="h-8 bg-slate-200 rounded-xl" />
+          ))}
+        </div>
+      </section>
     );
   }
 
-  
-
   const current = data?.current || {};
-  const aqi = Number(current.aqi) || 0;
-  const aqiInfo = getAqiInfo(aqi);
+  const aqi = Math.max(0, Number(current.aqi) || 0);
+  const info = infoUdara(aqi);
 
-  // Position percentage on standard 0-500 AQI scale
-  const needlePercent = Math.min(100, Math.max(0, (aqi / 500) * 100));
+  const aktif = TINGKAT_UDARA.findIndex((t) => aqi <= t.max);
+  const idxAktif = aktif === -1 ? TINGKAT_UDARA.length - 1 : aktif;
+
+  const polutan = [
+    { nama: 'PM2.5', nilai: current.pm25 ?? current.pm2_5 ?? 0, satuan: 'µg/m³' },
+    { nama: 'PM10', nilai: current.pm10 ?? 0, satuan: 'µg/m³' },
+    { nama: 'O₃', nilai: current.o3 ?? 0, satuan: '' },
+    { nama: 'NO₂', nilai: current.no2 ?? 0, satuan: '' },
+    { nama: 'SO₂', nilai: current.so2 ?? 0, satuan: '' },
+    { nama: 'CO', nilai: current.co ?? 0, satuan: '' },
+  ];
+  const pemicu = [...polutan].sort((a, b) => Number(b.nilai) - Number(a.nilai))[0];
 
   return (
-    <div className="flat-card" style={{ padding: '1.5rem' }}>
-      
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <div style={{ width: '32px', height: '32px', borderRadius: 'var(--radius-full)', backgroundColor: aqiInfo.color, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
-            <Wind size={18} strokeWidth={2.5} />
-          </div>
-          <h3 style={{ fontSize: '1.05rem', fontWeight: '800', margin: 0, color: 'var(--text-main)' }}>{t.aqiTitle}</h3>
-        </div>
-        <span style={{
-          fontSize: '0.75rem',
-          fontWeight: '800',
-          padding: '3px 10px',
-          borderRadius: 'var(--radius-sm)',
-          backgroundColor: aqiInfo.color,
-          color: '#ffffff'
-        }}>
-          {aqiInfo.label}
-        </span>
-      </div>
+    <section className="border-2 border-slate-200 rounded-2xl bg-white overflow-hidden flex flex-col">
+      {/* Pita status atas */}
+      <div className="h-2 w-full" style={{ backgroundColor: info.color }} />
 
-      {/* Main AQI Numeric Readout */}
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.85rem', margin: '0.85rem 0 0.5rem 0' }}>
-        <div style={{
-          fontSize: '3.4rem',
-          fontWeight: '800',
-          lineHeight: '1',
-          color: aqiInfo.color,
-          letterSpacing: '-0.04em'
-        }}>
-          {current.aqi !== undefined && current.aqi !== null ? current.aqi : '--'}
-        </div>
-        <div style={{ minWidth: 0, flex: 1 }}>
-          <strong style={{ fontSize: '1.15rem', color: 'var(--text-main)', display: 'block', fontWeight: '800', lineHeight: 1.2 }}>
-            {aqiInfo.label}
-          </strong>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600', display: 'block', lineHeight: 1.4 }}>
-            Indeks gabungan partikulat & gas <span style={{ whiteSpace: 'nowrap' }}>(US-AQI)</span>
+      <div className="p-5 flex flex-col gap-4">
+        {/* Eyebrow ronda */}
+        <div className="flex items-center justify-between">
+          <p className="text-[11px] font-extrabold tracking-[0.14em] text-slate-500 uppercase">
+            Pos Udara • Ronda Warga
+          </p>
+          <span
+            className="inline-flex items-center gap-1.5 text-[11px] font-extrabold px-2.5 py-1 rounded-full border-2"
+            style={{ color: info.color, borderColor: info.color, backgroundColor: info.bg }}
+          >
+            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: info.color }} />
+            {info.label}
           </span>
         </div>
-      </div>
 
-      {/* Official 0-500 Continuous Gauge Scale Bar with Needle Position Marker */}
-      <div style={{ margin: '1.25rem 0 0.5rem 0' }}>
-        <div
-          style={{
-            height: '10px',
-            width: '100%',
-            borderRadius: '4px',
-            background: 'linear-gradient(to right, #2ea043 0%, #2ea043 10%, #d29922 10%, #d29922 20%, #db6d28 20%, #db6d28 30%, #f85149 30%, #f85149 40%, #a371f7 40%, #a371f7 60%, #8b0000 60%, #8b0000 100%)',
-            position: 'relative',
-            border: '1px solid rgba(0, 0, 0, 0.1)'
-          }}
-          title={`Posisi AQI: ${aqi} dari skala 500`}
-        >
-          {/* Vertical Needle / Pointer Indicator */}
+        {/* Baris utama: kotak angka + sapaan */}
+        <div className="flex items-stretch gap-4">
           <div
-            style={{
-              position: 'absolute',
-              top: '-6px',
-              left: `${needlePercent}%`,
-              width: '4px',
-              height: '22px',
-              backgroundColor: 'var(--text-main)',
-              border: '1px solid #ffffff',
-              borderRadius: '2px',
-              transform: 'translateX(-50%)',
-              transition: 'left 600ms cubic-bezier(0.16, 1, 0.3, 1)',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.3)'
-            }}
-          />
-        </div>
-
-        {/* Scale Ticks: angka pendek saja agar 100-150-200 tidak tabrakan di kartu sempit */}
-        <div style={{
-          position: 'relative',
-          height: '14px',
-          fontSize: '0.675rem',
-          color: 'var(--text-muted)',
-          fontWeight: '600',
-          marginTop: '0.45rem'
-        }}>
-          {[
-            { v: 0, label: '0', align: 'left' },
-            { v: 50, label: '50', align: 'center' },
-            { v: 100, label: '100', align: 'center' },
-            { v: 150, label: '150', align: 'center' },
-            { v: 200, label: '200', align: 'center' },
-            { v: 300, label: '300', align: 'center' },
-            { v: 500, label: '500', align: 'right' }
-          ].map((tick) => (
-            <span
-              key={tick.v}
-              style={{
-                position: 'absolute',
-                left: `${(tick.v / 500) * 100}%`,
-                transform: tick.align === 'left' ? 'none' : tick.align === 'right' ? 'translateX(-100%)' : 'translateX(-50%)',
-                whiteSpace: 'nowrap'
-              }}
-            >
-              {tick.label}
+            className="shrink-0 w-24 rounded-2xl border-2 flex flex-col items-center justify-center py-3"
+            style={{ borderColor: info.color, backgroundColor: info.bg }}
+          >
+            <Wind size={20} style={{ color: info.color }} strokeWidth={2.5} />
+            <span className="text-4xl font-black tabular-nums leading-none mt-1" style={{ color: info.color }}>
+              {current.aqi ?? '--'}
             </span>
-          ))}
+            <span className="text-[10px] font-bold text-slate-500 mt-1">US-AQI</span>
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-xl font-black text-slate-900 leading-tight">
+              Udara lagi {info.label.toLowerCase()}, Lur.
+            </h3>
+            <p className="text-[13px] font-medium text-slate-600 leading-snug mt-1">
+              {info.advice}
+            </p>
+            <p className="text-[12px] text-slate-500 mt-2">
+              Pemicu tertinggi: <strong className="text-slate-800">{pemicu.nama} {String(pemicu.nilai)}</strong>
+            </p>
+          </div>
         </div>
-        {/* Keterangan kategori ikut badge di atas (Baik/Sedang/Sensitif/Tidak Sehat/...) agar tidak menumpuk */}
-        <div style={{ fontSize: '0.675rem', color: 'var(--text-muted)', fontWeight: '600', marginTop: '0.15rem' }}>
-          Skala: 0–50 Baik • 51–100 Sedang • 101–150 Sensitif • 151–200 Tidak Sehat • 201+ Bahaya
+
+        {/* Tangga warga vertikal — beda dari gauge horizontal lama */}
+        <ol className="rounded-2xl border-2 border-slate-100 overflow-hidden divide-y-2 divide-slate-100">
+          {TINGKAT_UDARA.map((t, i) => {
+            const on = i === idxAktif;
+            return (
+              <li
+                key={t.label}
+                className="flex items-center gap-3 px-3 py-1.5"
+                style={on ? { backgroundColor: t.bg } : undefined}
+              >
+                <span
+                  className="w-3 h-3 rounded-full shrink-0 border-2 border-white"
+                  style={{ backgroundColor: t.color, outline: on ? `2px solid ${t.color}` : 'none' }}
+                />
+                <span className={`text-[12px] font-extrabold ${on ? 'text-slate-900' : 'text-slate-400'}`}>
+                  {t.label}
+                </span>
+                <span className="ml-auto text-[11px] font-semibold text-slate-400">
+                  {i === 0 ? '0–50' : i === 1 ? '51–100' : i === 2 ? '101–150' : i === 3 ? '151–200' : i === 4 ? '201–300' : '300+'}
+                </span>
+                {on && (
+                  <span
+                    className="text-[10px] font-black px-1.5 py-0.5 rounded-md text-white"
+                    style={{ backgroundColor: t.color }}
+                  >
+                    KAMU DI SINI
+                  </span>
+                )}
+              </li>
+            );
+          })}
+        </ol>
+
+        {/* Aksi warga */}
+        <div className="grid grid-cols-2 gap-2">
+          <div className="rounded-xl border-2 border-slate-100 bg-slate-50 px-3 py-2 flex items-center gap-2">
+            <DoorOpen size={16} className="text-slate-500 shrink-0" />
+            <div>
+              <p className="text-[10px] font-bold text-slate-500 uppercase">Jendela</p>
+              <p className="text-[13px] font-extrabold text-slate-800">{aqi <= 60 ? 'Buka aja' : 'Tutup dulu'}</p>
+            </div>
+          </div>
+          <div className="rounded-xl border-2 border-slate-100 bg-slate-50 px-3 py-2 flex items-center gap-2">
+            <ShieldCheck size={16} className="text-slate-500 shrink-0" />
+            <div>
+              <p className="text-[10px] font-bold text-slate-500 uppercase">Masker</p>
+              <p className="text-[13px] font-extrabold text-slate-800">{aqi > 100 ? 'Wajib' : aqi > 50 ? 'Siapin' : 'Nggak perlu'}</p>
+            </div>
+          </div>
         </div>
+
+        {/* Rincian penyumbang — list vertikal, bukan grid 3 kolom lama */}
+        <details className="rounded-xl border-2 border-dashed border-slate-200 px-3 py-2">
+          <summary className="text-[12px] font-extrabold text-slate-600 cursor-pointer flex items-center gap-1.5">
+            <Leaf size={14} /> Rincian penyumbang (6 zat)
+          </summary>
+          <dl className="mt-2 divide-y divide-slate-100">
+            {polutan.map((p) => (
+              <div key={p.nama} className="flex items-center justify-between py-1">
+                <dt className="text-[12px] font-bold text-slate-500">{p.nama}</dt>
+                <dd className="text-[13px] font-extrabold text-slate-800 tabular-nums">
+                  {p.nilai} <span className="font-semibold text-slate-400 text-[11px]">{p.satuan}</span>
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </details>
       </div>
-
-      {/* Advice */}
-      <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)', margin: '0.85rem 0 1.15rem 0', lineHeight: '1.45', fontWeight: '500' }}>
-        {aqiInfo.advice}
-      </p>
-
-      {/* Pollutant Breakdown Grid: tampilkan 6 penentu AQI agar 183 bisa diverifikasi */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
-        <div style={{ padding: '0.5rem 0.35rem', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--bg-muted)', textAlign: 'center', border: 'var(--border-thick)' }}>
-          <span style={{ fontSize: '0.675rem', color: 'var(--text-muted)', fontWeight: '700' }}>PM2.5</span>
-          <div style={{ fontSize: '0.875rem', fontWeight: '800', color: 'var(--text-main)' }}>{current.pm25 ?? 0}</div>
-        </div>
-        <div style={{ padding: '0.5rem 0.35rem', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--bg-muted)', textAlign: 'center', border: 'var(--border-thick)' }}>
-          <span style={{ fontSize: '0.675rem', color: 'var(--text-muted)', fontWeight: '700' }}>PM10</span>
-          <div style={{ fontSize: '0.875rem', fontWeight: '800', color: 'var(--text-main)' }}>{current.pm10 ?? 0}</div>
-        </div>
-        <div style={{ padding: '0.5rem 0.35rem', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--bg-muted)', textAlign: 'center', border: 'var(--border-thick)' }}>
-          <span style={{ fontSize: '0.675rem', color: 'var(--text-muted)', fontWeight: '700' }}>O₃</span>
-          <div style={{ fontSize: '0.875rem', fontWeight: '800', color: 'var(--text-main)' }}>{current.o3 ?? 0}</div>
-        </div>
-        <div style={{ padding: '0.5rem 0.35rem', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--bg-muted)', textAlign: 'center', border: 'var(--border-thick)' }}>
-          <span style={{ fontSize: '0.675rem', color: 'var(--text-muted)', fontWeight: '700' }}>NO₂</span>
-          <div style={{ fontSize: '0.875rem', fontWeight: '800', color: 'var(--text-main)' }}>{current.no2 ?? 0}</div>
-        </div>
-        <div style={{ padding: '0.5rem 0.35rem', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--bg-muted)', textAlign: 'center', border: 'var(--border-thick)' }}>
-          <span style={{ fontSize: '0.675rem', color: 'var(--text-muted)', fontWeight: '700' }}>SO₂</span>
-          <div style={{ fontSize: '0.875rem', fontWeight: '800', color: 'var(--text-main)' }}>{current.so2 ?? 0}</div>
-        </div>
-        <div style={{ padding: '0.5rem 0.35rem', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--bg-muted)', textAlign: 'center', border: 'var(--border-thick)' }}>
-          <span style={{ fontSize: '0.675rem', color: 'var(--text-muted)', fontWeight: '700' }}>CO</span>
-          <div style={{ fontSize: '0.875rem', fontWeight: '800', color: 'var(--text-main)' }}>{current.co ?? 0}</div>
-        </div>
-      </div>
-
-    </div>
+    </section>
   );
 }

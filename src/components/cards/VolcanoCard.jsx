@@ -1,140 +1,96 @@
 import React from 'react';
-import { Flame, Compass, ChevronRight, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { Flame, Compass, ArrowRight, Mountain, TriangleAlert } from 'lucide-react';
 import { getNearbyVolcanoes } from '../../services/volcano.js';
-import { translations } from '../../utils/i18n.js';
+import { hitungJarakKm } from '../../utils/geo.js';
 
 export function VolcanoCard({ location, onOpenModal, isRefreshing }) {
-  const t = translations;
-
   if (isRefreshing) {
     return (
-      <div className="flat-card animate-pulse" style={{ padding: '1.5rem', minHeight: '220px' }}>
-        <div style={{ height: '24px', width: '45%', backgroundColor: 'var(--bg-muted)', borderRadius: '4px', marginBottom: '1rem' }} />
-        <div style={{ height: '70px', backgroundColor: 'var(--bg-muted)', borderRadius: '8px', marginBottom: '0.85rem' }} />
-        <div style={{ height: '40px', backgroundColor: 'var(--bg-muted)', borderRadius: '6px' }} />
-      </div>
+      <section className="border-2 border-slate-200 rounded-2xl bg-white p-5 animate-pulse min-h-[240px]">
+        <div className="h-4 w-1/2 bg-slate-200 rounded-full mb-4" />
+        <div className="h-16 bg-slate-200 rounded-2xl mb-3" />
+        <div className="h-11 bg-slate-200 rounded-2xl" />
+      </section>
     );
   }
 
-  const { nearest } = getNearbyVolcanoes(location?.lat, location?.lon);
-
+  const { nearest, list } = getNearbyVolcanoes(location?.lat, location?.lon);
   if (!nearest) return null;
 
-  const isHighAlert = nearest.statusLevel >= 3;
-  const isNear = nearest.distanceKm <= 50;
+  // Verifikasi jarak mandiri pakai util warga (bukan cuma percaya service)
+  const cekJarak = hitungJarakKm(location?.lat, location?.lon, nearest.lat, nearest.lon);
+  const jarak = Number.isFinite(cekJarak) && cekJarak > 0 ? cekJarak : nearest.distanceKm;
+  const waspada = nearest.statusLevel >= 3;
+  const zona = nearest.zona || (jarak <= (nearest.dangerRadiusKm || 3) ? 'bahaya' : jarak <= (nearest.dangerRadiusKm || 3) * 4 ? 'waspada' : 'aman');
+  const zonaWarna = zona === 'bahaya' ? '#dc2626' : zona === 'waspada' ? '#d97706' : '#059669';
+  const tetangga = (list || []).filter((v) => v.id !== nearest.id).slice(0, 2);
 
   return (
-    <div className="flat-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-      
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
-          <div style={{
-            width: '32px',
-            height: '32px',
-            borderRadius: 'var(--radius-full)',
-            backgroundColor: nearest.status.color,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#ffffff'
-          }}>
-            <Flame size={18} strokeWidth={2.5} />
-          </div>
+    <section className="border-2 border-slate-200 rounded-2xl bg-white overflow-hidden flex flex-col">
+      {/* Aksen kiri via pita atas */}
+      <div className="h-2 w-full" style={{ backgroundColor: nearest.status.color }} />
+
+      <div className="p-5 flex flex-col gap-4">
+        <div className="flex items-start justify-between gap-3">
           <div>
-            <h3 style={{ fontSize: '1.05rem', fontWeight: '800', margin: 0, color: 'var(--text-main)' }}>
-              {t.volcanoTitle}
-            </h3>
-            <span style={{ fontSize: '0.725rem', color: 'var(--text-muted)', fontWeight: '600' }}>
-              {t.volcanoSubtitle}
-            </span>
+            <p className="text-[11px] font-extrabold tracking-[0.14em] text-slate-500 uppercase flex items-center gap-1.5">
+              <Mountain size={13} /> Pos Gunung Api
+            </p>
+            <h3 className="text-2xl font-black text-slate-900 leading-tight mt-1">{nearest.name}</h3>
+            <p className="text-[12px] font-semibold text-slate-500">
+              {nearest.province} • {nearest.elevation} mdpl • {nearest.type}
+            </p>
           </div>
-        </div>
-
-        {/* Status Badge */}
-        <span style={{
-          fontSize: '0.75rem',
-          fontWeight: '800',
-          padding: '4px 12px',
-          borderRadius: 'var(--radius-sm)',
-          backgroundColor: nearest.status.color,
-          color: '#ffffff'
-        }}>
-          {nearest.status.code} ({nearest.status.name})
-        </span>
-      </div>
-
-      {/* Main Info Box */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        backgroundColor: 'var(--bg-muted)',
-        padding: '1rem 1.15rem',
-        borderRadius: 'var(--radius-md)',
-        border: 'var(--border-thick)',
-        margin: '0.75rem 0',
-        flexWrap: 'wrap',
-        gap: '0.75rem'
-      }}>
-        <div>
-          <strong style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-main)', display: 'block' }}>
-            {nearest.name}
-          </strong>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>
-            {nearest.regency}, {nearest.province} · {nearest.elevation}
+          <span
+            className="shrink-0 inline-flex items-center gap-1 text-[11px] font-black px-2.5 py-1.5 rounded-xl text-white"
+            style={{ backgroundColor: nearest.status.color }}
+          >
+            <Flame size={13} /> {nearest.status.code}
           </span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Compass size={18} color="var(--color-primary)" />
-          <div>
-            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', fontWeight: '700', textTransform: 'uppercase' }}>
-              {t.volcanoDistance}
-            </span>
-            <span style={{ fontSize: '1.1rem', fontWeight: '800', color: isNear ? 'var(--color-danger)' : 'var(--color-primary)' }}>
-              {nearest.distanceKm} km
-            </span>
+        {/* Kotak jarak verifikasi — 2 kolom sempit, bukan box horizontal lama */}
+        <div className="grid grid-cols-2 gap-2">
+          <div className="rounded-2xl border-2 border-slate-900 px-3 py-2.5">
+            <p className="flex items-center gap-1 text-[10px] font-bold text-slate-500 uppercase"><Compass size={12} /> Jarak darimu</p>
+            <p className="text-2xl font-black tabular-nums text-slate-900 leading-tight">{jarak}<span className="text-sm font-bold text-slate-400"> km</span></p>
+            <p className="text-[10px] font-semibold text-slate-400">diukur ulang • hitungJarakKm</p>
+          </div>
+          <div className="rounded-2xl border-2 border-slate-100 bg-slate-50 px-3 py-2.5">
+            <p className="flex items-center gap-1 text-[10px] font-bold text-slate-500 uppercase"><TriangleAlert size={12} /> Zona kamu</p>
+            <p className="text-lg font-black leading-tight" style={{ color: zonaWarna }}>
+              {zona === 'bahaya' ? 'Di radius bahaya' : zona === 'waspada' ? 'Ikut waspada' : 'Masih aman'}
+            </p>
+            <p className="text-[11px] font-semibold text-slate-500">Steril {nearest.dangerRadiusKm} km dari kawah</p>
           </div>
         </div>
-      </div>
 
-      {/* Advisory Banner */}
-      <div style={{
-        padding: '0.75rem 1rem',
-        backgroundColor: isHighAlert ? 'var(--color-danger-bg)' : 'var(--bg-subtle)',
-        border: isHighAlert ? '1.5px solid var(--color-danger)' : 'var(--border-flat)',
-        borderRadius: 'var(--radius-sm)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        fontSize: '0.775rem',
-        fontWeight: '600',
-        color: isHighAlert ? 'var(--color-danger)' : 'var(--text-main)',
-        flexWrap: 'wrap',
-        gap: '0.65rem'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: '1 1 300px' }}>
-          {isHighAlert ? <AlertTriangle size={16} /> : <ShieldCheck size={16} color="var(--color-primary)" />}
-          <span>{isHighAlert ? t.volcanoAlertMsg : t.volcanoNormalMsg}</span>
-        </div>
+        {/* Anjuran PVMBG sebagai kutipan */}
+        <blockquote
+          className="rounded-2xl border-l-8 px-4 py-3 text-[13px] font-medium leading-snug"
+          style={{ borderColor: nearest.status.color, backgroundColor: nearest.status.bg || '#f8fafc' }}
+        >
+          <span className="font-extrabold block text-[12px] uppercase tracking-wide opacity-70">
+            Kata PVMBG ({nearest.status.name})
+          </span>
+          {nearest.status.recommendation || nearest.note}
+        </blockquote>
 
+        {tetangga.length > 0 && (
+          <p className="text-[12px] font-semibold text-slate-500">
+            Tetangga lain: {tetangga.map((v) => `${v.name} (${v.distanceKm} km)`).join(' • ')}
+          </p>
+        )}
+
+        {/* Tombol full-width di bawah — bukan tombol kecil kanan lama */}
         <button
           onClick={onOpenModal}
-          className="flat-btn-primary"
-          style={{
-            padding: '4px 10px',
-            minHeight: '30px',
-            fontSize: '0.725rem',
-            gap: '0.3rem',
-            whiteSpace: 'nowrap'
-          }}
+          className="w-full rounded-2xl border-2 border-slate-900 bg-white px-4 py-3 text-[13px] font-extrabold text-slate-900 flex items-center justify-center gap-2 hover:bg-slate-900 hover:text-white transition-colors"
         >
-          <span>{t.volcanoAllBtn}</span>
-          <ChevronRight size={14} />
+          {waspada ? 'Cek daftar gunung — ada yang siaga!' : 'Lihat semua gunung di Indonesia'}
+          <ArrowRight size={16} />
         </button>
       </div>
-
-    </div>
+    </section>
   );
 }

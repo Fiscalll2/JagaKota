@@ -1,45 +1,39 @@
 import { INDONESIA_VOLCANOES, VOLCANO_STATUS_LEVELS } from '../utils/volcanoes.js';
-import { calculateDistance } from '../utils/geo.js';
+import { hitungJarakKm } from '../utils/geo.js';
 import { apiCache } from '../utils/apiCache.js';
 
-/**
- * Layanan Monitoring Vulkanologi & Gunung Api PVMBG / MAGMA Indonesia
- */
+const JATUH_LAT = -6.2088;
+const JATUH_LON = 106.8456;
+
 export function getNearbyVolcanoes(lat, lon, maxRadiusKm = 250) {
-  if (!lat || !lon) return { nearest: null, list: [], alertCount: 0 };
+  const la = Number(lat) || 0; const lo = Number(lon) || 0;
+  if (!la || !lo) return { nearest: null, list: [], nearbyList: [], alertCount: 0, allVolcanoes: [] };
+  const kunci = `gunung_${la.toFixed(2)}_${lo.toFixed(2)}`;
+  const cepat = apiCache.get(kunci) || apiCache.get(`volcano_${(Number(lat) || JATUH_LAT).toFixed(2)}_${(Number(lon) || JATUH_LON).toFixed(2)}`);
+  if (cepat) return cepat;
 
-  const safeLat = Number(lat) || -6.2088;
-  const safeLon = Number(lon) || 106.8456;
-  const cacheKey = `volcano_${safeLat.toFixed(2)}_${safeLon.toFixed(2)}`;
-  const cached = apiCache.get(cacheKey);
-  if (cached) return cached;
-
-  const volcanoesWithDistance = INDONESIA_VOLCANOES.map((v) => {
-    const distanceKm = Math.round(calculateDistance(lat, lon, v.lat, v.lon) * 10) / 10;
-    const status = VOLCANO_STATUS_LEVELS[v.statusLevel] || VOLCANO_STATUS_LEVELS[1];
-    const isInsideDangerZone = distanceKm <= v.dangerRadiusKm;
-    const isCautionZone = distanceKm <= v.dangerRadiusKm * 4;
-
+  const berJarak = INDONESIA_VOLCANOES.map((g) => {
+    const km = Math.round(hitungJarakKm(la, lo, g.lat, g.lon) * 10) / 10;
+    const status = VOLCANO_STATUS_LEVELS[g.statusLevel] || VOLCANO_STATUS_LEVELS[1];
     return {
-      ...v,
-      distanceKm,
-      status,
-      isInsideDangerZone,
-      isCautionZone
+      ...g, distanceKm: km, status,
+      isInsideDangerZone: km <= g.dangerRadiusKm,
+      isCautionZone: km <= g.dangerRadiusKm * 4,
+      zona: km <= g.dangerRadiusKm ? 'bahaya' : km <= g.dangerRadiusKm * 4 ? 'waspada' : 'aman',
     };
   }).sort((a, b) => a.distanceKm - b.distanceKm);
 
-  const nearest = volcanoesWithDistance[0] || null;
-  const nearbyList = volcanoesWithDistance.filter((v) => v.distanceKm <= maxRadiusKm);
-  const alertCount = INDONESIA_VOLCANOES.filter((v) => v.statusLevel >= 3).length;
-
-  const result = {
-    nearest,
-    nearbyList,
-    allVolcanoes: volcanoesWithDistance,
-    alertCount
+  const hasil = {
+    nearest: berJarak[0] || null,
+    list: berJarak.filter((v) => v.distanceKm <= maxRadiusKm),
+    nearbyList: berJarak.filter((v) => v.distanceKm <= maxRadiusKm),
+    allVolcanoes: berJarak,
+    alertCount: INDONESIA_VOLCANOES.filter((v) => v.statusLevel >= 3).length,
+    radiusKm: maxRadiusKm, versi: 2,
   };
-
-  apiCache.set(cacheKey, result, 10 * 60 * 1000); // 10 minutes cache
-  return result;
+  apiCache.set(kunci, hasil, 10 * 60 * 1000);
+  return hasil;
 }
+
+export const getGunungTerdekat = getNearbyVolcanoes;
+export default getNearbyVolcanoes;
