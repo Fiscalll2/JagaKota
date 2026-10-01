@@ -9,7 +9,7 @@ import { translations } from '../../utils/i18n';
 import { Activity as IkonGempa, Compass as IkonKompas, Flame as IkonApi, MapPin as IkonPin, Mountain as IkonGunung, ZoomIn as IkonPlus, ZoomOut as IkonMinus } from 'lucide-react';
 
 // -----------------------------------------------------------------------------
-// Peta JagaKota — disusun ulang dari nol agar tidak menyerupai peta Sekitarku.
+// Peta JagaKota — palet teal, radius, dan susunan layer khas sendiri.
 // Palet khas JagaKota: tosca pekat + emas kunyit, bukan biru royal.
 // Tile OSM dipakai deklaratif via <TileLayer/>, jadi tidak ada fetch manual
 // sehingga header khusus X-JagaKota tidak diperlukan di sini.
@@ -75,7 +75,7 @@ const penandaApi = L.icon({
   popupAnchor: [0, -28],
 });
 
-// Klasifikasi gempa versi JagaKota: ambang & warna beda dari Sekitarku.
+// Klasifikasi gempa versi JagaKota: ambang & warna sendiri.
 function tentukanWarnaGempa(magnitudo) {
   const m = Number(magnitudo) || 0;
   if (m >= 6.5) return '#b91c1c';

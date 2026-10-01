@@ -1,4 +1,4 @@
-// JagaKota — taksonomi udara v2 (ambang + bahasa khas warga)
+// JagaKota — taksonomi udara (ambang + bahasa khas warga)
 export const TINGKAT_UDARA = [
   { max: 50, label: 'Segar', color: '#059669', bg: 'rgba(5,150,105,.12)', advice: 'Udara segar. Gas keluar, buka jendela.' },
   { max: 100, label: 'Lumayan', color: '#b45309', bg: 'rgba(180,83,9,.12)', advice: 'Masih oke. Yang sensitif kurangi lari siang.' },
@@ -23,7 +23,7 @@ export function infoUdara(aqi) {
 
 export const getAqiInfo = infoUdara;
 
-const UV_V2 = [
+const TINGKAT_UV = [
   { max: 2, label: 'Teduh (Aman)', color: '#059669', advice: 'Aman. Nikmati pagi.' },
   { max: 5, label: 'Menyengat Ringan', color: '#ca8a04', advice: 'Pakai sunscreen SPF30+ bila lama di luar.' },
   { max: 7, label: 'Menyengat', color: '#ea580c', advice: 'Hindari 10.00–15.00, cari teduh.' },
@@ -33,7 +33,7 @@ const UV_V2 = [
 
 export function infoUv(uv) {
   const v = Math.max(0, Math.round(Number(uv) || 0));
-  const t = cariTingkat(v, UV_V2);
+  const t = cariTingkat(v, TINGKAT_UV);
   return { value: v, label: t.label, color: t.color, advice: t.advice };
 }
 

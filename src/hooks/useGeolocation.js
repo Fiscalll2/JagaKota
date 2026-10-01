@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { getCurrentPosition, jarakKm } from '../utils/geo';
 import { INDONESIA_CITIES, KOTA_JAGA } from '../utils/cities';
 
-const KUNCI = 'jagakota-lokasi-v2';
+const KUNCI = 'jagakota-lokasi';
 const KUNCI_LAMA = 'jagakota_saved_city';
 
 export const DEFAULT_CITY = {

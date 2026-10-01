@@ -42,7 +42,7 @@ async function ambilJson(url) {
 }
 
 export async function fetchLatestEarthquake(forceRefresh = false) {
-  const kunci = 'gempa_terkini_v2';
+  const kunci = 'gempa_terkini';
   if (!forceRefresh) {
     const cepat = apiCache.get(kunci) || apiCache.get('bmkg_autogempa');
     if (cepat) return cepat;
@@ -59,7 +59,7 @@ export async function fetchLatestEarthquake(forceRefresh = false) {
 }
 
 export async function fetchRecentEarthquakes(forceRefresh = false) {
-  const kunci = 'gempa_list_v2';
+  const kunci = 'gempa_list';
   if (!forceRefresh) {
     const cepat = apiCache.get(kunci) || apiCache.get('bmkg_gempaterkini');
     if (cepat) return cepat;

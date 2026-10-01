@@ -1,8 +1,8 @@
-# JagaKota v2 — Jaga Kota Bersama
+# JagaKota — Jaga Kota Bersama
 
 > Skor **KotaSiaga** khas warga, udara berbahasa sehari-hari, dan panduan darurat 112 — dalam satu dasbor cepat untuk 515 kota Indonesia.
 
-![Versi](https://img.shields.io/badge/Versi-2.0.0-0d9488?style=for-the-badge)
+![Versi](https://img.shields.io/badge/Versi-1.0.0-0d9488?style=for-the-badge)
 ![Lisensi](https://img.shields.io/badge/Lisensi-MIT-f59e0b?style=for-the-badge)
 ![Data](https://img.shields.io/badge/Data-Real--Time_4_sumber-059669?style=for-the-badge)
 
@@ -10,19 +10,19 @@ Live: **https://jagakota.vercel.app/** · PWA (pasang dari browser) · Mode offl
 
 ---
 
-## Kenapa v2 ditulis ulang?
+## Cara kerja JagaKota
 
-Generasi sebelumnya menumpuk seluruh logika di satu komponen raksasa dan memakai label kaku terjemahan standar. v2 memisahkannya:
+Seluruh logika tinggal di satu hook data, label memakai bahasa warga, dan daftar kota disimpan sebagai tabel kompak:
 
-| Dulu | Sekarang |
+| Bagian | Isi |
 | :--- | :--- |
-| Skor generik + label EPA (Baik/Sedang/...) | **KotaSiaga 0–100** + bahasa warga (Segar/Lumayan/Pengap/Pekat) |
-| Fetch + cache + state tercampur di `App` | Satu hook **`useDashboardData`** untuk semua layar |
-| Daftar kota 72 KB objek JSON | **Tabel kompak** `nama|prov|reg` + slug otomatis (~39 KB) |
-| Cache satu TTL untuk semua | **`jagaStore v2`** — TTL per jenis data + statistik hit/miss |
+| Skor | **KotaSiaga 0–100** + bahasa warga (Segar/Lumayan/Pengap/Pekat) |
+| Data | Satu hook **`useDashboardData`** untuk semua layar |
+| Kota | **Tabel kompak** `nama|prov|reg` + slug otomatis (~39 KB) |
+| Cache | **`jagaStore`** — TTL per jenis data + statistik hit/miss |
 | Panduan darurat satu halaman panjang | **4 tab**: Kontak · Gempa · Udara · Tsunami & UV |
 
-![Arsitektur JagaKota v2](./public/architecture.svg)
+![Arsitektur JagaKota](./public/architecture.svg)
 
 ---
 
@@ -78,7 +78,7 @@ Struktur penting: `src/hooks/useDashboardData.js` (otak data), `src/utils/kotaSc
 
 ## Atribusi
 
-JagaKota v2 dikembangkan dari [**Sekitarku**](https://github.com/anasysuf/sekitarku) (MIT) dengan perombakan besar: arsitektur, rumus skor, bahasa antarmuka, dan sistem navigasi. Dibantu penulisan oleh **OpenCode**. Lihat `CHANGELOG.md` untuk riwayat per versi.
+JagaKota dikembangkan dari [**Sekitarku**](https://github.com/anasysuf/sekitarku) (MIT) dengan arsitektur, rumus skor, bahasa antarmuka, dan sistem navigasi sendiri. Dibantu penulisan oleh **OpenCode**. Lihat `CHANGELOG.md` untuk riwayat per versi.
 
 ## Lisensi
 

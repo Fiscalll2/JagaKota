@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
-const KUNCI = 'jagakota-tema-v2';
+const KUNCI = 'jagakota-tema';
 
 function bacaAwal() {
   try {

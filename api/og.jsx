@@ -17,7 +17,7 @@ export default function handler(request) {
     const weather = searchParams.get('cuaca') || searchParams.get('weather') || 'Mendung Tipis';
     const quake = searchParams.get('gempa') || searchParams.get('quake') || 'M 4.9 (BMKG)';
 
-    // Warna lencana JagaKota v2 (palet warga)
+    // Warna lencana JagaKota (palet warga)
     const aqiNum = parseInt(aqi, 10) || 0;
     let aqiBg = '#059669';
     let aqiTextColor = '#ffffff';

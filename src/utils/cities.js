@@ -1,4 +1,4 @@
-// JagaKota — basis kota v2: tabel kompak + turunan objek (hemat diff, cepat parse)
+// JagaKota — basis kota: tabel kompak + turunan objek (ringan, cepat parse)
 export const REGIONS = ['Semua','Jawa','Sumatera','Kalimantan','Sulawesi','Bali & Nusa Tenggara','Maluku & Papua','Nusantara'];
 // name|province|region, lat, lon
 const _TABEL = [

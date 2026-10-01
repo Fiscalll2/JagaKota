@@ -1,7 +1,7 @@
 {
   "name": "jagakota",
   "description": "JagaKota — Jaga Kota Bersama: skor KotaSiaga, udara versi warga, dan panduan siaga bencana real-time.",
-  "version": "2.0.0",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "keywords": ["jagakota", "kota-siaga", "bmkg", "aqi", "pwa", "indonesia"],

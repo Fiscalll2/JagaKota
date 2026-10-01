@@ -1,4 +1,4 @@
-// JagaKota v2 — kamus bahasa disusun per bagian (builder), bukan satu objek datar.
+// JagaKota — kamus bahasa disusun per bagian (builder), bukan satu objek datar.
 // Kunci dipertahankan 100% kompatibel; kalimat disuarakan ulang gaya warga.
 
 function bagianAplikasi() {

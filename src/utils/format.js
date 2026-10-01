@@ -1,4 +1,4 @@
-// JagaKota — format tanggal v2 (Intl + fallback manual)
+// JagaKota — format tanggal (Intl + fallback manual)
 const HARI_PANJANG = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 const BULAN_PANJANG = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 

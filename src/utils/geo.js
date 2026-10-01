@@ -1,4 +1,4 @@
-// JagaKota v2 — geolokasi: presisi Haversine + bearing + slug.
+// JagaKota — geolokasi: presisi Haversine + bearing + slug.
 
 const RAD = Math.PI / 180;
 const BUMI_KM = 6371.0088;

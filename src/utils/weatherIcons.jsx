@@ -4,7 +4,7 @@ import {
   CloudRain, CloudRainWind, CloudLightning, Snowflake,
 } from 'lucide-react';
 
-// JagaKota v2 — tabel WMO gaya warga (label lebih pendek, palet sendiri)
+// JagaKota — tabel WMO gaya warga (label lebih pendek, palet sendiri)
 const TABEL = [
   { kode: [0], label: 'Terik Cerah', icon: Sun, warna: '#d97706', bg: '#fffbeb' },
   { kode: [1], label: 'Cerah Berawan', icon: Sunrise, warna: '#d97706', bg: '#fffbeb' },

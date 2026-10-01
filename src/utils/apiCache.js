@@ -1,10 +1,10 @@
 /**
- * JagaKota Store v2 — cache lokal berlapis (memori + localStorage)
- * Beda dari Sekitarku: prefix jk2, TTL per-bucket, LRU sederhana, statistik hit/miss.
+ * jagaStore — cache lokal berlapis (memori + localStorage)
+ * Beda dari turunan lain: prefix jk, TTL per-bucket, LRU sederhana, statistik hit/miss.
  */
 
 const RAM = new Map();
-const PREFIX = 'jk2:';
+const PREFIX = 'jk:';
 const DEFAULT_TTL = 10 * 60 * 1000;
 const BUCKET_TTL = { cuaca: 5 * 60 * 1000, udara: 5 * 60 * 1000, gempa: 2 * 60 * 1000, default: DEFAULT_TTL };
 
@@ -39,7 +39,7 @@ function writeDisk(k, doc) {
     window.localStorage.setItem(PREFIX + k, JSON.stringify(doc));
   } catch {
     try {
-      // LRU darurat: buang 15 entri jk2 tertua
+      // LRU darurat: buang 15 entri jk tertua
       const all = [];
       for (let i = 0; i < window.localStorage.length; i++) {
         const name = window.localStorage.key(i);

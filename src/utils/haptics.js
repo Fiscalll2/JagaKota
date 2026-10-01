@@ -1,4 +1,4 @@
-// JagaKota — getar v2: pola, bukan sekali getar
+// JagaKota — getar berpola, bukan sekali getar
 export function getarJaga(pola = 12) {
   try {
     if (typeof window !== 'undefined' && typeof navigator?.vibrate === 'function') {

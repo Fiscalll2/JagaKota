@@ -1,7 +1,7 @@
 /**
  * JagaKota — KotaSiaga Score (0-100)
  * Skor khas JagaKota: gabungan polusi + rasa panas (heat index sederhana)
- * + UV + kelembapan. Bobot dan ambang beda dari Sekitarku.
+ * Bobot dan ambang khas JagaKota.
  *
  * @param {object} input { aqi, pm25, temp, humidity, uvIndex, rainProb }
  * @returns {object} { score, level, label, color, bg, advice, breakdown }
