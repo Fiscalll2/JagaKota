@@ -1,5 +1,5 @@
 import React from 'react';
-import { Megaphone, Bell, BellRing, RefreshCw, Sun, Moon, Download } from 'lucide-react';
+import { Megaphone, Bell, BellRing, Sun, Moon, Download } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 
@@ -117,8 +117,13 @@ export function TickerBar({
             judul="Tarik data terbaru"
             onClick={onRefresh}
             disabled={isRefreshing}
+            aktif={isRefreshing}
           >
-            <RefreshCw size={15} strokeWidth={2.2} className={isRefreshing ? 'animate-spin' : ''} />
+            <span aria-hidden className={`orbit-loop ${isRefreshing ? 'orbit-cepat' : ''}`}>
+              <span className="orbit-ring" />
+              <span className="orbit-spin" />
+              <span className="orbit-inti" />
+            </span>
           </Segmen>
           <Pembatas />
           <Segmen
