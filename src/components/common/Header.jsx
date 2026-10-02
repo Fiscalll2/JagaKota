@@ -16,7 +16,8 @@ export function Header({
   notificationsEnabled,
   onRequestNotification,
   onOpenShare,
-  onOpenEmergency
+  onOpenEmergency,
+  hideBrand = false,
 }) {
   const displayName = location?.name || 'Jakarta Pusat';
   const displayProvince = (location?.province && location?.province !== displayName)
@@ -25,6 +26,7 @@ export function Header({
 
   return (
     <header className="mb-6">
+      {!hideBrand && (
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <LogoMark size={44} className="block shrink-0" />
@@ -61,6 +63,7 @@ export function Header({
           </button>
         </div>
       </div>
+      )}
 
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
         <div className="flex min-w-0 flex-1 items-center gap-2" style={{ flexBasis: 280 }}>

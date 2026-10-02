@@ -313,7 +313,7 @@ export function IndonesiaMap({ currentLocation, earthquakes, hotspots = SATELLIT
         </div>
       </div>
 
-      <div style={{ position: 'relative', width: '100%', height: '440px', borderRadius: '14px', overflow: 'hidden', border: '1px solid var(--border-flat)' }}>
+      <div style={{ position: 'relative', zIndex: 0, isolation: 'isolate', width: '100%', height: '440px', borderRadius: '14px', overflow: 'hidden', border: '1px solid var(--border-flat)' }}>
         <MapContainer
           key="jagakota-nusantara"
           center={bidikPeta.pusat}

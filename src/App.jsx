@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Analytics } from '@vercel/analytics/react';
 import { Header } from './components/common/Header';
+import { AppShell } from './components/shell/AppShell';
 import { TickerBar } from './components/common/TickerBar';
 import { OnboardingIntro } from './components/common/OnboardingIntro';
 import { EcoHealthCard } from './components/cards/EcoHealthCard';
@@ -203,7 +204,17 @@ export function App() {
   }
 
   return (
-    <div className="app-container" {...gestur}>
+    <AppShell
+      location={location}
+      onOpenSearch={() => setCariBuka(true)}
+      onGpsClick={requestGpsLocation}
+      gpsLoading={gpsLoading}
+      isDark={isDark}
+      onToggleDark={toggleDarkMode}
+      onOpenEmergency={() => setDaruratBuka(true)}
+      onOpenShare={() => setBagikanBuka(true)}
+    >
+    <div {...gestur}>
       {!modeSemat && introTampil && (
         <OnboardingIntro onEnter={() => setIntroTampil(false)} live={{
           aqi: airQualityData?.current?.aqi ?? null, temp: weatherData?.current?.temp ?? null,
@@ -213,7 +224,7 @@ export function App() {
         }} />
       )}
       <TickerBar items={itemTicker} />
-      <Header location={location} onOpenSearch={() => setCariBuka(true)} onGpsClick={requestGpsLocation}
+      <Header hideBrand location={location} onOpenSearch={() => setCariBuka(true)} onGpsClick={requestGpsLocation}
         gpsLoading={gpsLoading} isDark={isDark} onToggleDark={toggleDarkMode} onRefresh={handleManualRefresh}
         isRefreshing={isRefreshing} lastUpdated={lastUpdated} notificationsEnabled={bolehIngatkan}
         onRequestNotification={mintaNotifikasi} onOpenShare={() => setBagikanBuka(true)}
@@ -258,14 +269,25 @@ export function App() {
 
       <SpandukAwas aqi={awasAqi ? nilaiAqi : 0} gempa={!awasAqi && awasGempa ? latestEarthquake : null} kamus={kamus} />
 
-      <EcoHealthCard aqiData={airQualityData} weatherData={weatherData} loading={sibuk} />
+      <div id="seksi-command-center" className="section-anchor">
+        <EcoHealthCard aqiData={airQualityData} weatherData={weatherData} loading={sibuk} />
+      </div>
 
+      <div id="seksi-udara" className="section-anchor">
       <div className="dashboard-grid-3">
         <AqiCard data={airQualityData} loading={sibuk} />
         <WeatherCard data={weatherData} locationName={location.name} loading={sibuk} />
         <UvCard uvIndex={weatherData?.current?.uvIndex || 0} loading={sibuk} />
       </div>
 
+      <div style={{ marginBottom: '1.5rem' }}>
+        <React.Suspense fallback={<LayarTunggu height="260px" pesan="Memuat Grafik Tren AQI..." />}>
+          <AqiChart hourlyData={airQualityData?.hourly} />
+        </React.Suspense>
+      </div>
+      </div>
+
+      <div id="seksi-siaga" className="section-anchor">
       <div className="dashboard-grid-2" style={{ marginBottom: '1.5rem' }}>
         <EarthquakeCard earthquake={latestEarthquake} recentQuakes={recentEarthquakes}
           onFocusQuake={fokusGempa} userLocation={location} isRefreshing={isRefreshing} />
@@ -276,22 +298,19 @@ export function App() {
         onOpenModal={() => setApiBuka(true)} loading={sibuk} />
 
       <div style={{ marginBottom: '1.5rem' }}>
-        <React.Suspense fallback={<LayarTunggu height="260px" pesan="Memuat Grafik Tren AQI..." />}>
-          <AqiChart hourlyData={airQualityData?.hourly} />
-        </React.Suspense>
-      </div>
-
-      <div style={{ marginBottom: '1.5rem' }}>
         <React.Suspense fallback={<LayarTunggu height="260px" pesan="Memuat Prakiraan Cuaca 7 Hari..." />}>
           <WeatherForecastChart dailyData={weatherData?.daily} />
         </React.Suspense>
       </div>
+      </div>
 
+      <div id="seksi-sensor" className="section-anchor">
       <div style={{ marginBottom: '1.5rem' }}>
         <React.Suspense fallback={<LayarTunggu height="360px" pesan="Memuat Peta Interaktif Indonesia..." />}>
           <IndonesiaMap currentLocation={location} earthquakes={recentEarthquakes}
             hotspots={karhutlaData?.allHotspots || []} onSelectCity={selectCity} />
         </React.Suspense>
+      </div>
       </div>
 
       <Footer onOpenWidget={() => setWidgetBuka(true)} />
@@ -310,6 +329,7 @@ export function App() {
 
       <Analytics />
     </div>
+    </AppShell>
   );
 }
 

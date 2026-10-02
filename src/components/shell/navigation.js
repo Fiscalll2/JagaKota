@@ -1,12 +1,16 @@
-import { LayoutDashboard, Wind, Siren, Map as MapIcon, BookOpen } from 'lucide-react';
+import { LayoutDashboard, Wind, AlertTriangle, Megaphone, Radio } from 'lucide-react';
 
+// JagaKota — navigasi gaya Civic Guard (lihat referensi desain sidebar).
+// - `target` : id elemen section di halaman utama (navigasi anchor / scroll).
+// - `action` : aksi khusus tanpa section (mis. 'share' membuka modal Kabari Warga).
 export const NAV_ITEMS = [
-  { id: 'ringkasan', label: 'Ringkasan', icon: LayoutDashboard },
-  { id: 'udara', label: 'Udara', icon: Wind },
-  { id: 'siaga', label: 'Siaga', icon: Siren },
-  { id: 'peta', label: 'Peta', icon: MapIcon },
-  { id: 'panduan', label: 'Panduan', icon: BookOpen },
+  { id: 'command-center', label: 'Command Center', icon: LayoutDashboard, target: 'seksi-command-center' },
+  { id: 'udara', label: 'Kualitas Udara ISPU', icon: Wind, target: 'seksi-udara' },
+  { id: 'siaga', label: 'Siaga Bencana & Gempa', icon: AlertTriangle, target: 'seksi-siaga' },
+  { id: 'laporan', label: 'Laporan Warga', icon: Megaphone, action: 'share' },
+  { id: 'sensor', label: 'Node Sensor IoT', icon: Radio, target: 'seksi-sensor' },
 ];
 
 export const NAV_IDS = NAV_ITEMS.map((n) => n.id);
+export const SECTION_TARGETS = NAV_ITEMS.filter((n) => n.target).map((n) => n.target);
 export default NAV_ITEMS;

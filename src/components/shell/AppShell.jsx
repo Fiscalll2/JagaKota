@@ -1,142 +1,302 @@
-import React, { useState } from 'react';
-import { Sun, Moon, ShieldAlert } from 'lucide-react';
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Menu, X, Sun, Moon, ShieldAlert, Compass, ChevronRight } from 'lucide-react';
 import { LogoMark } from '../common/LogoMark';
-import { NAV_ITEMS } from './navigation';
+import { NAV_ITEMS, SECTION_TARGETS } from './navigation';
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
 
-function BrandMark({ compact = false }) {
+function BrandCivic({ compact = false }) {
   return (
     <div className="flex items-center gap-2.5">
-      <LogoMark size={40} className="block shrink-0" />
-      {!compact && (
-        <div className="min-w-0">
-          <div className="flex items-center gap-1.5">
-            <span className="truncate text-lg font-extrabold tracking-tight text-[var(--text-main)]">
-              JagaKota
-            </span>
-            <Badge className="hidden sm:inline-flex">Live</Badge>
-          </div>
-          <p className="truncate text-[11px] font-medium text-[var(--text-muted)]">
-            Smart City Monitor
-          </p>
-        </div>
-      )}
+      <LogoMark size={compact ? 34 : 38} className="block shrink-0" />
+      <div className="min-w-0">
+        <p className="truncate text-[17px] font-black leading-tight tracking-tight text-[var(--text-main)]">
+          JAGAKOTA
+        </p>
+        <p className="truncate text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">
+          Civic Guard ID
+        </p>
+      </div>
     </div>
   );
 }
 
+function LocationPill({ location, onOpenSearch, onGpsClick, gpsLoading }) {
+  const displayName = location?.name || 'Jakarta Pusat';
+  const displayProvince = location?.province && location.province !== displayName
+    ? location.province
+    : (displayName.includes('Jakarta') ? 'DKI Jakarta' : (location?.province || 'Indonesia'));
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <button
+        type="button"
+        onClick={onOpenSearch}
+        title="Ganti kota pantauan"
+        className="flex min-h-[52px] flex-1 items-center gap-2 rounded-xl bg-slate-100 px-3 py-2 text-left transition hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700"
+      >
+        <span className="relative flex h-2.5 w-2.5 shrink-0">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-60" />
+          <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-600" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-[13px] font-bold text-slate-800 dark:text-slate-100">
+            {displayName}
+          </span>
+          <span className="block truncate text-[11px] font-medium text-slate-500 dark:text-slate-400">
+            {displayProvince}
+          </span>
+        </span>
+        <span className="shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-extrabold text-emerald-700 dark:text-emerald-300">
+          Aktif
+        </span>
+        <ChevronRight size={14} className="shrink-0 text-slate-400" />
+      </button>
+      <button
+        type="button"
+        onClick={onGpsClick}
+        disabled={gpsLoading}
+        aria-label="Pakai lokasi saya"
+        title="Pakai lokasi saya biar info kotamu akurat"
+        className={cn(
+          'flex min-h-[52px] min-w-[44px] items-center justify-center rounded-xl border-2 transition',
+          location?.isGps
+            ? 'border-emerald-600 bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
+            : 'border-slate-200 bg-white text-slate-500 hover:border-emerald-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300'
+        )}
+      >
+        <Compass size={17} strokeWidth={2.2} className={gpsLoading ? 'animate-spin' : ''} />
+      </button>
+    </div>
+  );
+}
+
+function CivicNav({ activeId, onNavigate }) {
+  const containerRef = useRef(null);
+  const btnRefs = useRef(new Map());
+  const [pil, setPil] = useState({ top: 0, height: 0, tampil: false });
+
+  const ukurPil = useCallback(() => {
+    const btn = btnRefs.current.get(activeId);
+    if (btn) setPil({ top: btn.offsetTop, height: btn.offsetHeight, tampil: true });
+  }, [activeId]);
+
+  useLayoutEffect(() => {
+    ukurPil();
+  }, [activeId, ukurPil]);
+
+  useEffect(() => {
+    window.addEventListener('resize', ukurPil);
+    const t = setTimeout(ukurPil, 120);
+    return () => {
+      window.removeEventListener('resize', ukurPil);
+      clearTimeout(t);
+    };
+  }, [ukurPil]);
+
+  return (
+    <nav ref={containerRef} className="relative flex flex-col gap-1.5" aria-label="Navigasi utama">
+      {/* Pil geser: meluncur mengikuti tab aktif */}
+      <span
+        aria-hidden
+        className="absolute left-0 right-0 rounded-xl bg-emerald-700 dark:bg-emerald-600"
+        style={{
+          top: pil.top,
+          height: pil.height || 46,
+          opacity: pil.tampil ? 1 : 0,
+          transition:
+            'top 300ms cubic-bezier(0.22, 1, 0.36, 1), height 300ms cubic-bezier(0.22, 1, 0.36, 1), opacity 150ms ease-out',
+        }}
+      />
+      {NAV_ITEMS.map((item) => {
+        const Icon = item.icon;
+        const active = activeId === item.id;
+        return (
+          <button
+            key={item.id}
+            ref={(el) => {
+              if (el) btnRefs.current.set(item.id, el);
+              else btnRefs.current.delete(item.id);
+            }}
+            type="button"
+            onClick={() => onNavigate(item)}
+            aria-current={active ? 'page' : undefined}
+            className={cn(
+              'relative z-10 flex min-h-[46px] cursor-pointer items-center gap-3 rounded-xl bg-transparent px-3.5 text-[13.5px] font-bold transition-colors duration-200',
+              active
+                ? 'text-white'
+                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'
+            )}
+          >
+            <Icon size={18} strokeWidth={active ? 2.5 : 2.1} className="shrink-0" />
+            <span className="truncate">{item.label}</span>
+          </button>
+        );
+      })}
+    </nav>
+  );
+}
+
 export function AppShell({
-  header,
-  banners,
-  panels,
-  footer,
+  location,
+  onOpenSearch,
+  onGpsClick,
+  gpsLoading,
   isDark,
   onToggleDark,
   onOpenEmergency,
-  defaultTab = 'ringkasan'
+  onOpenShare,
+  children,
 }) {
-  const [activeTab, setActiveTab] = useState(defaultTab);
+  const [activeId, setActiveId] = useState('command-center');
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const handleNavigate = (item) => {
+    if (item.action === 'share') {
+      setDrawerOpen(false);
+      onOpenShare?.();
+      return;
+    }
+    setActiveId(item.id);
+    setDrawerOpen(false);
+    requestAnimationFrame(() => {
+      document.getElementById(item.target)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  };
+
+  // Scroll-spy: tandai menu sesuai section yang sedang terlihat.
+  useEffect(() => {
+    const targets = SECTION_TARGETS.map((t) => document.getElementById(t)).filter(Boolean);
+    if (!targets.length || typeof IntersectionObserver === 'undefined') return;
+    const targetToId = new Map(NAV_ITEMS.filter((n) => n.target).map((n) => [n.target, n.id]));
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            const id = targetToId.get(entry.target.id);
+            if (id) setActiveId(id);
+          }
+        }
+      },
+      { rootMargin: '-35% 0px -55% 0px', threshold: 0 }
+    );
+    targets.forEach((t) => observer.observe(t));
+    return () => observer.disconnect();
+  }, []);
+
+  // Kunci scroll body saat drawer terbuka + tutup via Escape.
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const onKey = (e) => { if (e.key === 'Escape') setDrawerOpen(false); };
+    document.addEventListener('keydown', onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [drawerOpen]);
+
+  const sidebarInner = (
+    <>
+      <LocationPill
+        location={location}
+        onOpenSearch={() => { setDrawerOpen(false); onOpenSearch?.(); }}
+        onGpsClick={onGpsClick}
+        gpsLoading={gpsLoading}
+      />
+      <CivicNav activeId={activeId} onNavigate={handleNavigate} />
+      <div className="mt-auto flex flex-col gap-2 pt-4">
+        <Button variant="destructive" size="sm" onClick={onOpenEmergency} className="w-full">
+          <ShieldAlert /> Darurat 112
+        </Button>
+        <Button variant="outline" size="sm" onClick={onToggleDark} className="w-full" aria-label="Ganti tema">
+          {isDark ? <Sun /> : <Moon />}
+          {isDark ? 'Mode Terang' : 'Mode Gelap'}
+        </Button>
+      </div>
+    </>
+  );
 
   return (
     <div className="min-h-screen bg-[var(--bg-canvas)] font-sans text-[var(--text-main)] antialiased">
       <div className="mx-auto flex min-h-screen w-full max-w-[1400px]">
-        {/* ============ SIDEBAR (desktop) ============ */}
-        <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r-2 border-[var(--border-flat)] bg-[var(--bg-card)] px-4 py-6 lg:flex">
-          <BrandMark />
-          <nav className="mt-8 flex flex-col gap-1" aria-label="Navigasi utama">
-            {NAV_ITEMS.map((item) => {
-              const Icon = item.icon;
-              const active = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  aria-current={active ? 'page' : undefined}
-                  className={cn(
-                    'flex min-h-[44px] cursor-pointer items-center gap-3 rounded-lg px-3 text-sm font-bold transition-colors',
-                    active
-                      ? 'bg-[var(--color-secondary-bg)] text-[var(--color-secondary-hover)] shadow-xs'
-                      : 'text-[var(--text-muted)] hover:bg-[var(--bg-muted)] hover:text-[var(--text-main)]'
-                  )}
-                >
-                  <Icon size={18} strokeWidth={2.4} />
-                  {item.label}
-                  {active && <span className="ml-auto h-5 w-1 rounded-full bg-[var(--color-secondary)]" />}
-                </button>
-              );
-            })}
-          </nav>
-          <div className="mt-auto flex flex-col gap-2">
-            <Button variant="destructive" size="sm" onClick={onOpenEmergency} className="w-full">
-              <ShieldAlert /> Darurat 112
-            </Button>
-            <Button variant="outline" size="sm" onClick={onToggleDark} className="w-full" aria-label="Ganti tema">
-              {isDark ? <Sun /> : <Moon />}
-              {isDark ? 'Mode Terang' : 'Mode Gelap'}
-            </Button>
+        {/* ============ SIDEBAR (desktop) — sticky + scroll-linked nav ============ */}
+        <aside className="sticky top-0 hidden h-screen w-72 shrink-0 border-r-2 border-[var(--border-flat)] bg-[var(--bg-card)] px-5 py-6 lg:flex">
+          <div className="flex h-full flex-col gap-5">
+            <BrandCivic />
+            {sidebarInner}
           </div>
         </aside>
 
         {/* ============ MAIN COLUMN ============ */}
         <div className="flex min-w-0 flex-1 flex-col">
-          {/* Mobile top bar */}
-          <div className="sticky top-0 z-40 border-b-2 border-[var(--border-flat)] bg-[var(--bg-card)]/95 px-4 py-3 backdrop-blur lg:hidden">
+          {/* Top bar (mobile): hamburger + brand + Live */}
+          <div className="sticky top-0 z-40 bg-[var(--bg-card)]/95 px-4 py-3 backdrop-blur lg:hidden">
             <div className="flex items-center gap-2.5">
-              <LogoMark size={36} label="JagaKota" className="block shrink-0" />
-              <span className="text-base font-extrabold tracking-tight text-[var(--text-main)]">
-                {NAV_ITEMS.find((n) => n.id === activeTab)?.label}
+              <button
+                type="button"
+                onClick={() => setDrawerOpen(true)}
+                aria-label="Buka menu navigasi"
+                className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-slate-200 text-slate-700 transition hover:border-emerald-500 dark:border-slate-700 dark:text-slate-200"
+              >
+                <Menu size={19} strokeWidth={2.4} />
+              </button>
+              <LogoMark size={34} className="block shrink-0" />
+              <div className="min-w-0 leading-tight">
+                <p className="truncate text-[15px] font-black tracking-tight">JAGAKOTA</p>
+                <p className="truncate text-[9px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">
+                  Civic Guard ID
+                </p>
+              </div>
+              <span className="ml-auto rounded-md bg-emerald-600 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-white">
+                Live
               </span>
-              <Badge className="ml-auto">Live</Badge>
             </div>
           </div>
 
-          <main className="w-full flex-1 px-4 pb-28 pt-4 sm:px-6 sm:pt-6 lg:px-8 lg:pb-12">
+          <main className="w-full flex-1 px-4 pb-12 pt-4 sm:px-6 sm:pt-6 lg:px-8">
             <div className="mx-auto w-full max-w-[1020px]">
-              {header}
-              {banners}
-              <section key={activeTab} className="animate-[fadeSlideIn_200ms_ease-out]">
-                {panels[activeTab]}
-              </section>
-              {footer}
+              {children}
             </div>
           </main>
-
-          {/* ============ BOTTOM NAV (mobile) ============ */}
-          <nav
-            aria-label="Navigasi utama"
-            className="fixed inset-x-0 bottom-0 z-50 border-t-2 border-[var(--border-flat)] bg-[var(--bg-card)]/97 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
-          >
-            <div className="grid grid-cols-4">
-              {NAV_ITEMS.map((item) => {
-                const Icon = item.icon;
-                const active = activeTab === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => setActiveTab(item.id)}
-                    aria-current={active ? 'page' : undefined}
-                    className={cn(
-                      'flex min-h-[60px] cursor-pointer flex-col items-center justify-center gap-1 text-[11px] font-bold transition-colors',
-                      active ? 'text-[var(--color-secondary-hover)]' : 'text-[var(--text-muted)]'
-                    )}
-                  >
-                    <Icon size={20} strokeWidth={active ? 2.6 : 2.2} />
-                    {item.label}
-                    <span
-                      className={cn(
-                        'h-1 w-8 rounded-full transition-colors',
-                        active ? 'bg-[var(--color-secondary)]' : 'bg-transparent'
-                      )}
-                    />
-                  </button>
-                );
-              })}
-            </div>
-          </nav>
         </div>
       </div>
+
+      {/* ============ DRAWER (mobile) ============ */}
+      <div
+        className={cn(
+          'fixed inset-0 z-50 bg-slate-950/60 transition-opacity lg:hidden',
+          drawerOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
+        )}
+        onClick={() => setDrawerOpen(false)}
+        aria-hidden={!drawerOpen}
+      />
+      <aside
+        className={cn(
+          'fixed inset-y-0 left-0 z-50 w-[85vw] max-w-[320px] bg-[var(--bg-card)] p-5 transition-transform duration-200 ease-out lg:hidden',
+          drawerOpen ? 'translate-x-0' : '-translate-x-full'
+        )}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Menu navigasi JagaKota"
+        aria-hidden={!drawerOpen}
+      >
+        <div className="mb-5 flex items-center justify-between">
+          <BrandCivic compact />
+          <button
+            type="button"
+            onClick={() => setDrawerOpen(false)}
+            aria-label="Tutup menu navigasi"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-slate-200 text-slate-600 transition hover:border-emerald-500 dark:border-slate-700 dark:text-slate-300"
+          >
+            <X size={18} strokeWidth={2.4} />
+          </button>
+        </div>
+        <div className="flex h-[calc(100%-52px)] flex-col gap-5 overflow-y-auto">
+          {sidebarInner}
+        </div>
+      </aside>
     </div>
   );
 }
