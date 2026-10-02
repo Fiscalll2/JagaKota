@@ -71,6 +71,10 @@ function LocationPill({ location, onOpenSearch, onGpsClick, gpsLoading }) {
   );
 }
 
+// Item scroll (punya target section) vs item aksi (independen, mis. buka modal).
+const SCROLL_ITEMS = NAV_ITEMS.filter((n) => n.target);
+const ACTION_ITEMS = NAV_ITEMS.filter((n) => n.action);
+
 function CivicNav({ activeId, onNavigate }) {
   const containerRef = useRef(null);
   const btnRefs = useRef(new Map());
@@ -108,7 +112,7 @@ function CivicNav({ activeId, onNavigate }) {
             'top 300ms cubic-bezier(0.22, 1, 0.36, 1), height 300ms cubic-bezier(0.22, 1, 0.36, 1), opacity 150ms ease-out',
         }}
       />
-      {NAV_ITEMS.map((item) => {
+      {SCROLL_ITEMS.map((item) => {
         const Icon = item.icon;
         const active = activeId === item.id;
         return (
@@ -134,6 +138,35 @@ function CivicNav({ activeId, onNavigate }) {
         );
       })}
     </nav>
+  );
+}
+
+/* Tombol aksi independen — BUKAN bagian navigasi scroll.
+   Contoh: Kabari Warga membuka modal share, tidak punya section tujuan. */
+function CivicActions({ onNavigate }) {
+  if (!ACTION_ITEMS.length) return null;
+  return (
+    <div className="border-t-2 border-slate-100 pt-4 dark:border-slate-800">
+      <p className="mb-2 px-1 text-[10px] font-extrabold uppercase tracking-[0.16em] text-slate-400 dark:text-slate-500">
+        Aksi Warga
+      </p>
+      <div className="flex flex-col gap-1.5">
+        {ACTION_ITEMS.map((item) => {
+          const Icon = item.icon;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => onNavigate(item)}
+              className="flex min-h-[46px] cursor-pointer items-center gap-2 rounded-xl border-2 border-emerald-600/25 bg-emerald-50 px-3 text-[13.5px] font-bold text-emerald-700 transition hover:bg-emerald-100 dark:border-emerald-500/30 dark:bg-emerald-950/60 dark:text-emerald-300 dark:hover:bg-emerald-950"
+            >
+              <Icon size={18} strokeWidth={2.2} className="shrink-0" />
+              <span className="truncate">{item.label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -206,6 +239,7 @@ export function AppShell({
         gpsLoading={gpsLoading}
       />
       <CivicNav activeId={activeId} onNavigate={handleNavigate} />
+      <CivicActions onNavigate={handleNavigate} />
       <div className="mt-auto flex flex-col gap-2 pt-4">
         <Button variant="destructive" size="sm" onClick={onOpenEmergency} className="w-full">
           <ShieldAlert /> Darurat 112
