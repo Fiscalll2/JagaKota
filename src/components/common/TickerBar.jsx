@@ -16,18 +16,19 @@ function Rangkaian({ items = [], sembunyi = false }) {
   );
 }
 
-function TombolLingkar({ label, judul, onClick, disabled, aktif, children }) {
+function Segmen({ label, judul, onClick, disabled, aktif, children }) {
   return (
     <Button
       type="button"
-      size="icon"
-      variant="outline"
+      variant="ghost"
       onClick={onClick}
       disabled={disabled}
       aria-label={label}
       title={judul || label}
-      className={`ticker-btn h-8 max-h-8 min-h-0 w-8 min-w-0 shrink-0 rounded-full border-[var(--border-flat)] bg-[var(--bg-card)] p-0 [&_svg]:size-4 ${
-        aktif ? 'text-emerald-600 dark:text-emerald-300' : 'text-slate-500 dark:text-slate-300'
+      className={`h-7 max-h-7 min-h-0 w-9 min-w-0 shrink-0 rounded-full p-0 transition-colors duration-200 [&_svg]:size-4 ${
+        aktif
+          ? 'bg-emerald-600/15 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-300'
+          : 'text-slate-500 hover:bg-[var(--bg-card)] hover:text-slate-800 dark:text-slate-300 dark:hover:text-white'
       }`}
     >
       {children}
@@ -35,9 +36,12 @@ function TombolLingkar({ label, judul, onClick, disabled, aktif, children }) {
   );
 }
 
+function Pembatas() {
+  return <span aria-hidden className="h-4 w-px shrink-0 bg-[var(--border-flat)]" />;
+}
+
 /**
- * TickerBar — pill command bar ala referensi stitch:
- * badge INFO + running text + tombol aksi (install app, notif, refresh, tema, avatar JK).
+ * TickerBar — pill command bar: badge INFO + running text + dock aksi tersegmentasi.
  * Kabari Warga TIDAK di sini — tetap di sidebar sebagai aksi independen.
  */
 export function TickerBar({
@@ -52,14 +56,6 @@ export function TickerBar({
 }) {
   if (!items.length) return null;
   const text = items.join('  •  ');
-
-  const keAtas = () => {
-    try {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } catch {
-      window.scrollTo(0, 0);
-    }
-  };
 
   return (
     <div
@@ -91,40 +87,40 @@ export function TickerBar({
             Buka di aplikasi
           </Button>
         )}
-        <TombolLingkar
-          label={notificationsEnabled ? 'Notifikasi aktif' : 'Nyalakan pengingat cuaca'}
-          onClick={onRequestNotification}
-          aktif={notificationsEnabled}
+        {/* Dock aksi: satu strip menyatu, bukan lingkaran lepas */}
+        <div
+          role="toolbar"
+          aria-label="Aksi cepat"
+          className="ticker-btn flex items-center gap-0.5 rounded-full border-2 border-[var(--border-flat)] bg-[var(--bg-muted)]/70 p-1"
         >
-          {notificationsEnabled
-            ? <BellRing size={16} strokeWidth={2.5} />
-            : <Bell size={16} strokeWidth={2.2} />}
-        </TombolLingkar>
-        <TombolLingkar
-          label="Muat ulang data kota"
-          judul="Tarik data terbaru"
-          onClick={onRefresh}
-          disabled={isRefreshing}
-        >
-          <RefreshCw size={15} strokeWidth={2.2} className={isRefreshing ? 'animate-spin' : ''} />
-        </TombolLingkar>
-        <TombolLingkar
-          label="Ganti mode terang/gelap"
-          judul={isDark ? 'Balik ke mode terang' : 'Istirahatkan mata, mode gelap'}
-          onClick={onToggleDark}
-          aktif={isDark}
-        >
-          {isDark ? <Sun size={16} strokeWidth={2.5} /> : <Moon size={16} strokeWidth={2.4} />}
-        </TombolLingkar>
-        <button
-          type="button"
-          onClick={keAtas}
-          title="Kembali ke atas"
-          aria-label="Kembali ke atas"
-          className="ticker-btn flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-[11px] font-black tracking-tight text-white transition hover:bg-emerald-700"
-        >
-          JK
-        </button>
+          <Segmen
+            label={notificationsEnabled ? 'Notifikasi aktif' : 'Nyalakan pengingat cuaca'}
+            onClick={onRequestNotification}
+            aktif={notificationsEnabled}
+          >
+            {notificationsEnabled
+              ? <BellRing size={16} strokeWidth={2.5} />
+              : <Bell size={16} strokeWidth={2.2} />}
+          </Segmen>
+          <Pembatas />
+          <Segmen
+            label="Muat ulang data kota"
+            judul="Tarik data terbaru"
+            onClick={onRefresh}
+            disabled={isRefreshing}
+          >
+            <RefreshCw size={15} strokeWidth={2.2} className={isRefreshing ? 'animate-spin' : ''} />
+          </Segmen>
+          <Pembatas />
+          <Segmen
+            label="Ganti mode terang/gelap"
+            judul={isDark ? 'Balik ke mode terang' : 'Istirahatkan mata, mode gelap'}
+            onClick={onToggleDark}
+            aktif={isDark}
+          >
+            {isDark ? <Sun size={16} strokeWidth={2.5} /> : <Moon size={16} strokeWidth={2.4} />}
+          </Segmen>
+        </div>
       </div>
     </div>
   );
