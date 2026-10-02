@@ -122,7 +122,7 @@ function CivicNav({ activeId, onNavigate }) {
             onClick={() => onNavigate(item)}
             aria-current={active ? 'page' : undefined}
             className={cn(
-              'relative z-10 flex min-h-[46px] cursor-pointer items-center gap-3 rounded-xl bg-transparent px-3.5 text-[13.5px] font-bold transition-colors duration-200',
+              'relative z-10 flex min-h-[46px] cursor-pointer items-center gap-2 rounded-xl bg-transparent px-3 text-[13.5px] font-bold transition-colors duration-200',
               active
                 ? 'text-white'
                 : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'

@@ -65,8 +65,9 @@ export function Header({
       </div>
       )}
 
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex min-w-0 flex-1 items-center gap-2" style={{ flexBasis: 280 }}>
+      {/* Baris kota + GPS: hanya mobile. Di desktop konteks kota sudah ada di pil lokasi sidebar. */}
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 lg:mt-0 lg:justify-end">
+        <div className="flex min-w-0 flex-1 items-center gap-2 lg:hidden" style={{ flexBasis: 280 }}>
           <button
             onClick={onOpenSearch}
             className="flex min-h-10 flex-1 items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-left shadow-sm transition hover:border-emerald-300 dark:border-slate-700 dark:bg-slate-900"
@@ -116,9 +117,9 @@ export function Header({
             onClick={onToggleDark}
             aria-label="Ganti mode terang/gelap"
             title={isDark ? 'Balik ke mode terang' : 'Istirahatkan mata, mode gelap'}
-            className={`flex h-9 items-center gap-1 rounded-lg px-2.5 text-xs font-extrabold transition ${isDark ? 'bg-slate-900 text-amber-300' : 'bg-white text-slate-700 shadow-sm dark:bg-slate-900'}`}
+            className={`flex h-9 w-9 items-center justify-center rounded-lg transition ${isDark ? 'bg-slate-900 text-amber-300' : 'bg-white text-slate-700 shadow-sm dark:bg-slate-900 dark:text-amber-300'}`}
           >
-            {isDark ? (<><Sun size={15} strokeWidth={2.5} /> Terang</>) : (<><Moon size={15} strokeWidth={2.5} /> Gelap</>)}
+            {isDark ? <Sun size={16} strokeWidth={2.5} /> : <Moon size={16} strokeWidth={2.4} />}
           </button>
         </div>
       </div>

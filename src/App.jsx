@@ -187,7 +187,7 @@ export function App() {
   const sibuk = loading || isRefreshing;
 
   const itemTicker = [
-    location?.name ? `Lokasi: ${location.name}${location?.province ? ` - ${location.province}` : ''}` : null,
+    // Lokasi sengaja tidak diulang di sini: sudah tampil di pil lokasi sidebar + bar kota (mobile).
     airQualityData?.current ? `Kualitas Udara AQI ${airQualityData.current.aqi}` : null,
     weatherData?.current ? `Suhu ${weatherData.current.temp}°C` : null,
     weatherData?.current ? `UV Indeks ${weatherData.current.uvIndex}` : null,
