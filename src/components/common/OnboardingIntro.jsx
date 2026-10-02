@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Compass, Wind, CloudSun, Activity, Flame, ArrowRight, Satellite } from 'lucide-react';
+import { Wind, CloudSun, Activity, Flame, ArrowRight, Satellite } from 'lucide-react';
+import { LogoMark } from './LogoMark';
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
 import { Badge } from '../ui/badge';
@@ -112,9 +113,7 @@ export function OnboardingIntro({ onEnter, live = {} }) {
         </div>
 
         <div className="intro-brand intro-rise" style={{ animationDelay: '80ms' }}>
-          <div className="intro-logo">
-            <Compass size={30} strokeWidth={2.5} />
-          </div>
+          <LogoMark size={56} label="JagaKota" className="intro-logo" />
           <h1>JagaKota</h1>
         </div>
 

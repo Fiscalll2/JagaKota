@@ -1,6 +1,7 @@
 import React from 'react';
 import { MapPin, RefreshCw, Compass, Bell, BellRing, Search, CalendarDays, Share2, ShieldAlert, Sun, Moon } from 'lucide-react';
 import { tanggalPenuhJaga } from '../../utils/format';
+import { LogoMark } from './LogoMark';
 
 export function Header({
   location,
@@ -26,16 +27,14 @@ export function Header({
     <header className="mb-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-sm">
-            <Compass size={24} strokeWidth={2.5} />
-          </span>
+          <LogoMark size={44} className="block shrink-0" />
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-xl font-black tracking-tight text-slate-900 dark:text-white">JagaKota</h1>
               <span className="rounded-md bg-emerald-600 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-white">Live</span>
             </div>
             <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
-              <span>Kabar kota MSKini buat warga siaga</span>
+              <span>Pantau udara, cuaca & siaga bencana</span>
               <span aria-hidden>•</span>
               <span className="inline-flex items-center gap-1 font-bold text-emerald-700 dark:text-emerald-300">
                 <CalendarDays size={12} strokeWidth={2.5} />

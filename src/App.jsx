@@ -153,7 +153,7 @@ export function App() {
       try {
         new Notification('JagaKota Aktif', {
           body: 'Notifikasi peringatan gempa, gunung api & kualitas udara berhasil diaktifkan.',
-          icon: '/leaf.svg',
+          icon: '/icon-192.png',
         });
       } catch {}
     }

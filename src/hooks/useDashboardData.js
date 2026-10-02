@@ -33,7 +33,7 @@ function kabariPolusi(namaKota, aqi) {
   try {
     new Notification('Peringatan Polusi Udara', {
       body: `AQI di ${namaKota} mencapai ${aqi} (Tidak Sehat).`,
-      icon: '/leaf.svg',
+      icon: '/icon-192.png',
     });
   } catch {}
 }

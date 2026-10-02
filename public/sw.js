@@ -1,8 +1,9 @@
-const CACHE_NAME = 'jagakota-v112-fix-search';
+const CACHE_NAME = 'jagakota-v113-logo';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
-  '/leaf.svg',
+  '/favicon.svg',
+  '/icon-192.png',
   '/manifest.webmanifest'
 ];
 

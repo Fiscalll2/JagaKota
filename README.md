@@ -76,9 +76,8 @@ Struktur penting: `src/hooks/useDashboardData.js` (otak data), `src/utils/kotaSc
 
 ---
 
-## Atribusi
 
-JagaKota dikembangkan dari [**Sekitarku**](https://github.com/anasysuf/sekitarku) (MIT) dengan arsitektur, rumus skor, bahasa antarmuka, dan sistem navigasi sendiri. Dibantu penulisan oleh **OpenCode**. Lihat `CHANGELOG.md` untuk riwayat per versi.
+
 
 ## Lisensi
 

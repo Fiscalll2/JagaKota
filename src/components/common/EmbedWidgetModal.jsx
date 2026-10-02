@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, Copy, Check, Globe, Code2, Leaf } from 'lucide-react';
+import { X, Copy, Check, Globe, Code2 } from 'lucide-react';
+import { LogoMark } from './LogoMark';
 import { getAqiInfo } from '../../utils/aqi';
 
 export function EmbedWidgetModal({ isOpen, onClose, location, airQualityData, weatherData }) {
@@ -86,7 +87,7 @@ export function EmbedWidgetModal({ isOpen, onClose, location, airQualityData, we
           <div className="rounded-2xl border-2 border-slate-200 bg-white p-3.5 dark:border-slate-700 dark:bg-slate-900">
             <div className="flex items-center justify-between gap-2">
               <strong className="flex min-w-0 items-center gap-1.5 truncate text-sm font-extrabold text-slate-900 dark:text-white">
-                <Leaf size={15} className="shrink-0 text-emerald-500" /> JagaKota · {namaKota}
+                <LogoMark size={18} className="shrink-0" /> JagaKota · {namaKota}
               </strong>
               <span
                 className="shrink-0 rounded-lg px-2 py-0.5 text-[11px] font-extrabold"
@@ -108,7 +109,7 @@ export function EmbedWidgetModal({ isOpen, onClose, location, airQualityData, we
           <div className="mt-1.5 flex justify-center">
             <div className="inline-flex max-w-full items-stretch overflow-hidden rounded-lg text-xs font-extrabold">
               <span className="inline-flex shrink-0 items-center gap-1 bg-emerald-500 px-2.5 py-1.5 text-white">
-                <Leaf size={12} /> JagaKota
+                <LogoMark size={14} className="shrink-0" /> JagaKota
               </span>
               <span className="inline-flex max-w-[170px] items-center truncate bg-slate-800 px-2.5 py-1.5 text-slate-100">
                 {namaKota} ({suhu}°C)

@@ -1,6 +1,9 @@
 /* JagaKota — sistem flat teal khas warga */
 @import "tailwindcss";
 
+/* Dark mode mengikuti toggle aplikasi (data-theme), bukan OS */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 /* ==========================================================================
    JAGAKOTA — WARNA SEBAGAI STRUKTUR
    Teal sebagai aksi utama • Emerald siaga • Amber waspada

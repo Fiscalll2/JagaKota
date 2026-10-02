@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Compass, Sun, Moon, ShieldAlert } from 'lucide-react';
+import { Sun, Moon, ShieldAlert } from 'lucide-react';
+import { LogoMark } from '../common/LogoMark';
 import { NAV_ITEMS } from './navigation';
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/button';
@@ -8,9 +9,7 @@ import { Badge } from '../ui/badge';
 function BrandMark({ compact = false }) {
   return (
     <div className="flex items-center gap-2.5">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--color-secondary)] text-white shadow-sm">
-        <Compass size={22} strokeWidth={2.5} />
-      </div>
+      <LogoMark size={40} className="block shrink-0" />
       {!compact && (
         <div className="min-w-0">
           <div className="flex items-center gap-1.5">
@@ -85,9 +84,7 @@ export function AppShell({
           {/* Mobile top bar */}
           <div className="sticky top-0 z-40 border-b-2 border-[var(--border-flat)] bg-[var(--bg-card)]/95 px-4 py-3 backdrop-blur lg:hidden">
             <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--color-secondary)] text-white shadow-sm">
-                <Compass size={20} strokeWidth={2.5} />
-              </div>
+              <LogoMark size={36} label="JagaKota" className="block shrink-0" />
               <span className="text-base font-extrabold tracking-tight text-[var(--text-main)]">
                 {NAV_ITEMS.find((n) => n.id === activeTab)?.label}
               </span>
