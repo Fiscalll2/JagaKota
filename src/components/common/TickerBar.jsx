@@ -16,7 +16,7 @@ function Rangkaian({ items = [], sembunyi = false }) {
   );
 }
 
-function Segmen({ label, judul, onClick, disabled, aktif, children }) {
+function Segmen({ label, judul, onClick, disabled, aktif, className = '', children }) {
   return (
     <Button
       type="button"
@@ -25,7 +25,7 @@ function Segmen({ label, judul, onClick, disabled, aktif, children }) {
       disabled={disabled}
       aria-label={label}
       title={judul || label}
-      className={`h-7 max-h-7 min-h-0 w-9 min-w-0 shrink-0 rounded-full p-0 transition-colors duration-200 [&_svg]:size-4 ${
+      className={`relative h-7 max-h-7 min-h-0 w-9 min-w-0 shrink-0 rounded-full p-0 transition-all duration-200 active:scale-90 [&_svg]:size-4 ${className} ${
         aktif
           ? 'bg-emerald-600/15 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-300'
           : 'text-slate-500 hover:bg-[var(--bg-card)] hover:text-slate-800 dark:text-slate-300 dark:hover:text-white'
@@ -97,10 +97,19 @@ export function TickerBar({
             label={notificationsEnabled ? 'Notifikasi aktif' : 'Nyalakan pengingat cuaca'}
             onClick={onRequestNotification}
             aktif={notificationsEnabled}
+            className="seg-bell group"
           >
-            {notificationsEnabled
-              ? <BellRing size={16} strokeWidth={2.5} />
-              : <Bell size={16} strokeWidth={2.2} />}
+            {notificationsEnabled ? (
+              <>
+                <BellRing size={16} strokeWidth={2.5} className="bell-ikon" />
+                <span aria-hidden className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              </>
+            ) : (
+              <>
+                <Bell size={16} strokeWidth={2.2} className="bell-ikon group-hover:hidden" />
+                <BellRing size={16} strokeWidth={2.5} className="bell-ikon hidden group-hover:block" />
+              </>
+            )}
           </Segmen>
           <Pembatas />
           <Segmen

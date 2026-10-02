@@ -477,6 +477,26 @@ button, input, select, a {
   transform: scale(0.94);
 }
 
+/* Segmen lonceng: goyang dering saat hover/fokus keyboard, menyusut saat ditekan.
+   transform-origin dijaga di tengah-atas agar ayunan mirip lonceng asli. */
+@keyframes bell-dering {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(16deg); }
+  40% { transform: rotate(-13deg); }
+  60% { transform: rotate(8deg); }
+  80% { transform: rotate(-5deg); }
+}
+
+.seg-bell:hover svg.bell-ikon,
+.seg-bell:focus-visible svg.bell-ikon {
+  animation: bell-dering 650ms ease-in-out;
+  transform-origin: 50% 8%;
+}
+
+.seg-bell:active {
+  transform: scale(0.86);
+}
+
 /* Ticker Announcement Bar */
 .ticker-viewport {
   overflow: hidden;
