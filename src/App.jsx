@@ -223,12 +223,13 @@ export function App() {
           hotspotCount: karhutlaData?.allHotspots?.length ?? null, fdrs: karhutlaData?.fdrs?.code ?? null,
         }} />
       )}
-      <TickerBar items={itemTicker} />
-      <Header hideBrand location={location} onOpenSearch={() => setCariBuka(true)} onGpsClick={requestGpsLocation}
-        gpsLoading={gpsLoading} isDark={isDark} onToggleDark={toggleDarkMode} onRefresh={handleManualRefresh}
-        isRefreshing={isRefreshing} lastUpdated={lastUpdated} notificationsEnabled={bolehIngatkan}
-        onRequestNotification={mintaNotifikasi} onOpenShare={() => setBagikanBuka(true)}
-        onOpenEmergency={() => setDaruratBuka(true)} onOpenWidget={() => setWidgetBuka(true)} />
+      <TickerBar items={itemTicker}
+        notificationsEnabled={bolehIngatkan} onRequestNotification={mintaNotifikasi}
+        onRefresh={handleManualRefresh} isRefreshing={isRefreshing}
+        isDark={isDark} onToggleDark={toggleDarkMode}
+        installApp={pintaPasang ? pasangPwa : null} />
+      <Header location={location} onOpenSearch={() => setCariBuka(true)} onGpsClick={requestGpsLocation}
+        gpsLoading={gpsLoading} />
 
       {cariBuka && <CitySearchModal isOpen={cariBuka} onClose={() => setCariBuka(false)} onSelectCity={selectCity} currentCity={location} />}
       {bagikanBuka && <ShareCardModal isOpen={bagikanBuka} onClose={() => setBagikanBuka(false)} location={location} airQualityData={airQualityData} weatherData={weatherData} latestEarthquake={latestEarthquake} karhutlaData={karhutlaData} />}

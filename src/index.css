@@ -460,6 +460,23 @@ button, input, select, a {
   to { opacity: 1; }
 }
 
+/* Ticker pill: efek terangkat ala referensi.
+   Memakai filter drop-shadow (BUKAN box-shadow) karena proyek ini mengunci
+   * { box-shadow: none !important } sehingga box-shadow biasa tidak tembus. */
+.ticker-pill {
+  filter:
+    drop-shadow(0 14px 22px rgba(6, 95, 70, 0.22))
+    drop-shadow(0 2px 5px rgba(2, 32, 24, 0.12));
+}
+
+.ticker-btn {
+  filter: drop-shadow(0 1px 3px rgba(2, 32, 24, 0.3));
+}
+
+.ticker-btn:active {
+  transform: scale(0.94);
+}
+
 /* Ticker Announcement Bar */
 .ticker-viewport {
   overflow: hidden;
