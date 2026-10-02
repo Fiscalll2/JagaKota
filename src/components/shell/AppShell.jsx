@@ -281,6 +281,7 @@ export function AppShell({
         aria-modal="true"
         aria-label="Menu navigasi JagaKota"
         aria-hidden={!drawerOpen}
+        inert={!drawerOpen}
       >
         <div className="mb-5 flex items-center justify-between">
           <BrandCivic compact />
