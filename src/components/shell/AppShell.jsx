@@ -220,7 +220,8 @@ export function AppShell({
 
   return (
     <div className="min-h-screen bg-[var(--bg-canvas)] font-sans text-[var(--text-main)] antialiased">
-      <div className="mx-auto flex min-h-screen w-full max-w-[1400px]">
+      {/* Full-bleed: sidebar ditempel ke tepi kiri viewport, tanpa gutter tengah */}
+      <div className="flex min-h-screen w-full">
         {/* ============ SIDEBAR (desktop) — sticky + scroll-linked nav ============ */}
         <aside className="sticky top-0 hidden h-screen w-72 shrink-0 border-r-2 border-[var(--border-flat)] bg-[var(--bg-card)] px-5 py-6 lg:flex">
           <div className="flex h-full flex-col gap-5">
@@ -255,8 +256,8 @@ export function AppShell({
             </div>
           </div>
 
-          <main className="w-full flex-1 px-4 pb-12 pt-4 sm:px-6 sm:pt-6 lg:px-8">
-            <div className="mx-auto w-full max-w-[1020px]">
+          <main className="w-full flex-1 px-4 pb-12 pt-4 sm:px-6 sm:pt-6 lg:px-10">
+            <div className="mx-auto w-full max-w-[1100px]">
               {children}
             </div>
           </main>
