@@ -102,6 +102,15 @@ export function EmergencyGuideModal({ isOpen, onClose }) {
         <div className="flex-1 overflow-y-auto px-4 py-4">
           {tabAktif === 'kontak' && (
             <div className="grid gap-2.5">
+              <a
+                href="tel:112"
+                className="flex items-center justify-center gap-2 rounded-2xl bg-red-600 px-4 py-3.5 text-base font-black text-white hover:bg-red-700"
+              >
+                <PhoneCall size={19} strokeWidth={2.5} /> Telepon 112 Sekarang
+              </a>
+              <p className="-mt-1 text-center text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                Bebas pulsa • polisi, ambulans, damkar & bencana
+              </p>
               <div className="flex items-start gap-2 rounded-2xl border-2 border-red-200 bg-red-50 px-3.5 py-3 text-xs font-bold leading-relaxed text-red-600 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
                 <TriangleAlert size={15} className="mt-0.5 shrink-0" />
                 <span>Nomor 112 bebas pulsa dari semua operator, bahkan saat layar ponsel terkunci.</span>

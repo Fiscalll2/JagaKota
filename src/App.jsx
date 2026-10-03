@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { Analytics } from '@vercel/analytics/react';
-import { Header } from './components/common/Header';
 import { AppShell } from './components/shell/AppShell';
 import { TickerBar } from './components/common/TickerBar';
 import { OnboardingIntro } from './components/common/OnboardingIntro';
@@ -243,6 +242,10 @@ export function App() {
       onOpenEmergency={() => setDaruratBuka(true)}
       onOpenShare={() => setBagikanBuka(true)}
       onOpenLapor={() => setLaporBuka(true)}
+      notificationsEnabled={bolehIngatkan}
+      onRequestNotification={mintaNotifikasi}
+      onRefresh={handleManualRefresh}
+      isRefreshing={isRefreshing}
     >
     <div {...gestur}>
       {!modeSemat && introTampil && (
@@ -258,8 +261,6 @@ export function App() {
         onRefresh={handleManualRefresh} isRefreshing={isRefreshing}
         isDark={isDark} onToggleDark={toggleDarkMode}
         installApp={pintaPasang ? pasangPwa : null} />
-      <Header location={location} onOpenSearch={() => setCariBuka(true)} onGpsClick={requestGpsLocation}
-        gpsLoading={gpsLoading} />
 
       {cariBuka && <CitySearchModal isOpen={cariBuka} onClose={() => setCariBuka(false)} onSelectCity={selectCity} currentCity={location} />}
       {bagikanBuka && <ShareCardModal isOpen={bagikanBuka} onClose={() => setBagikanBuka(false)} location={location} airQualityData={airQualityData} weatherData={weatherData} latestEarthquake={latestEarthquake} karhutlaData={karhutlaData} />}

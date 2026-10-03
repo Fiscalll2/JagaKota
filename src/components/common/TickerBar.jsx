@@ -75,7 +75,8 @@ export function TickerBar({
         </div>
       </div>
 
-      <div className="flex shrink-0 items-center gap-1.5">
+      <div className="hidden shrink-0 items-center gap-1.5 lg:flex">
+        {/* Dock ticker hanya untuk desktop: di mobile dock pindah ke top bar. */}
         {installApp && (
           <Button
             type="button"
@@ -126,14 +127,18 @@ export function TickerBar({
             </span>
           </Segmen>
           <Pembatas />
-          <Segmen
-            label="Ganti mode terang/gelap"
-            judul={isDark ? 'Balik ke mode terang' : 'Istirahatkan mata, mode gelap'}
-            onClick={onToggleDark}
-            aktif={isDark}
-          >
-            {isDark ? <Sun size={16} strokeWidth={2.5} /> : <Moon size={16} strokeWidth={2.4} />}
-          </Segmen>
+          {/* Mode gelap disembunyikan di layar sempit (<420px): sudah ada di drawer. */}
+          <span className="hidden min-[420px]:contents">
+            <Pembatas />
+            <Segmen
+              label="Ganti mode terang/gelap"
+              judul={isDark ? 'Balik ke mode terang' : 'Istirahatkan mata, mode gelap'}
+              onClick={onToggleDark}
+              aktif={isDark}
+            >
+              {isDark ? <Sun size={16} strokeWidth={2.5} /> : <Moon size={16} strokeWidth={2.4} />}
+            </Segmen>
+          </span>
         </div>
       </div>
     </div>

@@ -1,14 +1,16 @@
-import { LayoutDashboard, Wind, AlertTriangle, Megaphone, Siren, Map as MapIcon } from 'lucide-react';
+import { LayoutDashboard, Wind, AlertTriangle, Megaphone, Siren, LifeBuoy, Map as MapIcon } from 'lucide-react';
 
 // JagaKota — navigasi gaya Civic Guard (lihat referensi desain sidebar).
 // - `target` : item navigasi scroll (punya section tujuan, ikut scroll-spy + pil geser).
 // - `action` : item aksi independen (TIDAK masuk <nav>, dirender terpisah sebagai tombol aksi).
+// - `gulirAtas` : scroll sampai puncak halaman (ticker ikut terlihat), bukan awal section.
 export const NAV_ITEMS = [
-  { id: 'command-center', label: 'Command Center', icon: LayoutDashboard, target: 'seksi-command-center' },
+  { id: 'command-center', label: 'Command Center', icon: LayoutDashboard, target: 'seksi-command-center', gulirAtas: true },
   { id: 'udara', label: 'Kualitas Udara ISPU', icon: Wind, target: 'seksi-udara' },
   { id: 'siaga', label: 'Siaga Bencana & Gempa', icon: AlertTriangle, target: 'seksi-siaga' },
   { id: 'laporan', label: 'Kabari Warga', icon: Megaphone, action: 'share' },
   { id: 'lapor', label: 'Lapor Warga', icon: Siren, action: 'lapor' },
+  { id: 'tolong', label: 'Minta Tolong', icon: LifeBuoy, action: 'tolong' },
   { id: 'sensor', label: 'Peta Pantauan', icon: MapIcon, target: 'seksi-sensor' },
 ];
 

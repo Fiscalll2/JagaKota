@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Menu, X, Sun, Moon, ShieldAlert, ShieldCheck, Compass, ChevronRight } from 'lucide-react';
+import { Menu, X, Sun, Moon, Bell, ShieldCheck, Compass, ChevronRight } from 'lucide-react';
 import { LogoMark } from '../common/LogoMark';
 import { NAV_ITEMS, SECTION_TARGETS } from './navigation';
 import { cn } from '../../lib/utils';
@@ -180,6 +180,10 @@ export function AppShell({
   onOpenEmergency,
   onOpenShare,
   onOpenLapor,
+  notificationsEnabled,
+  onRequestNotification,
+  onRefresh,
+  isRefreshing,
   children,
 }) {
   const [activeId, setActiveId] = useState('command-center');
@@ -196,8 +200,18 @@ export function AppShell({
       onOpenLapor?.();
       return;
     }
+    if (item.action === 'tolong') {
+      setDrawerOpen(false);
+      onOpenEmergency?.();
+      return;
+    }
     setActiveId(item.id);
     setDrawerOpen(false);
+    if (item.gulirAtas) {
+      // Command Center: naik sampai ticker pengumuman terlihat.
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
     requestAnimationFrame(() => {
       document.getElementById(item.target)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
@@ -253,9 +267,6 @@ export function AppShell({
             Data resmi BMKG • PVMBG • KLHK • NASA. Selalu cek kanal resmi untuk keputusan darurat.
           </p>
         </div>
-        <Button variant="destructive" size="sm" onClick={onOpenEmergency} className="w-full">
-          <ShieldAlert /> Darurat 112
-        </Button>
         <Button variant="outline" size="sm" onClick={onToggleDark} className="w-full" aria-label="Ganti tema">
           {isDark ? <Sun /> : <Moon />}
           {isDark ? 'Mode Terang' : 'Mode Gelap'}
@@ -278,27 +289,61 @@ export function AppShell({
 
         {/* ============ MAIN COLUMN ============ */}
         <div className="flex min-w-0 flex-1 flex-col">
-          {/* Top bar (mobile): hamburger + brand + Live */}
+          {/* Top bar (mobile): hamburger + brand + Live + dock aksi */}
           <div className="sticky top-0 z-40 bg-[var(--bg-card)]/95 px-4 py-3 backdrop-blur lg:hidden">
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => setDrawerOpen(true)}
                 aria-label="Buka menu navigasi"
-                className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-slate-200 text-slate-700 transition hover:border-emerald-500 dark:border-slate-700 dark:text-slate-200"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-slate-200 text-slate-700 transition hover:border-emerald-500 dark:border-slate-700 dark:text-slate-200"
               >
                 <Menu size={19} strokeWidth={2.4} />
               </button>
               <LogoMark size={34} className="block shrink-0" />
-              <div className="min-w-0 leading-tight">
+              <div className="min-w-0 flex-1 leading-tight">
                 <p className="truncate text-[15px] font-black tracking-tight">JAGAKOTA</p>
                 <p className="truncate text-[9px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">
                   Civic Guard ID
                 </p>
               </div>
-              <span className="ml-auto rounded-md bg-emerald-600 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-white">
+              <span className="shrink-0 rounded-md bg-emerald-600 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-white">
                 Live
               </span>
+              <div className="flex shrink-0 items-center gap-1" role="toolbar" aria-label="Aksi cepat">
+                <button
+                  type="button"
+                  onClick={onRequestNotification}
+                  aria-label={notificationsEnabled ? 'Notifikasi aktif' : 'Nyalakan pengingat cuaca'}
+                  className="relative flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition dark:border-slate-700 dark:text-slate-300"
+                >
+                  <Bell size={15} strokeWidth={2.4} />
+                  {notificationsEnabled && (
+                    <span aria-hidden className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={onRefresh}
+                  disabled={isRefreshing}
+                  aria-label="Muat ulang data kota"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition dark:border-slate-700 dark:text-slate-300"
+                >
+                  <span aria-hidden className={`orbit-loop ${isRefreshing ? 'orbit-cepat' : ''}`}>
+                    <span className="orbit-ring" />
+                    <span className="orbit-spin" />
+                    <span className="orbit-inti" />
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={onToggleDark}
+                  aria-label="Ganti mode terang/gelap"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition dark:border-slate-700 dark:text-slate-300"
+                >
+                  {isDark ? <Sun size={15} strokeWidth={2.4} /> : <Moon size={15} strokeWidth={2.4} />}
+                </button>
+              </div>
             </div>
           </div>
 
