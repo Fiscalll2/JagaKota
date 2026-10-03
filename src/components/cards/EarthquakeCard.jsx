@@ -4,6 +4,14 @@ import { warnaGempa } from '../../utils/aqi';
 import { calculateDistance } from '../../utils/geo';
 import { tanggalPenuhJaga } from '../../utils/format';
 
+function kategoriKedalaman(teks) {
+  const angka = parseFloat(teks);
+  if (!Number.isFinite(angka)) return '';
+  if (angka <= 70) return 'Dangkal';
+  if (angka <= 300) return 'Menengah';
+  return 'Dalam';
+}
+
 export function EarthquakeCard({ earthquake, recentQuakes = [], onFocusQuake, userLocation, isRefreshing }) {
   const [showList, setShowList] = useState(false);
 
@@ -48,70 +56,93 @@ export function EarthquakeCard({ earthquake, recentQuakes = [], onFocusQuake, us
     ? `${earthquake.date} • ${earthquake.time}`
     : tanggalPenuhJaga(new Date());
 
+  const dalamKategori = kategoriKedalaman(earthquake.depth);
+  const aman = !isMajor;
+  const warnaAman = '#059669';
+
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2.5">
-          <span className="flex h-9 w-9 items-center justify-center rounded-full text-white" style={{ backgroundColor: magColor }}>
-            <Activity size={18} strokeWidth={2.5} />
-          </span>
-          <div>
-            <h3 className="text-base font-extrabold tracking-tight text-slate-900 dark:text-white">Kabar Gempa Terkini</h3>
-            <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">Info langsung dari BMKG buat warga</p>
-          </div>
-        </div>
-        <span className="rounded-lg px-2.5 py-1 text-xs font-black text-white" style={{ backgroundColor: magColor }}>
-          M {earthquake.magnitude}
-        </span>
-      </div>
-
-      <div className="mt-4 flex items-center gap-4">
-        <p className="text-5xl font-black tracking-tighter" style={{ color: magColor }}>
-          {earthquake.magnitude}
-          <span className="ml-1 text-lg font-bold">M</span>
-        </p>
-        <div className="min-w-0">
-          <p className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
-            <Clock size={13} strokeWidth={2.2} />
-            <span className="truncate">{waktuPenuh}</span>
+      <div className="grid gap-5 md:grid-cols-[200px_minmax(0,230px)_minmax(0,1fr)]">
+        {/* Kolom 1 — sumber */}
+        <div>
+          <p className="flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
+            <span className="flex h-6 w-6 items-center justify-center rounded-lg" style={{ backgroundColor: `${magColor}1a`, color: magColor }}>
+              <Activity size={14} strokeWidth={2.5} />
+            </span>
+            BMKG Seismik
           </p>
-          <p className="mt-1 text-sm font-extrabold text-slate-800 dark:text-slate-100">
-            Kedalaman: {earthquake.depth}
-          </p>
-          <p className={`mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold ${isMajor ? 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'}`}>
-            {isMajor ? <AlertTriangle size={12} strokeWidth={2.5} /> : <ShieldCheck size={12} strokeWidth={2.5} />}
-            {earthquake.potensi || (isMajor ? 'Waspada, cek info tsunami!' : 'Tidak berpotensi tsunami')}
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/60">
-        <p className="flex items-start gap-2 text-[13px] font-semibold text-slate-800 dark:text-slate-100">
-          <MapPin size={16} strokeWidth={2.5} className="mt-0.5 shrink-0" style={{ color: magColor }} />
-          <span>{earthquake.wilayah}</span>
-        </p>
-        {distanceKm !== null && (
-          <p className="ml-6 mt-1.5 flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
-            <Compass size={13} className="text-emerald-600" />
-            Jarak ke episenter: <strong className="font-extrabold text-emerald-700 dark:text-emerald-300">{distanceKm} km</strong> dari posisimu
-          </p>
-        )}
-      </div>
-
-      <div className="mt-3 flex items-center justify-between gap-2">
-        <p className="text-[11px] font-medium text-slate-400">
-          {isMajor ? 'Tetap tenang, jauhi bangunan retak ya warga.' : 'Guncangan kecil, aman. Lanjut aktivitas!'}
-        </p>
-        {recentQuakes.length > 0 && (
-          <button
-            onClick={() => setShowList(!showList)}
-            className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+          <h3 className="mt-1.5 text-lg font-black tracking-tight text-slate-900 dark:text-white">Gempa Terkini</h3>
+          <p
+            className="mt-1.5 inline-block rounded-lg px-2 py-1 text-[11px] font-extrabold"
+            style={{ color: aman ? warnaAman : magColor, backgroundColor: aman ? `${warnaAman}14` : `${magColor}14` }}
           >
-            <List size={13} strokeWidth={2.2} />
-            {showList ? 'Tutup' : `Riwayat (${Math.min(recentQuakes.length, 5)})`}
-            {showList ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-          </button>
-        )}
+            {aman ? 'Kondisi Aman' : 'Waspada Gempa'}
+          </p>
+          <p className="mt-1.5 flex items-center gap-1 text-[11px] font-semibold text-slate-400">
+            <Clock size={12} strokeWidth={2.2} />
+            {waktuPenuh}
+          </p>
+        </div>
+
+        {/* Kolom 2 — angka besar */}
+        <div>
+          <p className="text-[44px] font-black leading-none tracking-tight" style={{ color: magColor }}>
+            {earthquake.magnitude}
+            <span className="ml-1 text-base font-bold">M</span>
+          </p>
+          <p className="mt-1.5 text-[13px] font-semibold text-slate-600 dark:text-slate-300">
+            Kedalaman {earthquake.depth}{dalamKategori ? ` (${dalamKategori})` : ''}
+          </p>
+          <p className="mt-0.5 flex items-center gap-1 text-[13px] font-extrabold" style={{ color: aman ? warnaAman : magColor }}>
+            {aman ? <ShieldCheck size={14} strokeWidth={2.5} /> : <AlertTriangle size={14} strokeWidth={2.5} />}
+            {earthquake.potensi || (aman ? 'Tidak berpotensi tsunami' : 'Waspada, cek info tsunami!')}
+          </p>
+        </div>
+
+        {/* Kolom 3 — lokasi + analisis + aksi */}
+        <div className="min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <p className="flex min-w-0 items-start gap-1.5 text-[13px] font-extrabold text-slate-800 dark:text-slate-100">
+              <MapPin size={15} strokeWidth={2.5} className="mt-0.5 shrink-0" style={{ color: magColor }} />
+              <span>
+                {earthquake.wilayah}
+                {distanceKm !== null && (
+                  <span className="font-semibold text-slate-500 dark:text-slate-400"> ({distanceKm} km darimu)</span>
+                )}
+              </span>
+            </p>
+            {recentQuakes.length > 0 && (
+              <button
+                onClick={() => setShowList(!showList)}
+                className="inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+              >
+                <List size={13} strokeWidth={2.2} />
+                {showList ? 'Tutup' : `Riwayat (${Math.min(recentQuakes.length, 5)})`}
+                {showList ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+              </button>
+            )}
+          </div>
+          <ul className="mt-2.5 space-y-1.5 text-[13px] font-medium leading-snug text-slate-600 dark:text-slate-300">
+            <li className="flex gap-2">
+              <span aria-hidden className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-slate-300 dark:bg-slate-600" />
+              {dalamKategori === 'Dangkal'
+                ? 'Episenter dangkal — guncangan terasa kuat di sekitar lokasi.'
+                : dalamKategori
+                  ? `Episenter ${dalamKategori.toLowerCase()} — getaran merambat lebih luas.`
+                  : 'Pantau info resmi BMKG untuk perkembangan lanjutan.'}
+            </li>
+            <li className="flex gap-2">
+              <span aria-hidden className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-slate-300 dark:bg-slate-600" />
+              {aman ? 'Aktivitas warga berjalan aman, lanjut aktivitas!' : 'Tetap tenang, jauhi bangunan retak ya warga.'}
+            </li>
+          </ul>
+          {distanceKm !== null && (
+            <p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
+              <Compass size={13} className="text-emerald-600" />
+              Jarak ke episenter: <strong className="font-extrabold text-emerald-700 dark:text-emerald-300">{distanceKm} km</strong> dari posisimu
+            </p>
+          )}
+        </div>
       </div>
 
       {showList && (

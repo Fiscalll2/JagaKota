@@ -289,14 +289,13 @@ export function App() {
       </div>
 
       <div id="seksi-siaga" className="section-anchor">
-      <div className="dashboard-grid-2" style={{ marginBottom: '1.5rem' }}>
+      <div className="flex flex-col gap-4" style={{ marginBottom: '1.5rem' }}>
         <EarthquakeCard earthquake={latestEarthquake} recentQuakes={recentEarthquakes}
           onFocusQuake={fokusGempa} userLocation={location} isRefreshing={isRefreshing} />
         <VolcanoCard location={location} onOpenModal={() => setGunungBuka(true)} isRefreshing={isRefreshing} />
+        <KarhutlaCard karhutlaData={karhutlaData} airQualityData={airQualityData} location={location}
+          onOpenModal={() => setApiBuka(true)} loading={sibuk} />
       </div>
-
-      <KarhutlaCard karhutlaData={karhutlaData} airQualityData={airQualityData} location={location}
-        onOpenModal={() => setApiBuka(true)} loading={sibuk} />
 
       <div style={{ marginBottom: '1.5rem' }}>
         <React.Suspense fallback={<LayarTunggu height="260px" pesan="Memuat Prakiraan Cuaca 7 Hari..." />}>
