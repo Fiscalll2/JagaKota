@@ -1,7 +1,12 @@
 import React from 'react';
 import { CalendarDays, Droplets, Sun, ArrowUp, ArrowDown } from 'lucide-react';
 import { visualCuaca } from '../../utils/weatherIcons';
+import { RintikHujan } from '../weather/RintikHujan';
 import { tanggalRingkasJaga, tanggalPenuhJaga } from '../../utils/format';
+
+// Kode WMO yang berarti hujan (rinik → lebat), sesuai tabel visualCuaca.
+const KODE_HUJAN = [51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82];
+const KODE_DERAS = [63, 65, 66, 67, 81, 82];
 
 export function WeatherForecastChart({ dailyData }) {
   if (!dailyData || !dailyData.time) return null;
@@ -43,7 +48,9 @@ export function WeatherForecastChart({ dailyData }) {
           const code = dailyData.weather_code?.[idx] ?? 0;
           const visual = visualCuaca(code);
           const IconComp = visual.icon;
-          const ekstrem = rainProb >= 40 || uvMax >= 8;
+          const hujan = KODE_HUJAN.includes(code);
+          const deras = hujan && (KODE_DERAS.includes(code) || rainProb >= 70);
+          const goyang = !hujan && (rainProb >= 40 || uvMax >= 8);
 
           return (
             <article
@@ -71,10 +78,16 @@ export function WeatherForecastChart({ dailyData }) {
                 >
                   {hariIni ? (
                     <span className="flex h-full w-full items-center justify-center rounded-full bg-emerald-600 text-white">
-                      <IconComp size={26} strokeWidth={2.5} className={ekstrem ? 'anim-goyang' : ''} />
+                      {hujan ? (
+                        <RintikHujan deras={deras} garis="#ffffff" awan="rgba(255,255,255,0.28)" className="h-10 w-10" />
+                      ) : (
+                        <IconComp size={26} strokeWidth={2.5} className={goyang ? 'anim-goyang' : ''} />
+                      )}
                     </span>
+                  ) : hujan ? (
+                    <RintikHujan deras={deras} garis={visual.color} awan={visual.bg} className="h-9 w-9" />
                   ) : (
-                    <IconComp size={24} color={visual.color} strokeWidth={2.5} className={ekstrem ? 'anim-goyang' : ''} />
+                    <IconComp size={24} color={visual.color} strokeWidth={2.5} className={goyang ? 'anim-goyang' : ''} />
                   )}
                 </span>
                 <p className={`flex min-h-7 items-center text-xs font-bold ${hariIni ? 'text-slate-900 dark:text-white' : 'text-slate-700 dark:text-slate-200'}`}>{visual.label}</p>
