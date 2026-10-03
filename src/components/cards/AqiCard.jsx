@@ -1,6 +1,7 @@
 import React from 'react';
-import { Wind, Leaf, DoorOpen, ShieldCheck } from 'lucide-react';
+import { Wind, DoorOpen, ShieldCheck } from 'lucide-react';
 import { infoUdara, TINGKAT_UDARA } from '../../utils/aqi.js';
+import { analisisKimia } from '../../utils/kimiaUdara.js';
 
 export function AqiCard({ data, loading }) {
   if (loading) {
@@ -30,15 +31,8 @@ export function AqiCard({ data, loading }) {
   const aktif = TINGKAT_UDARA.findIndex((t) => aqi <= t.max);
   const idxAktif = aktif === -1 ? TINGKAT_UDARA.length - 1 : aktif;
 
-  const polutan = [
-    { nama: 'PM2.5', nilai: current.pm25 ?? current.pm2_5 ?? 0, satuan: 'µg/m³' },
-    { nama: 'PM10', nilai: current.pm10 ?? 0, satuan: 'µg/m³' },
-    { nama: 'O₃', nilai: current.o3 ?? 0, satuan: '' },
-    { nama: 'NO₂', nilai: current.no2 ?? 0, satuan: '' },
-    { nama: 'SO₂', nilai: current.so2 ?? 0, satuan: '' },
-    { nama: 'CO', nilai: current.co ?? 0, satuan: '' },
-  ];
-  const pemicu = [...polutan].sort((a, b) => Number(b.nilai) - Number(a.nilai))[0];
+  // Pemicu utama versi koreksi-rasio (dipecah lengkap di card Analisis Kimiawi).
+  const pemicu = analisisKimia(current).dominan;
 
   return (
     <section className="border-2 border-slate-200 rounded-2xl bg-white overflow-hidden flex flex-col">
@@ -81,6 +75,7 @@ export function AqiCard({ data, loading }) {
             </p>
             <p className="text-[12px] text-slate-500 mt-2">
               Pemicu tertinggi: <strong className="text-slate-800">{pemicu.nama} {String(pemicu.nilai)}</strong>
+              <span className="text-slate-400"> ({pemicu.rasio}× batas aman)</span>
             </p>
           </div>
         </div>
@@ -136,22 +131,6 @@ export function AqiCard({ data, loading }) {
           </div>
         </div>
 
-        {/* Rincian penyumbang — list vertikal, bukan grid 3 kolom lama */}
-        <details className="rounded-xl border-2 border-dashed border-slate-200 px-3 py-2">
-          <summary className="text-[12px] font-extrabold text-slate-600 cursor-pointer flex items-center gap-1.5">
-            <Leaf size={14} /> Rincian penyumbang (6 zat)
-          </summary>
-          <dl className="mt-2 divide-y divide-slate-100">
-            {polutan.map((p) => (
-              <div key={p.nama} className="flex items-center justify-between py-1">
-                <dt className="text-[12px] font-bold text-slate-500">{p.nama}</dt>
-                <dd className="text-[13px] font-extrabold text-slate-800 tabular-nums">
-                  {p.nilai} <span className="font-semibold text-slate-400 text-[11px]">{p.satuan}</span>
-                </dd>
-              </div>
-            ))}
-          </dl>
-        </details>
       </div>
     </section>
   );

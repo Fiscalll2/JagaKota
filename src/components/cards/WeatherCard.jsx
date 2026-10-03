@@ -51,11 +51,11 @@ export function WeatherCard({ data, locationName, loading }) {
           Cuaca Kampung • {visual.label}
         </p>
         <div className="flex items-center gap-4 mt-2">
-          <div className="w-16 h-16 rounded-2xl border-2 border-white bg-white flex items-center justify-center shrink-0">
-            <Ikon size={34} style={{ color: visual.color }} strokeWidth={2.2} />
+          <div className="w-20 h-20 rounded-2xl border-2 border-white bg-white flex items-center justify-center shrink-0">
+            <Ikon size={40} style={{ color: visual.color }} strokeWidth={2.2} />
           </div>
           <div className="flex items-end gap-2">
-            <span className="text-5xl font-black tabular-nums tracking-tighter text-slate-900 leading-none">
+            <span className="text-6xl font-black tabular-nums tracking-tighter text-slate-900 leading-none">
               {current.temp ?? '--'}°
             </span>
             <div className="pb-1">

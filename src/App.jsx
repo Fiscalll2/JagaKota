@@ -6,6 +6,7 @@ import { TickerBar } from './components/common/TickerBar';
 import { OnboardingIntro } from './components/common/OnboardingIntro';
 import { EcoHealthCard } from './components/cards/EcoHealthCard';
 import { AqiCard } from './components/cards/AqiCard';
+import { KimiaCard } from './components/cards/KimiaCard';
 import { WeatherCard } from './components/cards/WeatherCard';
 import { EarthquakeCard } from './components/cards/EarthquakeCard';
 import { UvCard } from './components/cards/UvCard';
@@ -279,6 +280,10 @@ export function App() {
         <AqiCard data={airQualityData} loading={sibuk} />
         <WeatherCard data={weatherData} locationName={location.name} loading={sibuk} />
         <UvCard uvIndex={weatherData?.current?.uvIndex || 0} loading={sibuk} />
+      </div>
+
+      <div style={{ marginBottom: '1.5rem' }}>
+        <KimiaCard current={airQualityData?.current} loading={sibuk} />
       </div>
 
       <div style={{ marginBottom: '1.5rem' }}>
