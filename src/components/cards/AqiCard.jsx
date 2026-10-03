@@ -3,7 +3,18 @@ import { Wind, DoorOpen, ShieldCheck } from 'lucide-react';
 import { infoUdara, TINGKAT_UDARA } from '../../utils/aqi.js';
 import { analisisKimia } from '../../utils/kimiaUdara.js';
 
-export function AqiCard({ data, loading }) {
+function waktuRelatif(waktu) {
+  if (!waktu) return '';
+  const beda = Date.now() - new Date(waktu).getTime();
+  if (!Number.isFinite(beda) || beda < 0) return '';
+  const menit = Math.floor(beda / 60000);
+  if (menit < 1) return 'baru saja';
+  if (menit < 60) return `${menit} menit lalu`;
+  const jam = Math.floor(menit / 60);
+  return `${jam} jam lalu`;
+}
+
+export function AqiCard({ data, loading, locationName, updatedAt }) {
   if (loading) {
     return (
       <section className="border-2 border-slate-200 rounded-2xl bg-white p-5 animate-pulse min-h-[240px]">
@@ -33,35 +44,29 @@ export function AqiCard({ data, loading }) {
 
   // Pemicu utama versi koreksi-rasio (dipecah lengkap di card Analisis Kimiawi).
   const pemicu = analisisKimia(current).dominan;
+  const relatif = waktuRelatif(updatedAt);
 
   return (
     <section className="border-2 border-slate-200 rounded-2xl bg-white overflow-hidden flex flex-col">
-      {/* Pita status atas */}
       <div className="h-2 w-full" style={{ backgroundColor: info.color }} />
 
       <div className="p-5 flex flex-col gap-4">
-        {/* Eyebrow ronda */}
         <div className="flex items-center justify-between">
-          <p className="text-[11px] font-extrabold tracking-[0.14em] text-slate-500 uppercase">
+          <p className="flex items-center gap-1.5 text-[11px] font-extrabold tracking-[0.14em] text-slate-500 uppercase">
+            <Wind size={14} style={{ color: info.color }} strokeWidth={2.5} />
             Pos Udara • Ronda Warga
           </p>
           <span
-            className="inline-flex items-center gap-1.5 text-[11px] font-extrabold px-2.5 py-1 rounded-full border-2"
-            style={{ color: info.color, borderColor: info.color, backgroundColor: info.bg }}
+            className="inline-flex items-center text-[11px] font-extrabold px-2.5 py-1 rounded-full"
+            style={{ color: info.color, backgroundColor: info.bg }}
           >
-            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: info.color }} />
             {info.label}
           </span>
         </div>
 
-        {/* Baris utama: kotak angka + sapaan */}
         <div className="flex items-stretch gap-4">
-          <div
-            className="shrink-0 w-24 rounded-2xl border-2 flex flex-col items-center justify-center py-3"
-            style={{ borderColor: info.color, backgroundColor: info.bg }}
-          >
-            <Wind size={20} style={{ color: info.color }} strokeWidth={2.5} />
-            <span className="text-4xl font-black tabular-nums leading-none mt-1" style={{ color: info.color }}>
+          <div className="shrink-0 w-24 rounded-2xl border-2 border-slate-200 bg-white flex flex-col items-center justify-center py-3">
+            <span className="text-4xl font-black tabular-nums leading-none" style={{ color: info.color }}>
               {current.aqi ?? '--'}
             </span>
             <span className="text-[10px] font-bold text-slate-500 mt-1">US-AQI</span>
@@ -74,13 +79,12 @@ export function AqiCard({ data, loading }) {
               {info.advice}
             </p>
             <p className="text-[12px] text-slate-500 mt-2">
-              Pemicu tertinggi: <strong className="text-slate-800">{pemicu.nama} {String(pemicu.nilai)}</strong>
+              Pemicu utama: <strong className="text-slate-800">{pemicu.nama} {String(pemicu.nilai)}</strong>
               <span className="text-slate-400"> ({pemicu.rasio}× batas aman)</span>
             </p>
           </div>
         </div>
 
-        {/* Tangga warga vertikal — beda dari gauge horizontal lama */}
         <ol className="rounded-2xl border-2 border-slate-100 overflow-hidden divide-y-2 divide-slate-100">
           {TINGKAT_UDARA.map((t, i) => {
             const on = i === idxAktif;
@@ -90,10 +94,6 @@ export function AqiCard({ data, loading }) {
                 className="flex items-center gap-3 px-3 py-1.5"
                 style={on ? { backgroundColor: t.bg } : undefined}
               >
-                <span
-                  className="w-3 h-3 rounded-full shrink-0 border-2 border-white"
-                  style={{ backgroundColor: t.color, outline: on ? `2px solid ${t.color}` : 'none' }}
-                />
                 <span className={`text-[12px] font-extrabold ${on ? 'text-slate-900' : 'text-slate-400'}`}>
                   {t.label}
                 </span>
@@ -105,7 +105,7 @@ export function AqiCard({ data, loading }) {
                     className="text-[10px] font-black px-1.5 py-0.5 rounded-md text-white"
                     style={{ backgroundColor: t.color }}
                   >
-                    KAMU DI SINI
+                    POSISI KITA
                   </span>
                 )}
               </li>
@@ -113,24 +113,33 @@ export function AqiCard({ data, loading }) {
           })}
         </ol>
 
-        {/* Aksi warga */}
         <div className="grid grid-cols-2 gap-2">
           <div className="rounded-xl border-2 border-slate-100 bg-slate-50 px-3 py-2 flex items-center gap-2">
-            <DoorOpen size={16} className="text-slate-500 shrink-0" />
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white">
+              <DoorOpen size={15} className="text-slate-500" />
+            </span>
             <div>
-              <p className="text-[10px] font-bold text-slate-500 uppercase">Jendela</p>
-              <p className="text-[13px] font-extrabold text-slate-800">{aqi <= 60 ? 'Buka aja' : 'Tutup dulu'}</p>
+              <p className="text-[10px] font-bold text-slate-500 uppercase">Sirkulasi Rumah</p>
+              <p className="text-[13px] font-extrabold text-slate-800">{aqi <= 60 ? 'Buka Terbatas' : 'Tutup Dulu'}</p>
             </div>
           </div>
           <div className="rounded-xl border-2 border-slate-100 bg-slate-50 px-3 py-2 flex items-center gap-2">
-            <ShieldCheck size={16} className="text-slate-500 shrink-0" />
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white">
+              <ShieldCheck size={15} className="text-slate-500" />
+            </span>
             <div>
-              <p className="text-[10px] font-bold text-slate-500 uppercase">Masker</p>
-              <p className="text-[13px] font-extrabold text-slate-800">{aqi > 100 ? 'Wajib' : aqi > 50 ? 'Siapin' : 'Nggak perlu'}</p>
+              <p className="text-[10px] font-bold text-slate-500 uppercase">Pelindung Diri</p>
+              <p className="text-[13px] font-extrabold text-slate-800">{aqi > 100 ? 'Wajib Masker' : aqi > 50 ? 'Siapin Masker' : 'Nggak Perlu'}</p>
             </div>
           </div>
         </div>
 
+        {locationName && (
+          <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400">
+            <span>Pos {locationName}</span>
+            {relatif && <span className="font-bold text-emerald-600">{relatif}</span>}
+          </div>
+        )}
       </div>
     </section>
   );

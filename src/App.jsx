@@ -277,13 +277,13 @@ export function App() {
 
       <div id="seksi-udara" className="section-anchor">
       <div className="dashboard-grid-3">
-        <AqiCard data={airQualityData} loading={sibuk} />
-        <WeatherCard data={weatherData} locationName={location.name} loading={sibuk} />
-        <UvCard uvIndex={weatherData?.current?.uvIndex || 0} loading={sibuk} />
+        <AqiCard data={airQualityData} loading={sibuk} locationName={location.name} updatedAt={lastUpdated} />
+        <WeatherCard data={weatherData} locationName={location.name} province={location.province} loading={sibuk} />
+        <UvCard uvIndex={weatherData?.current?.uvIndex || 0} hourly={weatherData?.hourly} loading={sibuk} />
       </div>
 
       <div style={{ marginBottom: '1.5rem' }}>
-        <KimiaCard current={airQualityData?.current} loading={sibuk} />
+        <KimiaCard current={airQualityData?.current} locationName={location.name} province={location.province} loading={sibuk} />
       </div>
 
       <div style={{ marginBottom: '1.5rem' }}>
