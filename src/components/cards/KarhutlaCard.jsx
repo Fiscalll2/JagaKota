@@ -2,6 +2,7 @@ import React from 'react';
 import { Flame, MapPin, Siren } from 'lucide-react';
 import { getHazeStatus } from '../../utils/karhutla.js';
 import { hitungJarakKm } from '../../utils/geo.js';
+import { CardSource } from '../common/CardSource';
 
 export function KarhutlaCard({ karhutlaData, airQualityData, location, onOpenModal, loading }) {
   if (loading) {
@@ -119,6 +120,8 @@ export function KarhutlaCard({ karhutlaData, airQualityData, location, onOpenMod
           </ul>
         </div>
       </div>
+
+      <CardSource ids={['firms', 'sipongi']} />
     </section>
   );
 }

@@ -3,6 +3,7 @@ import { Activity, AlertTriangle, ShieldCheck, MapPin, Clock, ChevronDown, Chevr
 import { warnaGempa } from '../../utils/aqi';
 import { calculateDistance } from '../../utils/geo';
 import { tanggalPenuhJaga } from '../../utils/format';
+import { CardSource } from '../common/CardSource';
 
 function kategoriKedalaman(teks) {
   const angka = parseFloat(teks);
@@ -172,6 +173,8 @@ export function EarthquakeCard({ earthquake, recentQuakes = [], onFocusQuake, us
           })}
         </ul>
       )}
+
+      <CardSource ids={['bmkg']} />
     </section>
   );
 }

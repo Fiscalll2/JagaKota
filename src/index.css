@@ -375,6 +375,29 @@ button, input, select, a {
   }
 }
 
+/* Footer menempel ke dasar viewport: batalkan padding .app-container */
+.footer-bleed {
+  margin-left: -0.75rem;
+  margin-right: -0.75rem;
+  margin-bottom: -2rem;
+}
+
+@media (min-width: 640px) {
+  .footer-bleed {
+    margin-left: -1.5rem;
+    margin-right: -1.5rem;
+    margin-bottom: -5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .footer-bleed {
+    margin-left: -2rem;
+    margin-right: -2rem;
+    margin-bottom: -6rem;
+  }
+}
+
 /* ==========================================
    MODAL POPUP SYSTEM (Standard Centered Dialog)
    ========================================== */

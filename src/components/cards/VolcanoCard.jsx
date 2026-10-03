@@ -2,6 +2,7 @@ import React from 'react';
 import { Mountain, MapPin, ArrowRight } from 'lucide-react';
 import { getNearbyVolcanoes } from '../../services/volcano.js';
 import { hitungJarakKm } from '../../utils/geo.js';
+import { CardSource } from '../common/CardSource';
 
 export function VolcanoCard({ location, onOpenModal, isRefreshing }) {
   if (isRefreshing) {
@@ -97,6 +98,8 @@ export function VolcanoCard({ location, onOpenModal, isRefreshing }) {
           )}
         </div>
       </div>
+
+      <CardSource ids={['magma']} />
     </section>
   );
 }

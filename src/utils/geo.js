@@ -8,14 +8,8 @@ function keAngka(v, jaga = 0) {
   return Number.isFinite(n) ? n : jaga;
 }
 
-export function getCurrentPosition(pilihan = {}) {
-  const { timeout = 12000, akurasiTinggi = true } = pilihan;
+function bacaPos(geo, opsi) {
   return new Promise((selesai, gagal) => {
-    const geo = navigator?.geolocation;
-    if (!geo) {
-      gagal(new Error('Peramban tidak mendukung geolokasi.'));
-      return;
-    }
     geo.getCurrentPosition(
       (pos) => selesai({
         latitude: pos.coords.latitude,
@@ -24,8 +18,38 @@ export function getCurrentPosition(pilihan = {}) {
         ketelitianM: pos.coords.accuracy,
       }),
       (galat) => gagal(galat),
-      { timeout, enableHighAccuracy: akurasiTinggi, maximumAge: 60000 },
+      opsi,
     );
+  });
+}
+
+function pesanGalat(galat) {
+  // Kode Geolocation API: 1 = izin ditolak, 2 = posisi tak tersedia, 3 = timeout.
+  if (!galat || typeof galat.code !== 'number') {
+    return galat?.message || 'GPS tidak tersedia. Pilih kota manual.';
+  }
+  if (galat.code === 1) {
+    const aman = typeof window !== 'undefined' && (window.isSecureContext || ['localhost', '127.0.0.1'].includes(window.location?.hostname));
+    return aman
+      ? 'Izin lokasi ditolak. Ketuk ikon gembok di address bar → izinkan Lokasi, lalu coba lagi.'
+      : 'Browser memblokir lokasi di koneksi tak aman (HTTP). Buka versi HTTPS atau pilih kota manual.';
+  }
+  if (galat.code === 2) return 'Sinyal lokasi tidak ketemu (dalam ruangan / GPS mati). Nyalakan GPS atau pilih kota manual.';
+  return 'Mencari sinyal lokasi kelamaan. Coba lagi di tempat terbuka atau pilih kota manual.';
+}
+
+export function getCurrentPosition(pilihan = {}) {
+  const { timeout = 12000, akurasiTinggi = true } = pilihan;
+  const geo = navigator?.geolocation;
+  if (!geo) return Promise.reject(new Error('Peramban tidak mendukung geolokasi.'));
+  // Tahap 1: paksa posisi segar (tanpa cache basi) akurasi tinggi.
+  return bacaPos(geo, { timeout, enableHighAccuracy: akurasiTinggi, maximumAge: 0 }).catch((galat) => {
+    // Izin ditolak / tak didukung → jangan buang waktu retry.
+    if (galat?.code === 1 || !akurasiTinggi) throw new Error(pesanGalat(galat));
+    // Tahap 2: fallback hemat (WiFi/IP) — lebih cepatwalau kurang presisi.
+    return bacaPos(geo, { timeout: 8000, enableHighAccuracy: false, maximumAge: 0 }).catch(() => {
+      throw new Error(pesanGalat(galat));
+    });
   });
 }
 
@@ -60,6 +84,24 @@ export function arahMataAngin(derajat) {
 export const calculateDistance = hitungJarakKm;
 export const jarakKm = hitungJarakKm;
 export const haversineKm = hitungJarakKm;
+
+/**
+ * Jarak presisi (desimal, tanpa pembulatan) khusus untuk MEMILIH kota terdekat.
+ * hitungJarakKm membulatkan ke km bulat sehingga kota-kota tetangga <0,5 km
+ * seri dan pemenang jadi arbitrer (kota pertama di daftar).
+ */
+export function hitungJarakPresisiKm(garis1, bujur1, garis2, bujur2) {
+  const a1 = keAngka(garis1, NaN);
+  const b1 = keAngka(bujur1, NaN);
+  const a2 = keAngka(garis2, NaN);
+  const b2 = keAngka(bujur2, NaN);
+  if (![a1, b1, a2, b2].every(Number.isFinite)) return Infinity;
+  const dLat = (a2 - a1) * RAD;
+  const dLon = (b2 - b1) * RAD;
+  const h = Math.sin(dLat / 2) ** 2
+    + Math.cos(a1 * RAD) * Math.cos(a2 * RAD) * Math.sin(dLon / 2) ** 2;
+  return BUMI_KM * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+}
 
 export function slugKota(nama = '') {
   return String(nama ?? '')

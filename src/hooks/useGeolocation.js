@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { getCurrentPosition, jarakKm } from '../utils/geo';
+import { getCurrentPosition, hitungJarakPresisiKm } from '../utils/geo';
 import { INDONESIA_CITIES, KOTA_JAGA } from '../utils/cities';
 
 const KUNCI = 'jagakota-lokasi';
@@ -32,7 +32,8 @@ function kotaTerdekat(lat, lon) {
   let terbaik = DAFTAR[0];
   let skor = Infinity;
   for (const k of DAFTAR) {
-    const d = jarakKm ? jarakKm(lat, lon, k.lat, k.lon) : Math.hypot(k.lat - lat, k.lon - lon);
+    // Presisi desimal: versi bulat (hitungJarakKm) bikin kota tetangga seri.
+    const d = hitungJarakPresisiKm(lat, lon, k.lat, k.lon);
     if (d < skor) { skor = d; terbaik = k; }
   }
   return { kota: terbaik, km: skor };
@@ -74,7 +75,7 @@ export function useGeolocation() {
     setError(null);
   }, []);
 
-  return { location, selectCity, requestGpsLocation, gpsLoading, loading, error };
+  return { location, selectCity, requestGpsLocation, gpsLoading, loading, error, gpsError: error };
 }
 
 export default useGeolocation;

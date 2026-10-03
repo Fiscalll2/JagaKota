@@ -1,49 +1,77 @@
 import React from 'react';
-import { Code2, Globe, Code, Flame, Mountain, HeartHandshake } from 'lucide-react';
-import { tanggalPenuhJaga } from '../../utils/format';
+import { SUMBER_DATA } from '../../utils/sources';
+import { SourceMark } from './SourceMark';
 
+// Footer minimal ala penutup profesional: satu kolom rata tengah.
+// - Judul "Tanggung Jawab Data" + deskripsi kecil.
+// - Logo API tersusun piramid ke bawah (3 - 2), klik → situs resmi.
+// - Baris hak cipta mungil di paling bawah.
+// Prop `status` / `onOpenShare` sengaja tidak dipakai di varian ramping ini
+// (tetap diterima agar pemanggil lama tidak error).
 export function Footer({ onOpenWidget }) {
   const tahun = new Date().getFullYear();
+  const barisAtas = SUMBER_DATA.slice(0, 3);
+  const barisBawah = SUMBER_DATA.slice(3);
 
   return (
-    <footer className="mt-12 border-t border-slate-200 px-2 py-8 text-center dark:border-slate-800">
-      <p className="flex items-center justify-center gap-1.5 text-sm font-extrabold text-slate-800 dark:text-slate-100">
-        <HeartHandshake size={16} className="text-emerald-600" />
-        JagaKota — dijaga bareng warga, buat warga {tahun}
+    <footer className="footer-bleed mt-12 border-t border-slate-200 px-4 pb-6 pt-8 text-center dark:border-slate-800">
+      <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
+        Tanggung Jawab Data
       </p>
-      <p className="mx-auto mt-1.5 max-w-2xl text-xs font-medium leading-relaxed text-slate-500 dark:text-slate-400">
-        Data cuaca, udara, gempa, dan api dirangkum dari sumber terbuka biar gampang dipantau.
-        Terakhir dirender: {tanggalPenuhJaga(new Date())}. Selalu cek kanal resmi untuk keputusan darurat ya.
+      <p className="mx-auto mt-2 max-w-md text-[11px] font-medium leading-relaxed text-slate-500 dark:text-slate-400">
+        Data dirangkum dari sumber terbuka di bawah. Klik logo untuk buka situs resminya.
+        Selalu cek kanal resmi untuk keputusan darurat ya.
       </p>
 
-      <div className="mt-4 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[13px]">
-        <a href="https://github.com/Fiscalll2" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 font-bold text-emerald-700 hover:underline dark:text-emerald-300">
-          <Code2 size={16} strokeWidth={2.5} /> Intip dapur kode
-        </a>
+      {/* Piramida: 3 di atas, 2 di bawah */}
+      <div className="mt-3 flex flex-col items-center gap-1.5" aria-label="Sumber data resmi">
+        <div className="flex flex-wrap justify-center gap-1.5">
+          {barisAtas.map((s) => (
+            <a
+              key={s.id}
+              href={s.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={`${s.nama} — ${s.host}`}
+              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 py-1 pl-1 pr-3 text-[11px] font-extrabold text-slate-600 transition hover:-translate-y-px hover:border-emerald-400 hover:text-emerald-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-300"
+            >
+              <SourceMark id={s.id} size={20} label={`Logo ${s.nama}`} />
+              {s.nama}
+            </a>
+          ))}
+        </div>
+        <div className="flex flex-wrap justify-center gap-1.5">
+          {barisBawah.map((s) => (
+            <a
+              key={s.id}
+              href={s.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={`${s.nama} — ${s.host}`}
+              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 py-1 pl-1 pr-3 text-[11px] font-extrabold text-slate-600 transition hover:-translate-y-px hover:border-emerald-400 hover:text-emerald-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-300"
+            >
+              <SourceMark id={s.id} size={20} label={`Logo ${s.nama}`} />
+              {s.nama}
+            </a>
+          ))}
+        </div>
+      </div>
+
+      <p className="mt-4 text-[11px] font-semibold text-slate-400 dark:text-slate-500">
+        JagaKota {tahun} — dijaga bareng warga.
         {onOpenWidget && (
-          <button onClick={onOpenWidget} className="inline-flex items-center gap-1.5 font-bold text-sky-700 hover:underline dark:text-sky-300">
-            <Code size={16} strokeWidth={2.5} /> Pasang widget di web RT/RW
-          </button>
+          <>
+            {' • '}
+            <button
+              type="button"
+              onClick={onOpenWidget}
+              className="font-bold text-emerald-700 hover:underline dark:text-emerald-300"
+            >
+              Pasang widget RT/RW
+            </button>
+          </>
         )}
-      </div>
-
-      <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs font-bold">
-        <a href="https://data.bmkg.go.id" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-slate-600 hover:text-emerald-700 dark:text-slate-300">
-          <Globe size={14} strokeWidth={2.5} /> BMKG Open Data
-        </a>
-        <a href="https://magma.esdm.go.id" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-slate-600 hover:text-emerald-700 dark:text-slate-300">
-          <Mountain size={14} strokeWidth={2.5} /> PVMBG Magma
-        </a>
-        <a href="https://sipongi.gakkum.kehutanan.go.id" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-slate-600 hover:text-emerald-700 dark:text-slate-300">
-          <Flame size={14} strokeWidth={2.5} /> KLHK SiPongi+
-        </a>
-        <a href="https://firms.modaps.eosdis.nasa.gov" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-slate-600 hover:text-emerald-700 dark:text-slate-300">
-          <Flame size={14} strokeWidth={2.5} /> NASA FIRMS
-        </a>
-        <a href="https://open-meteo.com" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-slate-600 hover:text-emerald-700 dark:text-slate-300">
-          <Globe size={14} strokeWidth={2.5} /> Open-Meteo
-        </a>
-      </div>
+      </p>
     </footer>
   );
 }

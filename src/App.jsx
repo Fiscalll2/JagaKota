@@ -31,7 +31,7 @@ import { useDarkMode } from './hooks/useDarkMode';
 import { useDataJaga } from './hooks/useDashboardData';
 import { getarJaga } from './utils/haptics';
 import { i18n } from './utils/i18n';
-import { Download, AlertTriangle, X, Loader2, WifiOff, CheckCircle2 } from 'lucide-react';
+import { Download, AlertTriangle, X, Loader2, WifiOff, CheckCircle2, MapPin } from 'lucide-react';
 
 function bacaParam(kunci) {
   try {
@@ -75,7 +75,7 @@ function SpandukAwas({ aqi, gempa, kamus }) {
 export function App() {
   const kamus = i18n.id;
   const { isDark, toggleDarkMode } = useDarkMode();
-  const { location, selectCity, requestGpsLocation, gpsLoading } = useGeolocation();
+  const { location, selectCity, requestGpsLocation, gpsLoading, error: gpsError } = useGeolocation();
   const [bolehIngatkan, setBolehIngatkan] = useState(false);
   const {
     weatherData, airQualityData, latestEarthquake, recentEarthquakes, karhutlaData,
@@ -92,7 +92,10 @@ export function App() {
     if (cocok && (cocok.lat !== location.lat || cocok.lon !== location.lon)) selectCity(cocok);
   }, [paramKota]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEffect(() => { setGpsTutup(false); }, [gpsError]);
+
   const [cariBuka, setCariBuka] = useState(false);
+  const [gpsTutup, setGpsTutup] = useState(false);
   const [bagikanBuka, setBagikanBuka] = useState(false);
   const [daruratBuka, setDaruratBuka] = useState(false);
   const [gunungBuka, setGunungBuka] = useState(false);
@@ -214,6 +217,14 @@ export function App() {
   const awasGempa = (latestEarthquake?.magnitude || 0) >= 5.5;
   const sibuk = loading || isRefreshing;
 
+  // Status sinyal tiap sumber untuk footer (jujur saat data gagal dimuat).
+  const statusSinyal = {
+    cuaca: loading ? 'memuat' : weatherData?.current ? 'ok' : 'terganggu',
+    udara: loading ? 'memuat' : airQualityData?.current ? 'ok' : 'terganggu',
+    gempa: loading ? 'memuat' : latestEarthquake ? 'ok' : 'terganggu',
+    karhutla: loading ? 'memuat' : karhutlaData ? 'ok' : 'terganggu',
+  };
+
   const itemTicker = [
     // Lokasi sengaja tidak diulang di sini: sudah tampil di pil lokasi sidebar + bar kota (mobile).
     airQualityData?.current ? `Kualitas Udara AQI ${airQualityData.current.aqi}` : null,
@@ -301,6 +312,46 @@ export function App() {
         </div>
       )}
 
+      {gpsError && !gpsTutup && (
+        <div className="animate-fade-in" role="alert" style={{
+          backgroundColor: 'var(--color-danger-bg)', border: '2px solid var(--color-danger)',
+          color: 'var(--text-main)', padding: '0.7rem 1rem', borderRadius: 'var(--radius-md)',
+          marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.8rem',
+        }}>
+          <AlertTriangle size={18} color="var(--color-danger)" style={{ flexShrink: 0 }} />
+          <span style={{ flex: 1, fontWeight: '600' }}>{gpsError}</span>
+          <button
+            onClick={() => { setGpsTutup(true); setCariBuka(true); }}
+            className="flat-btn-primary" style={{ minHeight: '34px', padding: '4px 12px', fontSize: '0.75rem', flexShrink: 0 }}
+          >
+            Pilih manual
+          </button>
+          <button onClick={() => setGpsTutup(true)} aria-label="Tutup peringatan GPS" className="flat-btn-secondary" style={{ minHeight: '34px', padding: '4px 8px', flexShrink: 0 }}>
+            <X size={15} />
+          </button>
+        </div>
+      )}
+
+      {location?.isGps && (location?.akurasiM ?? 0) > 20000 && (
+        <div className="animate-fade-in" role="status" style={{
+          backgroundColor: 'var(--color-accent-bg)', border: '2px solid var(--color-accent)',
+          color: 'var(--text-main)', padding: '0.6rem 1rem', borderRadius: 'var(--radius-md)',
+          marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.8rem',
+        }}>
+          <MapPin size={18} color="var(--color-accent-hover)" style={{ flexShrink: 0 }} />
+          <span style={{ flex: 1, fontWeight: '600' }}>
+            Lokasi GPS kira-kira (±{(location.akurasiM / 1000).toFixed(0)} km, kemungkinan dari IP/VPN) — peta bisa meleset.
+            Pilih kota manual biar pas.
+          </span>
+          <button
+            onClick={() => setCariBuka(true)}
+            className="flat-btn-primary" style={{ minHeight: '34px', padding: '4px 12px', fontSize: '0.75rem', flexShrink: 0 }}
+          >
+            Pilih manual
+          </button>
+        </div>
+      )}
+
       <SpandukAwas aqi={awasAqi ? nilaiAqi : 0} gempa={!awasAqi && awasGempa ? latestEarthquake : null} kamus={kamus} />
 
       <div id="seksi-command-center" className="section-anchor">
@@ -347,7 +398,7 @@ export function App() {
       </div>
       </div>
 
-      <Footer onOpenWidget={() => setWidgetBuka(true)} />
+      <Footer status={statusSinyal} onOpenWidget={() => setWidgetBuka(true)} onOpenShare={() => setBagikanBuka(true)} />
 
       {showUpdateToast && (
         <div className="animate-fade-in" role="status" style={{
