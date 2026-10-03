@@ -19,11 +19,14 @@ import { CitySearchModal } from './components/common/CitySearchModal';
 import { ShareCardModal } from './components/common/ShareCardModal';
 import { EmergencyGuideModal } from './components/common/EmergencyGuideModal';
 import { KarhutlaListModal } from './components/common/KarhutlaListModal';
+import { LaporModal } from './components/common/LaporModal';
+import { DaftarLaporModal } from './components/common/DaftarLaporModal';
 import { VolcanoListModal } from './components/common/VolcanoListModal';
 import { EmbedWidgetModal } from './components/common/EmbedWidgetModal';
 import { Footer } from './components/common/Footer';
 import { WidgetEmbedView } from './components/embed/WidgetEmbedView';
 import { KOTA_JAGA } from './utils/cities';
+import { cariLaporan } from './utils/lapor';
 import { useGeolocation } from './hooks/useGeolocation';
 import { useDarkMode } from './hooks/useDarkMode';
 import { useDataJaga } from './hooks/useDashboardData';
@@ -95,6 +98,31 @@ export function App() {
   const [daruratBuka, setDaruratBuka] = useState(false);
   const [gunungBuka, setGunungBuka] = useState(false);
   const [apiBuka, setApiBuka] = useState(false);
+  const [laporBuka, setLaporBuka] = useState(false);
+  const [daftarBuka, setDaftarBuka] = useState(false);
+  const [sorotAwal, setSorotAwal] = useState(null);
+
+  // Deep-link ?lapor=id: sorot pin laporannya (sekali saat dibuka).
+  useEffect(() => {
+    const id = bacaParam('lapor');
+    if (!id) return;
+    const cocok = cariLaporan(id);
+    if (cocok) setSorotAwal(cocok);
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('lapor');
+      window.history.replaceState({}, '', url.pathname + url.search + url.hash);
+    } catch {}
+  }, []);
+
+  const terbangKeLaporan = (lapor) => {
+    if (!Number.isFinite(lapor?.lat) || !Number.isFinite(lapor?.lon)) return;
+    try {
+      window.dispatchEvent(new CustomEvent('jagakota:terbang-lapor', {
+        detail: { lat: lapor.lat, lon: lapor.lon },
+      }));
+    } catch {}
+  };
   const [widgetBuka, setWidgetBuka] = useState(false);
 
   const [pintaPasang, setPintaPasang] = useState(null);
@@ -214,6 +242,7 @@ export function App() {
       onToggleDark={toggleDarkMode}
       onOpenEmergency={() => setDaruratBuka(true)}
       onOpenShare={() => setBagikanBuka(true)}
+      onOpenLapor={() => setLaporBuka(true)}
     >
     <div {...gestur}>
       {!modeSemat && introTampil && (
@@ -237,6 +266,8 @@ export function App() {
       {daruratBuka && <EmergencyGuideModal isOpen={daruratBuka} onClose={() => setDaruratBuka(false)} />}
       {widgetBuka && <EmbedWidgetModal isOpen={widgetBuka} onClose={() => setWidgetBuka(false)} location={location} airQualityData={airQualityData} weatherData={weatherData} />}
       {apiBuka && <KarhutlaListModal isOpen={apiBuka} onClose={() => setApiBuka(false)} userLocation={location} hotspots={karhutlaData?.allHotspots || []} />}
+      {laporBuka && <LaporModal isOpen={laporBuka} onClose={() => setLaporBuka(false)} location={location} onRefreshGps={requestGpsLocation} gpsLoading={gpsLoading} />}
+      {daftarBuka && <DaftarLaporModal isOpen={daftarBuka} onClose={() => setDaftarBuka(false)} onPilih={terbangKeLaporan} onLaporBaru={() => setLaporBuka(true)} />}
       {gunungBuka && <VolcanoListModal isOpen={gunungBuka} onClose={() => setGunungBuka(false)} userLocation={location} />}
 
       {pintaPasang && spandukPwa && (
@@ -310,7 +341,7 @@ export function App() {
       <div style={{ marginBottom: '1.5rem' }}>
         <React.Suspense fallback={<LayarTunggu height="360px" pesan="Memuat Peta Interaktif Indonesia..." />}>
           <IndonesiaMap currentLocation={location} earthquakes={recentEarthquakes}
-            hotspots={karhutlaData?.allHotspots || []} onSelectCity={selectCity} />
+            hotspots={karhutlaData?.allHotspots || []} onSelectCity={selectCity} onOpenDaftar={() => setDaftarBuka(true)} sorotAwal={sorotAwal} />
         </React.Suspense>
       </div>
       </div>

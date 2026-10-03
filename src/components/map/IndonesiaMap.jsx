@@ -3,10 +3,11 @@ import { Circle, MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } 
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { INDONESIA_CITIES } from '../../utils/cities';
+import { muatLaporan, PETA_KATEGORI_LAPOR, KATEGORI_LAPOR, waktuRelatif, dukungLaporan, flagLaporan, sudahDukung, sudahFlag, escapeHtml } from '../../utils/lapor';
 import { INDONESIA_VOLCANOES, VOLCANO_STATUS_LEVELS } from '../../utils/volcanoes';
 import { SATELLITE_HOTSPOTS } from '../../utils/karhutla';
 import { translations } from '../../utils/i18n';
-import { Activity as IkonGempa, Compass as IkonKompas, Flame as IkonApi, MapPin as IkonPin, Mountain as IkonGunung, ZoomIn as IkonPlus, ZoomOut as IkonMinus } from 'lucide-react';
+import { Activity as IkonGempa, Compass as IkonKompas, Flame as IkonApi, MapPin as IkonPin, Mountain as IkonGunung, Users as IkonWarga, ZoomIn as IkonPlus, ZoomOut as IkonMinus } from 'lucide-react';
 
 // -----------------------------------------------------------------------------
 // Peta JagaKota — palet teal, radius, dan susunan layer khas sendiri.
@@ -74,6 +75,26 @@ const penandaApi = L.icon({
   iconAnchor: [12, 31],
   popupAnchor: [0, -28],
 });
+
+// Pin laporan warga: lingkaran warna kategori + garis putus-putus putih,
+// sengaja beda bentuk dari pin resmi (BMKG/gempa) agar langsung kentara.
+function rakitSvgLapor(warna) {
+  const raw = `
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28" width="28" height="28">
+    <circle cx="14" cy="14" r="12" fill="${warna}" stroke="#ffffff" stroke-width="2.4" stroke-dasharray="4 2.4"/>
+    <circle cx="14" cy="14" r="4.6" fill="#ffffff"/>
+  </svg>`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(raw)}`;
+}
+
+const PENANDA_LAPOR = Object.fromEntries(
+  KATEGORI_LAPOR.map((k) => [k.id, L.icon({
+    iconUrl: rakitSvgLapor(k.warna),
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+    popupAnchor: [0, -12],
+  })])
+);
 
 // Klasifikasi gempa versi JagaKota: ambang & warna sendiri.
 function tentukanWarnaGempa(magnitudo) {
@@ -240,7 +261,35 @@ const gayaTombolPopup = (warna) => ({
   width: '100%',
 });
 
-export function IndonesiaMap({ currentLocation, earthquakes, hotspots = SATELLITE_HOTSPOTS, onSelectCity }) {
+// Popup programatik untuk deep-link ?lapor=id: HTML string (escape manual!)
+// karena konten Leaflet di luar render React.
+function PembukaPopupLapor({ lapor }) {
+  const peta = useMap();
+
+  useEffect(() => {
+    if (!lapor || !Number.isFinite(lapor.lat) || !Number.isFinite(lapor.lon)) return;
+    const kat = PETA_KATEGORI_LAPOR[lapor.kategori] || {};
+    // Hanya dataURL gambar yang diizinkan (jangan render skema lain dari storage).
+    const fotoOk = typeof lapor.foto === 'string' && /^data:image\/(jpeg|png|webp);base64,/.test(lapor.foto);
+    const foto = fotoOk
+      ? `<a href="${lapor.foto}" target="_blank" rel="noreferrer" title="Buka foto ukuran penuh di tab baru"><img src="${lapor.foto}" alt="" style="width:100%;max-height:160px;object-fit:cover;border-radius:8px;margin-top:6px" /></a>`
+      : '';
+    const html = `
+      <div style="padding:6px;text-align:center;font-family:'Plus Jakarta Sans',sans-serif">
+        <span style="display:inline-block;padding:3px 8px;border-radius:9999px;background:${escapeHtml(kat.warna || '#6b7280')};color:#fff;font-size:11px;font-weight:800">${escapeHtml(kat.label || lapor.kategori)}</span>
+        <span style="display:inline-block;margin-left:4px;padding:3px 8px;border-radius:9999px;background:#fef3c7;color:#92400e;font-size:11px;font-weight:800">WARGA • belum verifikasi</span>
+        <p style="margin:6px 0 0 0;font-size:13px;color:#111827;font-weight:600">${escapeHtml(lapor.deskripsi)}</p>
+        ${foto}
+        <p style="margin:3px 0 0 0;font-size:11px;color:#6b7280">${escapeHtml(lapor.kota ? `${lapor.kota} • ` : '')}${escapeHtml(waktuRelatif(lapor.createdAt))}</p>
+      </div>`;
+    L.popup({ maxWidth: 260 }).setLatLng([lapor.lat, lapor.lon]).setContent(html).openOn(peta);
+    peta.flyTo([lapor.lat, lapor.lon], 14, { duration: 1.4, easeLinearity: 0.2 });
+  }, [lapor, peta]);
+
+  return null;
+}
+
+export function IndonesiaMap({ currentLocation, earthquakes, hotspots = SATELLITE_HOTSPOTS, onSelectCity, onOpenDaftar, sorotAwal }) {
   const kamus = translations;
   const namaAktif = petikNamaKotaAktif(currentLocation);
 
@@ -248,6 +297,9 @@ export function IndonesiaMap({ currentLocation, earthquakes, hotspots = SATELLIT
   const [lapisGunung, setLapisGunung] = useState(true);
   const [lapisApi, setLapisApi] = useState(true);
   const [lapisGempa, setLapisGempa] = useState(true);
+  const [lapisLapor, setLapisLapor] = useState(true);
+  const [saringKategori, setSaringKategori] = useState('semua');
+  const [laporan, setLaporan] = useState(() => muatLaporan());
   const [angkaZoom, setAngkaZoom] = useState(8);
 
   const [bidikPeta, setBidikPeta] = useState(() => ({
@@ -263,6 +315,25 @@ export function IndonesiaMap({ currentLocation, earthquakes, hotspots = SATELLIT
       setBidikPeta({ pusat: [currentLocation.lat, currentLocation.lon], tingkat: 10 });
     }
   }, [currentLocation?.lat, currentLocation?.lon]);
+
+  // Muat ulang pin warga saat ada laporan baru (event dari LaporModal).
+  useEffect(() => {
+    const muatUlang = () => setLaporan(muatLaporan());
+    window.addEventListener('jagakota:lapor-baru', muatUlang);
+    return () => window.removeEventListener('jagakota:lapor-baru', muatUlang);
+  }, []);
+
+  // Terbang ke pin dari DaftarLaporModal (event dari App).
+  useEffect(() => {
+    const terbang = (e) => {
+      const { lat, lon } = e.detail || {};
+      if (Number.isFinite(lat) && Number.isFinite(lon)) {
+        setBidikPeta({ pusat: [lat, lon], tingkat: 13 });
+      }
+    };
+    window.addEventListener('jagakota:terbang-lapor', terbang);
+    return () => window.removeEventListener('jagakota:terbang-lapor', terbang);
+  }, []);
 
   const lompatNusantara = useCallback(() => {
     setBidikPeta({ pusat: [...TITIK_TENGAH_NUSANTARA], tingkat: 5 });
@@ -286,6 +357,19 @@ export function IndonesiaMap({ currentLocation, earthquakes, hotspots = SATELLIT
     setBidikPeta({ pusat: [titik.lat, titik.lon], tingkat: 11 });
   }, []);
 
+  const dukung = useCallback((id) => {
+    const hasil = dukungLaporan(id);
+    if (hasil.ok) setLaporan(muatLaporan());
+    else if (hasil.galat?.[0]) window.alert(hasil.galat[0]);
+  }, []);
+
+  const laporkanHoaks = useCallback((id) => {
+    if (!window.confirm('Laporkan ini sebagai hoaks / tidak pantas?')) return;
+    const hasil = flagLaporan(id);
+    if (hasil.ok) setLaporan(muatLaporan());
+    else if (hasil.galat?.[0]) window.alert(hasil.galat[0]);
+  }, []);
+
   // Saring kota saat zoom jauh: tampilkan 60 hub + kota aktif via lookup Map.
   const kotaTerpampang = useMemo(() => {
     if (angkaZoom > 6) return INDONESIA_CITIES;
@@ -297,6 +381,10 @@ export function IndonesiaMap({ currentLocation, earthquakes, hotspots = SATELLIT
 
   const jumlahGempa = Array.isArray(earthquakes) ? earthquakes.length : 0;
   const jumlahApi = Array.isArray(hotspots) ? hotspots.length : 0;
+  const laporanTampil = (saringKategori === 'semua'
+    ? laporan
+    : laporan.filter((l) => l.kategori === saringKategori)
+  ).slice(0, 200); // cap performa: 200 terbaru (muatLaporan sudah terurut)
 
   return (
     <div className="flat-card" style={{ padding: '1.4rem', position: 'relative' }}>
@@ -310,8 +398,56 @@ export function IndonesiaMap({ currentLocation, earthquakes, hotspots = SATELLIT
           <PilLapisan menyala={lapisGunung} warnaMenyala="#c2410c" Simbol={IkonGunung} teks={`Gunung Api (${INDONESIA_VOLCANOES.length})`} ketuk={() => setLapisGunung((v) => !v)} />
           <PilLapisan menyala={lapisApi} warnaMenyala={PALET_JAGAKOTA.apiBara} Simbol={IkonApi} teks={`Titik Panas (${jumlahApi})`} ketuk={() => setLapisApi((v) => !v)} />
           <PilLapisan menyala={lapisKota} warnaMenyala={PALET_JAGAKOTA.pinKota} Simbol={IkonPin} teks={`Kota (${kotaTerpampang.length})`} ketuk={() => setLapisKota((v) => !v)} />
+          <PilLapisan menyala={lapisLapor} warnaMenyala="#059669" Simbol={IkonWarga} teks={saringKategori === 'semua' ? `Lapor Warga (${laporan.length})` : `Lapor Warga (${laporanTampil.length}/${laporan.length})`} ketuk={() => { if (lapisLapor) setSaringKategori('semua'); setLapisLapor((v) => !v); }} />
         </div>
       </div>
+      {lapisLapor && (
+        <div style={{ display: 'flex', gap: '0.4rem', overflowX: 'auto', marginBottom: '0.8rem', paddingBottom: '2px' }}>
+          {[{ id: 'semua', label: 'Semua' }, ...KATEGORI_LAPOR].map((k) => {
+            const aktif = saringKategori === k.id;
+            return (
+              <button
+                key={k.id}
+                type="button"
+                onClick={() => setSaringKategori(k.id)}
+                aria-pressed={aktif}
+                style={{
+                  flexShrink: 0,
+                  padding: '4px 10px',
+                  borderRadius: '9999px',
+                  fontSize: '0.7rem',
+                  fontWeight: '800',
+                  cursor: 'pointer',
+                  backgroundColor: aktif ? '#059669' : 'var(--bg-muted)',
+                  color: aktif ? '#fff' : 'var(--text-muted)',
+                  border: '1px solid var(--border-flat)',
+                }}
+              >
+                {k.label}
+              </button>
+            );
+          })}
+          {onOpenDaftar && (
+            <button
+              type="button"
+              onClick={onOpenDaftar}
+              style={{
+                flexShrink: 0,
+                padding: '4px 10px',
+                borderRadius: '9999px',
+                fontSize: '0.7rem',
+                fontWeight: '800',
+                cursor: 'pointer',
+                backgroundColor: 'var(--bg-card)',
+                color: '#059669',
+                border: '1px dashed #059669',
+              }}
+            >
+              ☰ Daftar Laporan
+            </button>
+          )}
+        </div>
+      )}
 
       <div style={{ position: 'relative', zIndex: 0, isolation: 'isolate', width: '100%', height: '440px', borderRadius: '14px', overflow: 'hidden', border: '1px solid var(--border-flat)' }}>
         <MapContainer
@@ -329,6 +465,7 @@ export function IndonesiaMap({ currentLocation, earthquakes, hotspots = SATELLIT
         >
           <PenyelarasPeta bidikan={bidikPeta} kabariZoom={setAngkaZoom} />
           <PanelNavigasi labelKota={namaAktif} melompatNusantara={lompatNusantara} melompatKota={lompatKotaAktif} />
+          {sorotAwal && <PembukaPopupLapor lapor={sorotAwal} />}
 
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors'
@@ -449,6 +586,70 @@ export function IndonesiaMap({ currentLocation, earthquakes, hotspots = SATELLIT
                       <button onClick={() => pilihKotaLaluTerbang(kota)} style={gayaTombolPopup(PALET_JAGAKOTA.pinKota)}>
                         Pantau Kota Ini
                       </button>
+                    </div>
+                  </Popup>
+                </Marker>
+              );
+            })}
+
+          {/* LAPOR WARGA: pin lingkaran warna kategori, selalu tampil penuh (laporan sedikit). */}
+          {lapisLapor &&
+            laporanTampil.map((lapor) => {
+              if (!Number.isFinite(lapor?.lat) || !Number.isFinite(lapor?.lon)) return null;
+              const kat = PETA_KATEGORI_LAPOR[lapor.kategori];
+              if (!kat) return null;
+              return (
+                <Marker
+                  key={lapor.id}
+                  position={[lapor.lat, lapor.lon]}
+                  icon={PENANDA_LAPOR[lapor.kategori]}
+                >
+                  <Popup>
+                    <div style={gayaPopup}>
+                      <span style={{ display: 'inline-block', padding: '3px 8px', borderRadius: '9999px', backgroundColor: kat.warna, color: '#fff', fontSize: '0.7rem', fontWeight: '800' }}>
+                        {kat.label}
+                      </span>
+                      <span style={{ display: 'inline-block', marginLeft: '4px', padding: '3px 8px', borderRadius: '9999px', backgroundColor: '#fef3c7', color: '#92400e', fontSize: '0.68rem', fontWeight: '800' }}>
+                        WARGA • belum verifikasi
+                      </span>
+                      <p style={{ margin: '6px 0 0 0', fontSize: '0.8rem', color: '#111827', fontWeight: '600' }}>{lapor.deskripsi}</p>
+                      {lapor.foto && (
+                        <a
+                          href={lapor.foto}
+                          target="_blank"
+                          rel="noreferrer"
+                          title="Buka foto ukuran penuh di tab baru"
+                        >
+                          <img
+                            src={lapor.foto}
+                            alt={`Foto ${kat.label}`}
+                            loading="lazy"
+                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                            style={{ width: '100%', maxHeight: '160px', objectFit: 'cover', borderRadius: '8px', marginTop: '6px' }}
+                          />
+                        </a>
+                      )}
+                      <p title={new Date(lapor.createdAt).toLocaleString('id-ID')} style={{ margin: '3px 0 0 0', fontSize: '0.7rem', color: '#6b7280' }}>
+                        {lapor.kota ? `${lapor.kota} • ` : ''}{waktuRelatif(lapor.createdAt)}
+                        {lapor.nama ? ` • oleh ${lapor.nama}` : ''}
+                      </p>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
+                        <button
+                          onClick={() => dukung(lapor.id)}
+                          disabled={sudahDukung(lapor.id)}
+                          style={{ ...gayaTombolPopup('#059669'), width: 'auto', flex: 1, opacity: sudahDukung(lapor.id) ? 0.6 : 1 }}
+                        >
+                          👍 {sudahDukung(lapor.id) ? 'Didukung' : 'Dukung'} • {lapor.dukung || 0}
+                        </button>
+                        <button
+                          onClick={() => laporkanHoaks(lapor.id)}
+                          disabled={sudahFlag(lapor.id)}
+                          title="Laporkan sebagai hoaks"
+                          style={{ ...gayaTombolPopup('#b45309'), width: 'auto', opacity: sudahFlag(lapor.id) ? 0.6 : 1 }}
+                        >
+                          {sudahFlag(lapor.id) ? '🚩 Dilaporkan' : '🚩 Hoaks?'}
+                        </button>
+                      </div>
                     </div>
                   </Popup>
                 </Marker>

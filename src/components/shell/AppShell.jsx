@@ -179,6 +179,7 @@ export function AppShell({
   onToggleDark,
   onOpenEmergency,
   onOpenShare,
+  onOpenLapor,
   children,
 }) {
   const [activeId, setActiveId] = useState('command-center');
@@ -188,6 +189,11 @@ export function AppShell({
     if (item.action === 'share') {
       setDrawerOpen(false);
       onOpenShare?.();
+      return;
+    }
+    if (item.action === 'lapor') {
+      setDrawerOpen(false);
+      onOpenLapor?.();
       return;
     }
     setActiveId(item.id);
