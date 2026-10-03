@@ -55,7 +55,7 @@ export function KimiaCard({ current, locationName, province, loading }) {
         </span>
       </div>
 
-      <h3 className="mt-2 text-lg font-black tracking-tight text-slate-900 dark:text-white">
+      <h3 className="font-display-k mt-2 text-lg font-black tracking-tight text-slate-900 dark:text-white">
         Rincian Penyumbang Emisi {kota}
       </h3>
       <p className="text-[12px] font-medium text-slate-500">
@@ -71,7 +71,7 @@ export function KimiaCard({ current, locationName, province, loading }) {
                 <p className="text-[14px] font-black text-slate-900 dark:text-white">{meta.judul}</p>
                 <p className="text-[12px] font-medium text-slate-500">{meta.desc}</p>
               </div>
-              <p className="shrink-0 text-[15px] font-black tabular-nums text-slate-900 dark:text-white">
+              <p className="font-display-k shrink-0 text-[15px] font-black tabular-nums text-slate-900 dark:text-white">
                 {z.nilai}
                 {z.satuan && <span className="ml-1 text-[11px] font-bold text-slate-400">{z.satuan}</span>}
               </p>
@@ -94,7 +94,7 @@ export function KimiaCard({ current, locationName, province, loading }) {
               <p className="text-[10px] font-extrabold uppercase tracking-wide text-slate-500">
                 {meta.mini[0]} <span className="text-slate-400">({meta.mini[1]})</span>
               </p>
-              <p className="mt-0.5 text-[15px] font-black tabular-nums text-slate-900 dark:text-white">
+              <p className="font-display-k mt-0.5 text-[15px] font-black tabular-nums text-slate-900 dark:text-white">
                 {z.nilai}
                 {z.satuan && <span className="ml-0.5 text-[10px] font-bold text-slate-400">{z.satuan}</span>}
               </p>

@@ -628,7 +628,46 @@ button, input, select, a {
 
 .awan-napas { animation: awan-napas 5s ease-in-out infinite; }
 
-/* Ticker Announcement Bar */
+/* Trio udara dempet ala mock: satu panel menyatu, sekat antar card.
+   Mobile menumpuk (sekat horizontal), desktop 3 kolom (sekat vertikal). */
+.gabung-trio {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  border: var(--border-thick);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+  background-color: var(--bg-card);
+}
+
+.gabung-trio > section {
+  border: 0 !important;
+  border-radius: 0 !important;
+}
+
+.gabung-trio > section + section {
+  border-top: var(--border-thick) !important;
+}
+
+@media (min-width: 1024px) {
+  .gabung-trio {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .gabung-trio > section + section {
+    border-top: 0 !important;
+    border-left: var(--border-thick) !important;
+  }
+}
+
+/* Font ala mock: Space Grotesk (judul & angka), JetBrains Mono (meta). */
+.font-display-k {
+  font-family: 'Space Grotesk', 'Outfit', sans-serif;
+}
+
+.font-mono-k {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+}
 .ticker-viewport {
   overflow: hidden;
   flex: 1;

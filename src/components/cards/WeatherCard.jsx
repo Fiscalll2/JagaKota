@@ -74,7 +74,7 @@ export function WeatherCard({ data, locationName, province, loading }) {
         <div className="mt-2 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <Ikon size={44} style={{ color: visual.color }} strokeWidth={2} className="shrink-0" />
-            <span className="text-6xl font-black tabular-nums tracking-tighter text-slate-900 leading-none">
+            <span className="font-display-k text-6xl font-black tabular-nums tracking-tighter text-slate-900 leading-none">
               {current.temp ?? '--'}°
             </span>
             <div className="pb-0.5">
@@ -124,7 +124,7 @@ export function WeatherCard({ data, locationName, province, loading }) {
           ))}
         </ul>
 
-        <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400">
+        <div className="font-mono-k flex items-center justify-between text-[11px] font-semibold text-slate-400">
           <span>Sumber: Open-Meteo & BMKG</span>
           {jam && <span>{jam}</span>}
         </div>

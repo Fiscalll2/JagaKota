@@ -66,13 +66,13 @@ export function AqiCard({ data, loading, locationName, updatedAt }) {
 
         <div className="flex items-stretch gap-4">
           <div className="shrink-0 w-24 rounded-2xl border-2 border-slate-200 bg-white flex flex-col items-center justify-center py-3">
-            <span className="text-4xl font-black tabular-nums leading-none" style={{ color: info.color }}>
+            <span className="font-display-k text-4xl font-black tabular-nums leading-none" style={{ color: info.color }}>
               {current.aqi ?? '--'}
             </span>
             <span className="text-[10px] font-bold text-slate-500 mt-1">US-AQI</span>
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="text-xl font-black text-slate-900 leading-tight">
+            <h3 className="font-display-k text-xl font-black text-slate-900 leading-tight">
               Udara lagi {info.label.toLowerCase()}, Lur.
             </h3>
             <p className="text-[13px] font-medium text-slate-600 leading-snug mt-1">
@@ -139,7 +139,7 @@ export function AqiCard({ data, loading, locationName, updatedAt }) {
         </div>
 
         {locationName && (
-          <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400">
+          <div className="font-mono-k flex items-center justify-between text-[11px] font-semibold text-slate-400">
             <span>Pos {locationName}</span>
             {relatif && <span className="font-bold text-emerald-600">{relatif}</span>}
           </div>

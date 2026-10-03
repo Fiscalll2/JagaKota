@@ -81,13 +81,13 @@ export function UvCard({ uvIndex, hourly, loading }) {
           </svg>
           <span className="absolute inset-x-0 bottom-0 flex flex-col items-center">
             <SunMedium size={18} style={{ color: info.color }} />
-            <span className="text-2xl font-black tabular-nums leading-none" style={{ color: info.color }}>
+            <span className="font-display-k text-2xl font-black tabular-nums leading-none" style={{ color: info.color }}>
               {nilai}
             </span>
           </span>
         </div>
         <div className="min-w-0">
-          <h3 className="text-lg font-black text-slate-900 leading-tight">{info.label}</h3>
+          <h3 className="font-display-k text-lg font-black text-slate-900 leading-tight">{info.label}</h3>
           <p className="text-[13px] font-medium text-slate-600 leading-snug">{info.advice}</p>
         </div>
       </div>
@@ -135,7 +135,7 @@ export function UvCard({ uvIndex, hourly, loading }) {
         </div>
       </div>
 
-      <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400">
+      <div className="font-mono-k flex items-center justify-between text-[11px] font-semibold text-slate-400">
         <span>Puncak UV{puncak.jam ? `: ${puncak.jam}` : ' hari ini'} (Est. Lv {puncak.level})</span>
         {nilai <= 2
           ? <span className="font-extrabold text-emerald-600">Aman saat ini</span>

@@ -276,7 +276,7 @@ export function App() {
       </div>
 
       <div id="seksi-udara" className="section-anchor">
-      <div className="dashboard-grid-3">
+      <div className="gabung-trio">
         <AqiCard data={airQualityData} loading={sibuk} locationName={location.name} updatedAt={lastUpdated} />
         <WeatherCard data={weatherData} locationName={location.name} province={location.province} loading={sibuk} />
         <UvCard uvIndex={weatherData?.current?.uvIndex || 0} hourly={weatherData?.hourly} loading={sibuk} />
