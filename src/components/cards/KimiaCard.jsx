@@ -27,7 +27,7 @@ export function KimiaCard({ current, locationName, province, loading }) {
             <div key={i} className="h-14 bg-slate-200 rounded-xl" />
           ))}
         </div>
-        <div className="grid grid-cols-3 gap-2 mt-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
           {[0, 1, 2].map((i) => (
             <div key={i} className="h-20 bg-slate-200 rounded-xl" />
           ))}
@@ -86,7 +86,7 @@ export function KimiaCard({ current, locationName, province, loading }) {
         })}
       </div>
 
-      <div className="mt-2 grid grid-cols-3 gap-2">
+      <div className="mt-2 grid grid-cols-2 sm:grid-cols-3 gap-2">
         {mini.map((z) => {
           const meta = NAMA_PANJANG[z.id] || { mini: [z.nama, ''] };
           return (
