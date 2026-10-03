@@ -7,7 +7,7 @@ import { muatLaporan, PETA_KATEGORI_LAPOR, KATEGORI_LAPOR, waktuRelatif, dukungL
 import { INDONESIA_VOLCANOES, VOLCANO_STATUS_LEVELS } from '../../utils/volcanoes';
 import { SATELLITE_HOTSPOTS } from '../../utils/karhutla';
 import { translations } from '../../utils/i18n';
-import { Activity as IkonGempa, Compass as IkonKompas, Flame as IkonApi, MapPin as IkonPin, Mountain as IkonGunung, Users as IkonWarga, ZoomIn as IkonPlus, ZoomOut as IkonMinus } from 'lucide-react';
+import { Activity as IkonGempa, Compass as IkonKompas, Flame as IkonApi, MapPin as IkonPin, Mountain as IkonGunung, Users as IkonWarga, ZoomIn as IkonPlus, ZoomOut as IkonMinus, X as IkonTutup } from 'lucide-react';
 
 // -----------------------------------------------------------------------------
 // Peta JagaKota — palet teal, radius, dan susunan layer khas sendiri.
@@ -174,60 +174,101 @@ function PenyelarasPeta({ bidikan, kabariZoom }) {
   return null;
 }
 
-// Panel tombol melayang di kanan atas peta.
+// Speed-dial navigasi: 1 tombol kompas saat tertutup (ramping di Android),
+// mekar ke atas saat diketuk. Tutup otomatis saat peta digeser / Escape.
 function PanelNavigasi({ labelKota, melompatNusantara, melompatKota }) {
   const peta = useMap();
-  const bingkai = {
-    position: 'absolute',
-    top: '14px',
-    right: '14px',
-    zIndex: 1000,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px',
-  };
-  const tombolKecil = {
-    width: '38px',
-    height: '38px',
+  const [buka, setBuka] = useState(false);
+
+  useMapEvents({
+    dragstart: () => setBuka(false),
+  });
+
+  useEffect(() => {
+    if (!buka) return;
+    const tutup = (e) => { if (e.key === 'Escape') setBuka(false); };
+    window.addEventListener('keydown', tutup);
+    return () => window.removeEventListener('keydown', tutup);
+  }, [buka]);
+
+  const lingkaran = {
+    width: '42px',
+    height: '42px',
+    borderRadius: '9999px',
     backgroundColor: 'var(--bg-card)',
     color: 'var(--text-main)',
-    border: 'none',
+    border: '1px solid var(--border-flat)',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.16)',
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
   };
-  const tombolTeks = {
-    padding: '7px 11px',
-    minHeight: '38px',
-    borderRadius: '10px',
-    backgroundColor: 'var(--bg-card)',
-    border: '1px solid var(--border-flat)',
-    boxShadow: '0 6px 16px rgba(13, 148, 136, 0.14)',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    fontSize: '0.74rem',
+  const labelPil = {
+    fontSize: '0.7rem',
     fontWeight: '800',
+    backgroundColor: 'var(--bg-card)',
+    color: 'var(--text-main)',
+    border: '1px solid var(--border-flat)',
+    borderRadius: '9999px',
+    padding: '4px 10px',
+    marginRight: '8px',
+    whiteSpace: 'nowrap',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
   };
+
+  const aksi = [
+    { id: 'in', label: 'Perbesar', Ikon: IkonPlus, jalan: () => peta.zoomIn(), tutup: false },
+    { id: 'out', label: 'Perkecil', Ikon: IkonMinus, jalan: () => peta.zoomOut(), tutup: false },
+    { id: 'kota', label: labelKota ? `Kota: ${labelKota}` : 'Kota aktif', Ikon: IkonPin, jalan: melompatKota, tutup: true, warna: PALET_JAGAKOTA.tombolAksen },
+    { id: 'nusantara', label: 'Nusantara', Ikon: IkonKompas, jalan: melompatNusantara, tutup: true },
+  ];
+
   return (
-    <div style={bingkai}>
-      <div style={{ display: 'flex', flexDirection: 'column', borderRadius: '10px', overflow: 'hidden', border: '1px solid var(--border-flat)', boxShadow: '0 6px 16px rgba(0,0,0,0.14)' }}>
-        <button onClick={() => peta.zoomIn()} title="Perbesar peta" aria-label="Perbesar peta" style={{ ...tombolKecil, borderBottom: '1px solid var(--border-flat)' }}>
-          <IkonPlus size={17} />
-        </button>
-        <button onClick={() => peta.zoomOut()} title="Perkecil peta" aria-label="Perkecil peta" style={tombolKecil}>
-          <IkonMinus size={17} />
-        </button>
-      </div>
-      <button onClick={melompatKota} title={`Terbang ke ${labelKota || 'kota aktif'}`} aria-label="Terbang ke kota aktif" style={{ ...tombolTeks, color: PALET_JAGAKOTA.tombolAksen }}>
-        <IkonPin size={14} />
-        <span>Kota</span>
-      </button>
-      <button onClick={melompatNusantara} title="Lihat seluruh Nusantara" aria-label="Lihat seluruh Nusantara" style={{ ...tombolTeks, color: 'var(--text-main)' }}>
-        <IkonKompas size={14} />
-        <span>Nusantara</span>
+    <div style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+      {aksi.map((a, i) => (
+        <div
+          key={a.id}
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
+            opacity: buka ? 1 : 0,
+            transform: buka ? 'translateY(0) scale(1)' : 'translateY(10px) scale(0.85)',
+            transition: 'opacity 160ms ease, transform 160ms ease',
+            transitionDelay: buka ? `${i * 35}ms` : '0ms',
+            pointerEvents: buka ? 'auto' : 'none',
+          }}
+        >
+          <span style={labelPil}>{a.label}</span>
+          <button
+            onClick={() => { a.jalan(); if (a.tutup) setBuka(false); }}
+            title={a.label}
+            aria-label={a.label}
+            tabIndex={buka ? 0 : -1}
+            style={{ ...lingkaran, color: a.warna || 'var(--text-main)' }}
+          >
+            <a.Ikon size={17} />
+          </button>
+        </div>
+      ))}
+      <button
+        onClick={() => setBuka((v) => !v)}
+        title={buka ? 'Tutup navigasi peta' : 'Buka navigasi peta'}
+        aria-label={buka ? 'Tutup navigasi peta' : 'Buka navigasi peta'}
+        aria-expanded={buka}
+        style={{
+          ...lingkaran,
+          width: '46px',
+          height: '46px',
+          backgroundColor: PALET_JAGAKOTA.pinKotaAktif,
+          borderColor: PALET_JAGAKOTA.pinKotaAktif,
+          color: '#fff',
+          boxShadow: '0 6px 18px rgba(13,148,136,0.4)',
+        }}
+      >
+        <span style={{ display: 'flex', transform: buka ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 180ms ease' }}>
+          {buka ? <IkonTutup size={20} /> : <IkonKompas size={20} />}
+        </span>
       </button>
     </div>
   );
