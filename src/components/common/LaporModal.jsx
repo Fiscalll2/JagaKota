@@ -133,7 +133,7 @@ export function LaporModal({ isOpen, onClose, location, onRefreshGps, gpsLoading
     setTerkirim(hasil.laporan);
     setTotal(jumlahLaporan());
     try {
-      window.dispatchEvent(new Event('jagakota:lapor-baru'));
+      window.dispatchEvent(new CustomEvent('jagakota:lapor-baru', { detail: { id: hasil.laporan.id } }));
     } catch {}
   };
 

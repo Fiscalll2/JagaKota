@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Menu, X, Sun, Moon, ShieldAlert, Compass, ChevronRight } from 'lucide-react';
+import { Menu, X, Sun, Moon, ShieldAlert, ShieldCheck, Compass, ChevronRight } from 'lucide-react';
 import { LogoMark } from '../common/LogoMark';
 import { NAV_ITEMS, SECTION_TARGETS } from './navigation';
 import { cn } from '../../lib/utils';
@@ -28,12 +28,12 @@ function LocationPill({ location, onOpenSearch, onGpsClick, gpsLoading }) {
     : (displayName.includes('Jakarta') ? 'DKI Jakarta' : (location?.province || 'Indonesia'));
 
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex min-w-0 items-center gap-1.5">
       <button
         type="button"
         onClick={onOpenSearch}
         title="Ganti kota pantauan"
-        className="flex min-h-[52px] flex-1 items-center gap-2 rounded-xl bg-slate-100 px-3 py-2 text-left transition hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700"
+        className="flex min-w-0 min-h-[52px] flex-1 items-center gap-2 rounded-xl bg-slate-100 px-3 py-2 text-left transition hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700"
       >
         <span className="relative flex h-2.5 w-2.5 shrink-0">
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-60" />
@@ -50,7 +50,7 @@ function LocationPill({ location, onOpenSearch, onGpsClick, gpsLoading }) {
         <span className="shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-extrabold text-emerald-700 dark:text-emerald-300">
           Aktif
         </span>
-        <ChevronRight size={14} className="shrink-0 text-slate-400" />
+        <ChevronRight size={14} className="hidden shrink-0 text-slate-400 min-[420px]:block" />
       </button>
       <button
         type="button"
@@ -59,7 +59,7 @@ function LocationPill({ location, onOpenSearch, onGpsClick, gpsLoading }) {
         aria-label="Pakai lokasi saya"
         title="Pakai lokasi saya biar info kotamu akurat"
         className={cn(
-          'flex min-h-[52px] min-w-[44px] items-center justify-center rounded-xl border-2 transition',
+          'flex min-h-[52px] w-11 shrink-0 items-center justify-center rounded-xl border-2 transition',
           location?.isGps
             ? 'border-emerald-600 bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
             : 'border-slate-200 bg-white text-slate-500 hover:border-emerald-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300'
@@ -247,6 +247,12 @@ export function AppShell({
       <CivicNav activeId={activeId} onNavigate={handleNavigate} />
       <CivicActions onNavigate={handleNavigate} />
       <div className="mt-auto flex flex-col gap-2 pt-4">
+        <div className="flex items-start gap-2 rounded-xl border border-slate-200/80 bg-slate-50 px-3 py-2.5 dark:border-slate-800 dark:bg-slate-800/40">
+          <ShieldCheck size={15} className="mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+          <p className="text-[10.5px] font-semibold leading-relaxed text-slate-500 dark:text-slate-400">
+            Data resmi BMKG • PVMBG • KLHK • NASA. Selalu cek kanal resmi untuk keputusan darurat.
+          </p>
+        </div>
         <Button variant="destructive" size="sm" onClick={onOpenEmergency} className="w-full">
           <ShieldAlert /> Darurat 112
         </Button>

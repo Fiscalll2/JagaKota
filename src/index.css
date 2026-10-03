@@ -628,6 +628,95 @@ button, input, select, a {
 
 .awan-napas { animation: awan-napas 5s ease-in-out infinite; }
 
+/* Pin laporan warga: dot kecil + gabungan angka (divIcon Leaflet). */
+.jk-divikosong {
+  background: none;
+  border: none;
+}
+
+.jk-pin-wrap {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35));
+}
+
+.jk-pin {
+  position: relative;
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  background: var(--jk-warna, #059669);
+  border: 2px solid #ffffff;
+}
+
+.jk-pin::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 9999px;
+  background: #ffffff;
+}
+
+/* Cincin denyut: border + transform/opacity (tanpa box-shadow yang di-reset global). */
+.jk-pin-baru .jk-pin::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 9999px;
+  border: 2px solid var(--jk-warna, #059669);
+  animation: jk-pin-denyut 2.2s ease-out infinite;
+}
+
+.jk-gabung {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: var(--jk-warna, #059669);
+  border: 2px solid #ffffff;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  font-family: 'Outfit', sans-serif;
+}
+
+/* Pulse pin baru: pop sekali + denyut cincin (transform/opacity saja). */
+@keyframes jk-pin-pop {
+  0% { transform: scale(0.3); }
+  60% { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+
+@keyframes jk-pin-denyut {
+  0% { transform: scale(0.7); opacity: 0.8; }
+  100% { transform: scale(2.1); opacity: 0; }
+}
+
+.jk-pin-baru .jk-pin {
+  animation: jk-pin-pop 0.45s ease-out;
+}
+
+.jk-pin-baru .jk-gabung {
+  animation: jk-pin-pop 0.45s ease-out;
+}
+
+.jk-pin-baru .jk-pin::after {
+  animation: jk-pin-denyut 2.2s ease-out 0.45s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jk-pin-baru .jk-pin,
+  .jk-pin-baru .jk-gabung {
+    animation: none !important;
+  }
+}
+
 /* Font ala mock: Space Grotesk (judul & angka), JetBrains Mono (meta). */
 .font-display-k {
   font-family: 'Space Grotesk', 'Outfit', sans-serif;

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Circle, MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -76,25 +76,37 @@ const penandaApi = L.icon({
   popupAnchor: [0, -28],
 });
 
-// Pin laporan warga: lingkaran warna kategori + garis putus-putus putih,
-// sengaja beda bentuk dari pin resmi (BMKG/gempa) agar langsung kentara.
-function rakitSvgLapor(warna) {
-  const raw = `
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28" width="28" height="28">
-    <circle cx="14" cy="14" r="12" fill="${warna}" stroke="#ffffff" stroke-width="2.4" stroke-dasharray="4 2.4"/>
-    <circle cx="14" cy="14" r="4.6" fill="#ffffff"/>
-  </svg>`;
-  return `data:image/svg+xml;utf8,${encodeURIComponent(raw)}`;
+// Pin laporan warga: dot kecil 16px via divIcon (CSS di index.css) —
+// ringan, bisa dianimasikan, dan beda bentuk dari pin resmi.
+function ikonPinLapor(warna, { baru = false, gabung = 0 } = {}) {
+  const dalam = gabung > 1
+    ? `<span class="jk-gabung" style="--jk-warna:${warna}">${gabung > 9 ? '9+' : gabung}</span>`
+    : `<span class="jk-pin"></span>`;
+  return L.divIcon({
+    html: `<span class="jk-pin-wrap${baru ? ' jk-pin-baru' : ''}" style="--jk-warna:${warna}">${dalam}</span>`,
+    className: 'jk-divikosong',
+    iconSize: [30, 30],
+    iconAnchor: [15, 15],
+    popupAnchor: [0, -13],
+  });
 }
 
-const PENANDA_LAPOR = Object.fromEntries(
-  KATEGORI_LAPOR.map((k) => [k.id, L.icon({
-    iconUrl: rakitSvgLapor(k.warna),
-    iconSize: [28, 28],
-    iconAnchor: [14, 14],
-    popupAnchor: [0, -12],
-  })])
-);
+// Kelompokkan laporan per sel piksel peta (anti-tindih): sel ~44px sesuai zoom.
+function kelompokkanLaporan(daftar, zoom) {
+  const selDeg = (360 / (256 * Math.pow(2, Math.max(zoom, 1)))) * 44;
+  const grup = new Map();
+  for (const l of daftar) {
+    const kunci = `${Math.floor(l.lat / selDeg)}:${Math.floor(l.lon / selDeg)}`;
+    if (!grup.has(kunci)) grup.set(kunci, { kunci, items: [] });
+    grup.get(kunci).items.push(l);
+  }
+  return [...grup.values()].map(({ kunci, items }) => ({
+    kunci,
+    lat: items.reduce((a, b) => a + b.lat, 0) / items.length,
+    lon: items.reduce((a, b) => a + b.lon, 0) / items.length,
+    items,
+  }));
+}
 
 // Klasifikasi gempa versi JagaKota: ambang & warna sendiri.
 function tentukanWarnaGempa(magnitudo) {
@@ -300,6 +312,8 @@ export function IndonesiaMap({ currentLocation, earthquakes, hotspots = SATELLIT
   const [lapisLapor, setLapisLapor] = useState(true);
   const [saringKategori, setSaringKategori] = useState('semua');
   const [laporan, setLaporan] = useState(() => muatLaporan());
+  const [pinBaruId, setPinBaruId] = useState(null);
+  const timerPinBaru = useRef(null);
   const [angkaZoom, setAngkaZoom] = useState(8);
 
   const [bidikPeta, setBidikPeta] = useState(() => ({
@@ -317,10 +331,27 @@ export function IndonesiaMap({ currentLocation, earthquakes, hotspots = SATELLIT
   }, [currentLocation?.lat, currentLocation?.lon]);
 
   // Muat ulang pin warga saat ada laporan baru (event dari LaporModal).
+  // Pin terbaru dapat animasi pop sekali (~4 detik).
   useEffect(() => {
-    const muatUlang = () => setLaporan(muatLaporan());
+    const muatUlang = (e) => {
+      const daftar = muatLaporan();
+      setLaporan(daftar);
+      // detail event bisa tak terbaca lintas-compartment (evaluasi otomasi) → fallback terbaru.
+      let idBaru = null;
+      try {
+        idBaru = e?.detail?.id || null;
+      } catch {
+        idBaru = null;
+      }
+      setPinBaruId(idBaru || daftar[0]?.id || null);
+      if (timerPinBaru.current) clearTimeout(timerPinBaru.current);
+      timerPinBaru.current = setTimeout(() => setPinBaruId(null), 4000);
+    };
     window.addEventListener('jagakota:lapor-baru', muatUlang);
-    return () => window.removeEventListener('jagakota:lapor-baru', muatUlang);
+    return () => {
+      window.removeEventListener('jagakota:lapor-baru', muatUlang);
+      if (timerPinBaru.current) clearTimeout(timerPinBaru.current);
+    };
   }, []);
 
   // Terbang ke pin dari DaftarLaporModal (event dari App).
@@ -381,10 +412,21 @@ export function IndonesiaMap({ currentLocation, earthquakes, hotspots = SATELLIT
 
   const jumlahGempa = Array.isArray(earthquakes) ? earthquakes.length : 0;
   const jumlahApi = Array.isArray(hotspots) ? hotspots.length : 0;
-  const laporanTampil = (saringKategori === 'semua'
-    ? laporan
-    : laporan.filter((l) => l.kategori === saringKategori)
-  ).slice(0, 200); // cap performa: 200 terbaru (muatLaporan sudah terurut)
+  // Dasar tampil (cap 200 terbaru) — memo agar grup tidak dihitung ulang tiap render.
+  const laporanDasar = useMemo(() => (
+    saringKategori === 'semua'
+      ? laporan
+      : laporan.filter((l) => l.kategori === saringKategori)
+  ).slice(0, 200), [laporan, saringKategori]); // cap performa: 200 terbaru (muatLaporan sudah terurut)
+
+  // Grup anti-tindih per zoom; zoom nasional (<=5) hanya tampilkan grup berisi >1.
+  const grupLapor = useMemo(
+    () => kelompokkanLaporan(laporanDasar, angkaZoom),
+    [laporanDasar, angkaZoom]
+  );
+  const grupTampil = angkaZoom > 5
+    ? grupLapor
+    : grupLapor.filter((g) => g.items.length > 1 || g.items.some((i) => i.id === pinBaruId));
 
   return (
     <div className="flat-card" style={{ padding: '1.4rem', position: 'relative' }}>
@@ -398,7 +440,7 @@ export function IndonesiaMap({ currentLocation, earthquakes, hotspots = SATELLIT
           <PilLapisan menyala={lapisGunung} warnaMenyala="#c2410c" Simbol={IkonGunung} teks={`Gunung Api (${INDONESIA_VOLCANOES.length})`} ketuk={() => setLapisGunung((v) => !v)} />
           <PilLapisan menyala={lapisApi} warnaMenyala={PALET_JAGAKOTA.apiBara} Simbol={IkonApi} teks={`Titik Panas (${jumlahApi})`} ketuk={() => setLapisApi((v) => !v)} />
           <PilLapisan menyala={lapisKota} warnaMenyala={PALET_JAGAKOTA.pinKota} Simbol={IkonPin} teks={`Kota (${kotaTerpampang.length})`} ketuk={() => setLapisKota((v) => !v)} />
-          <PilLapisan menyala={lapisLapor} warnaMenyala="#059669" Simbol={IkonWarga} teks={saringKategori === 'semua' ? `Lapor Warga (${laporan.length})` : `Lapor Warga (${laporanTampil.length}/${laporan.length})`} ketuk={() => { if (lapisLapor) setSaringKategori('semua'); setLapisLapor((v) => !v); }} />
+          <PilLapisan menyala={lapisLapor} warnaMenyala="#059669" Simbol={IkonWarga} teks={saringKategori === 'semua' ? `Lapor Warga (${laporan.length})` : `Lapor Warga (${laporanDasar.length}/${laporan.length})`} ketuk={() => { if (lapisLapor) setSaringKategori('semua'); setLapisLapor((v) => !v); }} />
         </div>
       </div>
       {lapisLapor && (
@@ -592,17 +634,19 @@ export function IndonesiaMap({ currentLocation, earthquakes, hotspots = SATELLIT
               );
             })}
 
-          {/* LAPOR WARGA: pin lingkaran warna kategori, selalu tampil penuh (laporan sedikit). */}
+          {/* LAPOR WARGA: pin kecil per laporan; yang bertumpuk digabung 1 pin + daftar. */}
           {lapisLapor &&
-            laporanTampil.map((lapor) => {
-              if (!Number.isFinite(lapor?.lat) || !Number.isFinite(lapor?.lon)) return null;
-              const kat = PETA_KATEGORI_LAPOR[lapor.kategori];
-              if (!kat) return null;
-              return (
+            grupTampil.map((grup, gi) => {
+              if (grup.items.length === 1) {
+                const lapor = grup.items[0];
+                if (!Number.isFinite(lapor?.lat) || !Number.isFinite(lapor?.lon)) return null;
+                const kat = PETA_KATEGORI_LAPOR[lapor.kategori];
+                if (!kat) return null;
+                return (
                 <Marker
                   key={lapor.id}
                   position={[lapor.lat, lapor.lon]}
-                  icon={PENANDA_LAPOR[lapor.kategori]}
+                  icon={ikonPinLapor(kat.warna, { baru: lapor.id === pinBaruId })}
                 >
                   <Popup>
                     <div style={gayaPopup}>
@@ -653,6 +697,49 @@ export function IndonesiaMap({ currentLocation, earthquakes, hotspots = SATELLIT
                     </div>
                   </Popup>
                 </Marker>
+                );
+              }
+              // Grup: satu pin angka berisi daftar maksimal 5 laporan.
+              const kat0 = PETA_KATEGORI_LAPOR[grup.items[0].kategori] || {};
+              const n = grup.items.length;
+              return (
+                <Marker
+                  key={`grup-${grup.kunci}-${grup.items[0].id}`}
+                  position={[grup.lat, grup.lon]}
+                  icon={ikonPinLapor(kat0.warna || '#059669', { gabung: n, baru: grup.items.some((i) => i.id === pinBaruId) })}
+                >
+                  <Popup>
+                    <div style={{ ...gayaPopup, textAlign: 'left', minWidth: '210px', maxWidth: '250px' }}>
+                      <strong style={{ fontSize: '0.82rem', color: '#0f172a', display: 'block', marginBottom: '6px' }}>
+                        {n} laporan warga di sini
+                      </strong>
+                      {grup.items.slice(0, 5).map((l) => {
+                        const k = PETA_KATEGORI_LAPOR[l.kategori] || {};
+                        return (
+                          <div key={l.id} style={{ display: 'flex', gap: '6px', alignItems: 'flex-start', marginBottom: '6px' }}>
+                            <span style={{ flexShrink: 0, width: '10px', height: '10px', borderRadius: '9999px', backgroundColor: k.warna || '#6b7280', marginTop: '3px' }} />
+                            <div style={{ minWidth: 0 }}>
+                              <p style={{ margin: 0, fontSize: '0.72rem', fontWeight: '800', color: '#111827' }}>
+                                {k.label || l.kategori} • {waktuRelatif(l.createdAt)}
+                              </p>
+                              <p style={{ margin: 0, fontSize: '0.72rem', color: '#4b5563', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '200px' }}>
+                                {l.deskripsi}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      {n > 5 && (
+                        <p style={{ margin: '2px 0 0 0', fontSize: '0.7rem', color: '#6b7280' }}>
+                          +{n - 5} lainnya — buka Daftar Laporan.
+                        </p>
+                      )}
+                      <p style={{ margin: '4px 0 0 0', fontSize: '0.68rem', color: '#94a3b8' }}>
+                        Perbesar peta untuk memisahkan pin.
+                      </p>
+                    </div>
+                  </Popup>
+                </Marker>
               );
             })}
 
@@ -662,11 +749,13 @@ export function IndonesiaMap({ currentLocation, earthquakes, hotspots = SATELLIT
                 center={[currentLocation.lat, currentLocation.lon]}
                 radius={18000}
                 pathOptions={{ color: PALET_JAGAKOTA.haloLuar, fillColor: PALET_JAGAKOTA.haloLuar, fillOpacity: 0.14, weight: 1.6, dashArray: '5 5' }}
+                interactive={false}
               />
               <Circle
                 center={[currentLocation.lat, currentLocation.lon]}
                 radius={5500}
                 pathOptions={{ color: PALET_JAGAKOTA.haloDalam, fillColor: PALET_JAGAKOTA.haloDalam, fillOpacity: 0.42, weight: 2 }}
+                interactive={false}
               />
             </>
           )}
