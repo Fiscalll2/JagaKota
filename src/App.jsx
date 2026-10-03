@@ -7,8 +7,6 @@ import { OnboardingIntro } from './components/common/OnboardingIntro';
 import { EcoHealthCard } from './components/cards/EcoHealthCard';
 import { AqiCard } from './components/cards/AqiCard';
 import { KimiaCard } from './components/cards/KimiaCard';
-import { RincianJam } from './components/cards/RincianJam';
-import { RekomendasiWarga } from './components/cards/RekomendasiWarga';
 import { WeatherCard } from './components/cards/WeatherCard';
 import { EarthquakeCard } from './components/cards/EarthquakeCard';
 import { UvCard } from './components/cards/UvCard';
@@ -288,11 +286,6 @@ export function App() {
         <KimiaCard current={airQualityData?.current} loading={sibuk} />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1.6fr_1fr]" style={{ marginBottom: '1.5rem' }}>
-        <RincianJam hourly={weatherData?.hourly} current={weatherData?.current} location={location} />
-        <RekomendasiWarga daily={weatherData?.daily} />
-      </div>
-
       <div style={{ marginBottom: '1.5rem' }}>
         <React.Suspense fallback={<LayarTunggu height="260px" pesan="Memuat Grafik Tren AQI..." />}>
           <AqiChart hourlyData={airQualityData?.hourly} />
@@ -311,8 +304,7 @@ export function App() {
 
       <div style={{ marginBottom: '1.5rem' }}>
         <React.Suspense fallback={<LayarTunggu height="260px" pesan="Memuat Prakiraan Cuaca 7 Hari..." />}>
-          <WeatherForecastChart dailyData={weatherData?.daily} onRefresh={handleManualRefresh}
-            updatedAt={lastUpdated} onOpenMap={() => document.getElementById('seksi-sensor')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} />
+          <WeatherForecastChart dailyData={weatherData?.daily} />
         </React.Suspense>
       </div>
       </div>

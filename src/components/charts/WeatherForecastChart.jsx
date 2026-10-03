@@ -1,6 +1,5 @@
 import React from 'react';
-import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from 'recharts';
-import { CalendarDays, Droplets, Sun, ArrowUp, ArrowDown, RefreshCw, Map } from 'lucide-react';
+import { CalendarDays, Droplets, Sun, ArrowUp, ArrowDown } from 'lucide-react';
 import { visualCuaca } from '../../utils/weatherIcons';
 import { RintikHujan } from '../weather/RintikHujan';
 import { tanggalRingkasJaga, tanggalPenuhJaga } from '../../utils/format';
@@ -8,21 +7,8 @@ import { tanggalRingkasJaga, tanggalPenuhJaga } from '../../utils/format';
 // Kode WMO yang berarti hujan (rinik → lebat), sesuai tabel visualCuaca.
 const KODE_HUJAN = [51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82];
 const KODE_DERAS = [63, 65, 66, 67, 81, 82];
-const HARI_SINGKAT = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
 
-function TrenTip({ active, payload }) {
-  if (!active || !payload?.length) return null;
-  const d = payload[0].payload;
-  return (
-    <div className="rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs shadow-xl dark:border-slate-700 dark:bg-slate-900">
-      <p className="font-extrabold text-slate-800 dark:text-slate-100">{d.hari}</p>
-      <p className="font-bold text-rose-500">Maks {d.maks}°C</p>
-      <p className="font-bold text-sky-600">Min {d.min}°C</p>
-    </div>
-  );
-}
-
-export function WeatherForecastChart({ dailyData, onRefresh, updatedAt, onOpenMap }) {
+export function WeatherForecastChart({ dailyData }) {
   if (!dailyData || !dailyData.time) return null;
 
   const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
@@ -30,21 +16,6 @@ export function WeatherForecastChart({ dailyData, onRefresh, updatedAt, onOpenMa
   const minTemps = dailyData.temperature_2m_min?.slice(0, 7) || [];
   const highestTemp = maxTemps.length ? Math.round(Math.max(...maxTemps)) : 33;
   const lowestTemp = minTemps.length ? Math.round(Math.min(...minTemps)) : 23;
-
-  const tren = dailyData.time.slice(0, 7).map((t, i) => ({
-    hari: HARI_SINGKAT[new Date(t).getDay()] ?? `H${i + 1}`,
-    maks: Math.round(dailyData.temperature_2m_max?.[i] ?? 0),
-    min: Math.round(dailyData.temperature_2m_min?.[i] ?? 0),
-  }));
-
-  let labelUpdate = 'Update Real-Time';
-  if (updatedAt) {
-    const dd = new Date(updatedAt);
-    const b = (n) => String(n).padStart(2, '0');
-    const off = dd.getTimezoneOffset();
-    const tz = off === -420 ? 'WIB' : off === -480 ? 'WITA' : off === -540 ? 'WIT' : 'WIB';
-    labelUpdate = `Update Real-Time ${b(dd.getHours())}:${b(dd.getMinutes())} ${tz}`;
-  }
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
@@ -54,23 +25,16 @@ export function WeatherForecastChart({ dailyData, onRefresh, updatedAt, onOpenMa
             <CalendarDays size={18} strokeWidth={2.5} />
           </span>
           <div>
-            <div className="flex items-center gap-1.5">
-              <h3 className="text-base font-extrabold tracking-tight text-slate-900 dark:text-white">Bekal Seminggu ke Depan</h3>
-              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-black text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-                7 Hari
-              </span>
-            </div>
+            <h3 className="text-base font-extrabold tracking-tight text-slate-900 dark:text-white">Bekal Seminggu ke Depan</h3>
             <p className="text-[11px] font-medium text-slate-500">Biar nggak salah kostum, warga! • {tanggalPenuhJaga(new Date())}</p>
           </div>
         </div>
-        <span className="flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-          Adem <strong className="text-slate-900 dark:text-white">{lowestTemp}°</strong>
-          <span aria-hidden className="h-1.5 w-14 rounded-full" style={{ background: 'linear-gradient(90deg,#38bdf8,#f59e0b,#ef4444)' }} />
-          Panas <strong className="text-slate-900 dark:text-white">{highestTemp}°</strong>
+        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+          Adem <strong className="text-slate-900 dark:text-white">{lowestTemp}°</strong> – Panas <strong className="text-slate-900 dark:text-white">{highestTemp}°</strong>
         </span>
       </div>
 
-      <div className="mt-4 flex snap-x snap-mandatory gap-2 overflow-x-auto pb-2 pt-3 xl:grid xl:grid-cols-7 xl:overflow-visible xl:pb-0">
+      <div className="mt-4 flex snap-x snap-mandatory gap-2 overflow-x-auto pb-2 xl:grid xl:grid-cols-7 xl:overflow-visible xl:pb-0">
         {dailyData.time.slice(0, 7).map((dateStr, idx) => {
           const d = new Date(dateStr);
           const hariIni = idx === 0;
@@ -92,13 +56,8 @@ export function WeatherForecastChart({ dailyData, onRefresh, updatedAt, onOpenMa
             <article
               key={dateStr}
               style={{ animationDelay: `${idx * 70}ms` }}
-              className={`anim-naik relative shrink-0 snap-start ${hariIni ? 'min-w-[154px]' : 'min-w-[138px]'} xl:min-w-0`}
+              className={`anim-naik shrink-0 snap-start ${hariIni ? 'min-w-[154px]' : 'min-w-[138px]'} xl:min-w-0`}
             >
-              {hariIni && (
-                <span className="absolute -top-2.5 left-1/2 z-10 -translate-x-1/2 rounded-full bg-emerald-600 px-2.5 py-0.5 text-[10px] font-black tracking-wide text-white">
-                  SEKARANG
-                </span>
-              )}
               <div
                 className={`flex h-full min-h-60 flex-col items-center justify-between rounded-xl border p-3 text-center transition ${
                   hariIni
@@ -133,11 +92,12 @@ export function WeatherForecastChart({ dailyData, onRefresh, updatedAt, onOpenMa
                 </span>
                 <p className={`flex min-h-7 items-center text-xs font-bold ${hariIni ? 'text-slate-900 dark:text-white' : 'text-slate-700 dark:text-slate-200'}`}>{visual.label}</p>
 
-                <div className={`mt-1.5 flex w-full flex-col items-stretch gap-1 rounded-lg px-2 py-1.5 ${hariIni ? 'bg-white dark:bg-slate-900' : 'bg-white shadow-sm dark:bg-slate-900'}`}>
-                  <span className="flex items-center justify-center gap-0.5 font-extrabold text-red-500" title={`Paling panas siang ini: ${maxTemp}°C`}>
+                <div className={`mt-1.5 flex w-full items-center justify-center gap-1.5 rounded-lg px-2 py-1 ${hariIni ? 'bg-white dark:bg-slate-900' : 'bg-white shadow-sm dark:bg-slate-900'}`}>
+                  <span className="flex items-center gap-0.5 font-extrabold text-red-500" title={`Paling panas siang ini: ${maxTemp}°C`}>
                     <ArrowUp size={11} strokeWidth={3} /><span className={hariIni ? 'text-base' : 'text-sm'}>{maxTemp}°</span>
                   </span>
-                  <span className="flex items-center justify-center gap-0.5 font-bold text-sky-600" title={`Paling adem malam nanti: ${minTemp}°C`}>
+                  <span className="text-xs text-slate-400">/</span>
+                  <span className="flex items-center gap-0.5 font-bold text-sky-600" title={`Paling adem malam nanti: ${minTemp}°C`}>
                     <ArrowDown size={11} strokeWidth={3} /><span className={hariIni ? 'text-[15px]' : 'text-[13px]'}>{minTemp}°</span>
                   </span>
                 </div>
@@ -146,7 +106,7 @@ export function WeatherForecastChart({ dailyData, onRefresh, updatedAt, onOpenMa
                   <span className={`flex items-center gap-1 ${rainProb >= 40 ? 'text-sky-600' : ''}`} title={`Peluang hujan ${rainProb}%, curah ${rainSum} mm. ${rainProb >= 40 ? 'Bawa payung ya warga!' : 'Aman, langit bersahabat.'}`}>
                     <Droplets size={11} strokeWidth={2.5} />{rainProb}%
                   </span>
-                  <span className={`flex items-center gap-1 rounded-md px-1.5 py-0.5 ${uvMax >= 8 ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300' : ''}`} title={`UV maksimum ${uvMax}. ${uvMax >= 8 ? 'Jangan lupa sunscreen!' : 'Santai di luar oke.'}`}>
+                  <span className={`flex items-center gap-1 ${uvMax >= 8 ? 'text-orange-600' : ''}`} title={`UV maksimum ${uvMax}. ${uvMax >= 8 ? 'Jangan lupa sunscreen!' : 'Santai di luar oke.'}`}>
                     <Sun size={11} strokeWidth={2.5} />UV {uvMax}
                   </span>
                 </div>
@@ -156,70 +116,9 @@ export function WeatherForecastChart({ dailyData, onRefresh, updatedAt, onOpenMa
         })}
       </div>
 
-      <div className="mt-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-slate-400">
-            Tren fluktuasi suhu horizon sepekan (°C)
-          </p>
-          <div className="flex items-center gap-3 text-[11px] font-bold text-slate-500">
-            <span className="flex items-center gap-1">
-              <span className="h-2 w-2 rounded-full bg-rose-500" /> Suhu Maksimum
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="h-2 w-2 rounded-full bg-sky-500" /> Suhu Minimum
-            </span>
-          </div>
-        </div>
-        <div className="mt-2 h-36 w-full rounded-xl border border-slate-100 bg-slate-50/60 p-2 dark:border-slate-800 dark:bg-slate-800/40">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={tren} margin={{ top: 5, right: 8, left: -28, bottom: 0 }}>
-              <defs>
-                <linearGradient id="jagaTrenMaks" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.4} />
-                  <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="jagaTrenMin" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.35} />
-                  <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <XAxis dataKey="hari" stroke="#94a3b8" fontSize={11} fontWeight={600} tickLine={false} axisLine={false} />
-              <YAxis stroke="#94a3b8" fontSize={11} fontWeight={600} tickLine={false} axisLine={false} domain={['auto', 'auto']} width={36} />
-              <Tooltip content={<TrenTip />} />
-              <Area type="monotone" dataKey="maks" stroke="#f43f5e" strokeWidth={2.5} fillOpacity={1} fill="url(#jagaTrenMaks)" dot={{ r: 3, fill: '#f43f5e', strokeWidth: 0 }} activeDot={{ r: 4 }} name="Maks" />
-              <Area type="monotone" dataKey="min" stroke="#0ea5e9" strokeWidth={2} strokeDasharray="5 4" fillOpacity={1} fill="url(#jagaTrenMin)" dot={{ r: 2.5, fill: '#0ea5e9', strokeWidth: 0 }} activeDot={{ r: 4 }} name="Min" />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-        <p className="anim-naik flex-1 text-[11px] font-medium text-slate-400" style={{ animationDelay: '550ms', flexBasis: 220 }}>
-          Tips warga: payung lipat di tas itu penyelamat. Kalau UV 8+, topi + sunscreen wajib hukumnya.
-        </p>
-        <div className="flex items-center gap-1.5">
-          {onRefresh && (
-            <button
-              type="button"
-              onClick={onRefresh}
-              className="inline-flex min-h-8 items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-[11px] font-extrabold text-emerald-700 transition hover:bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-300"
-            >
-              <RefreshCw size={12} strokeWidth={2.5} />
-              {labelUpdate}
-            </button>
-          )}
-          {onOpenMap && (
-            <button
-              type="button"
-              onClick={onOpenMap}
-              className="inline-flex min-h-8 items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-extrabold text-slate-600 transition hover:border-emerald-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
-            >
-              <Map size={12} strokeWidth={2.5} />
-              Detail Satelit
-            </button>
-          )}
-        </div>
-      </div>
+      <p className="anim-naik mt-3 text-[11px] font-medium text-slate-400" style={{ animationDelay: '550ms' }}>
+        Tips warga: payung lipat di tas itu penyelamat. Kalau UV 8+, topi + sunscreen wajib hukumnya.
+      </p>
     </section>
   );
 }
