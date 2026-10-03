@@ -557,6 +557,55 @@ button, input, select, a {
   opacity: 0.9;
 }
 
+/* Prakiraan cuaca: entrance stagger + penegas Hari Ini + goyang ikon ekstrem.
+   Dihormati: prefers-reduced-motion mematikan semuanya. */
+@keyframes naik-part {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.anim-naik {
+  animation: naik-part 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes pop-ikon {
+  0% { opacity: 0; transform: scale(0.5); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.anim-pop {
+  animation: pop-ikon 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes denyut-hari-ini {
+  0%, 100% { border-color: #10b981; }
+  50% { border-color: #a7f3d0; }
+}
+
+.anim-hari-ini {
+  animation: denyut-hari-ini 2.8s ease-in-out infinite;
+}
+
+@keyframes goyang-ikon {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(10deg); }
+  75% { transform: rotate(-10deg); }
+}
+
+.anim-goyang {
+  animation: goyang-ikon 3s ease-in-out infinite;
+  transform-origin: 50% 30%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-naik,
+  .anim-pop,
+  .anim-hari-ini,
+  .anim-goyang {
+    animation: none !important;
+  }
+}
+
 /* Ticker Announcement Bar */
 .ticker-viewport {
   overflow: hidden;
