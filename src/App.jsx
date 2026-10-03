@@ -22,11 +22,13 @@ import { LaporModal } from './components/common/LaporModal';
 import { DaftarLaporModal } from './components/common/DaftarLaporModal';
 import { VolcanoListModal } from './components/common/VolcanoListModal';
 import { EmbedWidgetModal } from './components/common/EmbedWidgetModal';
+import { InstallGuideModal } from './components/common/InstallGuideModal';
 import { Footer } from './components/common/Footer';
 import { WidgetEmbedView } from './components/embed/WidgetEmbedView';
 import { KOTA_JAGA } from './utils/cities';
 import { cariLaporan } from './utils/lapor';
 import { useGeolocation } from './hooks/useGeolocation';
+import { usePwaInstall } from './hooks/usePwaInstall';
 import { useDarkMode } from './hooks/useDarkMode';
 import { useDataJaga } from './hooks/useDashboardData';
 import { getarJaga } from './utils/haptics';
@@ -127,8 +129,10 @@ export function App() {
   };
   const [widgetBuka, setWidgetBuka] = useState(false);
 
-  const [pintaPasang, setPintaPasang] = useState(null);
   const [spandukPwa, setSpandukPwa] = useState(true);
+  const [installBuka, setInstallBuka] = useState(false);
+  const { bisaPrompt, sudahPasang, platform, promptPasang } = usePwaInstall();
+  const pwa = { bisaPrompt, sudahPasang, platform, promptPasang };
   const [introTampil, setIntroTampil] = useState(true);
   const [daring, setDaring] = useState(() => typeof navigator !== 'undefined' ? navigator.onLine : true);
 
@@ -152,11 +156,6 @@ export function App() {
   }, [location.name, location.province, airQualityData?.current?.aqi, weatherData?.current?.temp]);
 
   useEffect(() => {
-    const tadahPinta = (e) => {
-      e.preventDefault();
-      setPintaPasang(e);
-    };
-    window.addEventListener('beforeinstallprompt', tadahPinta);
     if ('serviceWorker' in navigator) {
       if (import.meta.env.PROD) {
         navigator.serviceWorker.register('/sw.js').catch((e) => console.log('SW error:', e));
@@ -165,14 +164,11 @@ export function App() {
       }
     }
     if ('Notification' in window && Notification.permission === 'granted') setBolehIngatkan(true);
-    return () => window.removeEventListener('beforeinstallprompt', tadahPinta);
   }, []);
 
   const pasangPwa = async () => {
-    if (!pintaPasang) return;
-    pintaPasang.prompt();
-    const { outcome } = await pintaPasang.userChoice;
-    if (outcome === 'accepted') setPintaPasang(null);
+    const hasil = await promptPasang();
+    if (hasil === 'tak-tersedia') setInstallBuka(true);
   };
 
   const mintaNotifikasi = async () => {
@@ -257,6 +253,9 @@ export function App() {
       onRequestNotification={mintaNotifikasi}
       onRefresh={handleManualRefresh}
       isRefreshing={isRefreshing}
+      bisaPrompt={bisaPrompt}
+      sudahPasang={sudahPasang}
+      onOpenInstall={() => setInstallBuka(true)}
     >
     <div {...gestur}>
       {!modeSemat && introTampil && (
@@ -270,10 +269,9 @@ export function App() {
       <TickerBar items={itemTicker}
         notificationsEnabled={bolehIngatkan} onRequestNotification={mintaNotifikasi}
         onRefresh={handleManualRefresh} isRefreshing={isRefreshing}
-        isDark={isDark} onToggleDark={toggleDarkMode}
-        installApp={pintaPasang ? pasangPwa : null} />
+        isDark={isDark} onToggleDark={toggleDarkMode} />
 
-      {cariBuka && <CitySearchModal isOpen={cariBuka} onClose={() => setCariBuka(false)} onSelectCity={selectCity} currentCity={location} />}
+      {cariBuka && <CitySearchModal isOpen={cariBuka} onClose={() => setCariBuka(false)} onSelectCity={selectCity} currentCity={location} onRequestGps={requestGpsLocation} gpsLoading={gpsLoading} />}
       {bagikanBuka && <ShareCardModal isOpen={bagikanBuka} onClose={() => setBagikanBuka(false)} location={location} airQualityData={airQualityData} weatherData={weatherData} latestEarthquake={latestEarthquake} karhutlaData={karhutlaData} />}
       {daruratBuka && <EmergencyGuideModal isOpen={daruratBuka} onClose={() => setDaruratBuka(false)} />}
       {widgetBuka && <EmbedWidgetModal isOpen={widgetBuka} onClose={() => setWidgetBuka(false)} location={location} airQualityData={airQualityData} weatherData={weatherData} />}
@@ -281,8 +279,9 @@ export function App() {
       {laporBuka && <LaporModal isOpen={laporBuka} onClose={() => setLaporBuka(false)} location={location} onRefreshGps={requestGpsLocation} gpsLoading={gpsLoading} />}
       {daftarBuka && <DaftarLaporModal isOpen={daftarBuka} onClose={() => setDaftarBuka(false)} onPilih={terbangKeLaporan} onLaporBaru={() => setLaporBuka(true)} />}
       {gunungBuka && <VolcanoListModal isOpen={gunungBuka} onClose={() => setGunungBuka(false)} userLocation={location} />}
+      {installBuka && <InstallGuideModal isOpen={installBuka} onClose={() => setInstallBuka(false)} pwa={pwa} />}
 
-      {pintaPasang && spandukPwa && (
+      {bisaPrompt && spandukPwa && (
         <div className="pwa-banner animate-fade-in">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
             <Download size={18} color="var(--color-primary)" />

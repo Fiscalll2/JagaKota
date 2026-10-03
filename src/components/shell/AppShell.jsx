@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Menu, X, Sun, Moon, Bell, ShieldCheck, Compass, ChevronRight } from 'lucide-react';
+import { Menu, X, Sun, Moon, Bell, ShieldCheck, Compass, ChevronRight, Download } from 'lucide-react';
 import { LogoMark } from '../common/LogoMark';
 import { NAV_ITEMS, SECTION_TARGETS } from './navigation';
 import { cn } from '../../lib/utils';
@@ -185,6 +185,9 @@ export function AppShell({
   onRefresh,
   isRefreshing,
   children,
+  bisaPrompt = false,
+  sudahPasang = false,
+  onOpenInstall,
 }) {
   const [activeId, setActiveId] = useState('command-center');
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -260,6 +263,30 @@ export function AppShell({
       />
       <CivicNav activeId={activeId} onNavigate={handleNavigate} />
       <CivicActions onNavigate={handleNavigate} />
+      {/* Rumah permanen tombol install: selalu ada, tak hilang seperti banner */}
+      {!sudahPasang && onOpenInstall && (
+        <button
+          type="button"
+          onClick={() => { setDrawerOpen(false); onOpenInstall(); }}
+          className="flex min-h-[46px] cursor-pointer items-center gap-2 rounded-xl border-2 border-dashed border-emerald-600/50 bg-emerald-50/60 px-3 text-[13.5px] font-bold text-emerald-700 transition hover:bg-emerald-100 dark:border-emerald-500/40 dark:bg-emerald-950/40 dark:text-emerald-300 dark:hover:bg-emerald-950"
+        >
+          <span className="relative shrink-0">
+            <Download size={18} strokeWidth={2.2} />
+            {bisaPrompt && (
+              <span className="absolute -right-0.5 -top-0.5 flex h-2.5 w-2.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-70" />
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-600" />
+              </span>
+            )}
+          </span>
+          <span className="truncate">Pasang Aplikasi</span>
+          {bisaPrompt && (
+            <span className="ml-auto shrink-0 rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-white">
+              1 ketuk
+            </span>
+          )}
+        </button>
+      )}
       <div className="mt-auto flex flex-col gap-2 pt-4">
         <div className="flex items-start gap-2 rounded-xl border border-slate-200/80 bg-slate-50 px-3 py-2.5 dark:border-slate-800 dark:bg-slate-800/40">
           <ShieldCheck size={15} className="mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-400" />

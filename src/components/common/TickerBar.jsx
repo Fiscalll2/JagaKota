@@ -1,5 +1,5 @@
 import React from 'react';
-import { Megaphone, Bell, BellRing, Sun, Moon, Download } from 'lucide-react';
+import { Megaphone, Bell, BellRing, Sun, Moon } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 
@@ -52,7 +52,6 @@ export function TickerBar({
   isRefreshing,
   isDark,
   onToggleDark,
-  installApp = null,
 }) {
   if (!items.length) return null;
   const text = items.join('  •  ');
@@ -77,17 +76,6 @@ export function TickerBar({
 
       <div className="hidden shrink-0 items-center gap-1.5 lg:flex">
         {/* Dock ticker hanya untuk desktop: di mobile dock pindah ke top bar. */}
-        {installApp && (
-          <Button
-            type="button"
-            size="sm"
-            onClick={installApp}
-            className="ticker-btn hidden min-h-0 items-center rounded-full px-3 py-1.5 text-xs md:inline-flex"
-          >
-            <Download size={14} strokeWidth={2.5} />
-            Buka di aplikasi
-          </Button>
-        )}
         {/* Dock aksi: satu strip menyatu, bukan lingkaran lepas */}
         <div
           role="toolbar"

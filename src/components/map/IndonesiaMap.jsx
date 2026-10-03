@@ -175,10 +175,56 @@ function PenyelarasPeta({ bidikan, kabariZoom }) {
 }
 
 // Speed-dial navigasi: 1 tombol kompas saat tertutup (ramping di Android),
-// mekar ke atas saat diketuk. Tutup otomatis saat peta digeser / Escape.
+// mekar saat diketuk. FAB-nya bisa DISERET ke mana saja di dalam peta
+// (posisi fraksi tersimpan di localStorage). Tutup otomatis saat peta
+// digeser / Escape. Mekar ke bawah bila ruang atas sempit.
+const KUNCI_POS_NAV = 'jagakota-mapnav-pos';
+const MARGIN_NAV = 12;
+const DIAMETER_FAB = 46;
+
+function bacaPosNav() {
+  try {
+    const p = JSON.parse(localStorage.getItem(KUNCI_POS_NAV));
+    if (p && p.fx >= 0 && p.fx <= 1 && p.fy >= 0 && p.fy <= 1) return p;
+  } catch {}
+  return { fx: 1, fy: 0 }; // bawaan: kanan atas
+}
+
 function PanelNavigasi({ labelKota, melompatNusantara, melompatKota }) {
   const peta = useMap();
   const [buka, setBuka] = useState(false);
+  const [pos, setPos] = useState(bacaPosNav);
+  const wadahRef = useRef(null);
+  const seretRef = useRef(null);
+
+  // Konteks positioning sebenarnya (bukan sekadar parentElement): wadah
+  // absolute ini diposisikan relatif ke offsetParent-nya.
+
+  // Kotak peta yang terlihat + offset-nya terhadap offsetParent.
+  // Diukur live dari .leaflet-container (stabil), bukan snapshot yang
+  // bisa basi bila struktur DOM berubah saat inisialisasi peta.
+  const zonaPeta = useCallback(() => {
+    const wadah = wadahRef.current;
+    const petaEl = wadah?.closest?.('.leaflet-container');
+    if (!wadah || !petaEl) return null;
+    const opEl = wadah.offsetParent || petaEl;
+    const rPeta = petaEl.getBoundingClientRect();
+    const rOp = opEl.getBoundingClientRect();
+    return {
+      el: petaEl,
+      dx: rPeta.left - rOp.left,
+      dy: rPeta.top - rOp.top,
+      lebar: petaEl.clientWidth || rPeta.width || 400,
+      tinggi: petaEl.clientHeight || rPeta.height || 400,
+    };
+  }, []);
+  const [bingkai, setBingkai] = useState({ dx: 0, dy: 0, lebar: 400, tinggi: 400 });
+
+  const selaraskanBingkai = useCallback(() => {
+    const z = zonaPeta();
+    if (z) setBingkai({ dx: z.dx, dy: z.dy, lebar: z.lebar, tinggi: z.tinggi });
+    return z;
+  }, [zonaPeta]);
 
   useMapEvents({
     dragstart: () => setBuka(false),
@@ -190,6 +236,58 @@ function PanelNavigasi({ labelKota, melompatNusantara, melompatKota }) {
     window.addEventListener('keydown', tutup);
     return () => window.removeEventListener('keydown', tutup);
   }, [buka]);
+
+  // Ukur kotak peta yang sebenarnya agar FAB tak bisa keluar box.
+  // Node yang diamati = .leaflet-container (identitas stabil).
+  useEffect(() => {
+    const awal = zonaPeta();
+    if (!awal) return;
+    setBingkai({ dx: awal.dx, dy: awal.dy, lebar: awal.lebar, tinggi: awal.tinggi });
+    if (typeof ResizeObserver === 'undefined') return;
+    const catat = () => { selaraskanBingkai(); };
+    const amati = new ResizeObserver(catat);
+    amati.observe(awal.el);
+    return () => amati.disconnect();
+  }, [zonaPeta, selaraskanBingkai]);
+
+  const terapkanPos = useCallback((fx, fy) => {
+    const p = {
+      fx: Math.min(1, Math.max(0, fx)),
+      fy: Math.min(1, Math.max(0, fy)),
+    };
+    setPos(p);
+    try { localStorage.setItem(KUNCI_POS_NAV, JSON.stringify(p)); } catch {}
+  }, []);
+
+  const mulaiSeret = (e) => {
+    const zona = selaraskanBingkai() || zonaPeta();
+    if (!zona) return;
+    e.preventDefault();
+    peta.dragging.disable();
+    seretRef.current = {
+      lebarJalan: Math.max(1, zona.lebar - DIAMETER_FAB - MARGIN_NAV * 2),
+      tinggiJalan: Math.max(1, zona.tinggi - DIAMETER_FAB - MARGIN_NAV * 2),
+      x0: e.clientX, y0: e.clientY, fx0: pos.fx, fy0: pos.fy, bergerak: false,
+    };
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch {}
+  };
+
+  const jalanSeret = (e) => {
+    const s = seretRef.current;
+    if (!s) return;
+    const dx = e.clientX - s.x0;
+    const dy = e.clientY - s.y0;
+    if (!s.bergerak && Math.hypot(dx, dy) < 7) return;
+    s.bergerak = true;
+    terapkanPos(s.fx0 + dx / s.lebarJalan, s.fy0 + dy / s.tinggiJalan);
+  };
+
+  const lepasSeret = () => {
+    const s = seretRef.current;
+    seretRef.current = null;
+    peta.dragging.enable();
+    if (s && !s.bergerak) setBuka((v) => !v);
+  };
 
   const lingkaran = {
     width: '42px',
@@ -225,51 +323,103 @@ function PanelNavigasi({ labelKota, melompatNusantara, melompatKota }) {
     { id: 'nusantara', label: 'Nusantara', Ikon: IkonKompas, jalan: melompatNusantara, tutup: true },
   ];
 
-  return (
-    <div style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
-      {aksi.map((a, i) => (
-        <div
-          key={a.id}
-          style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
-            opacity: buka ? 1 : 0,
-            transform: buka ? 'translateY(0) scale(1)' : 'translateY(10px) scale(0.85)',
-            transition: 'opacity 160ms ease, transform 160ms ease',
-            transitionDelay: buka ? `${i * 35}ms` : '0ms',
-            pointerEvents: buka ? 'auto' : 'none',
-          }}
-        >
-          <span style={labelPil}>{a.label}</span>
-          <button
-            onClick={() => { a.jalan(); if (a.tutup) setBuka(false); }}
-            title={a.label}
-            aria-label={a.label}
-            tabIndex={buka ? 0 : -1}
-            style={{ ...lingkaran, color: a.warna || 'var(--text-main)' }}
-          >
-            <a.Ikon size={17} />
-          </button>
-        </div>
-      ))}
+  // Posisi piksel dari fraksi terhadap kotak peta yang sebenarnya.
+  // Dijepit agar FAB tak pernah keluar box, termasuk label yang menjulur.
+  const jalanLebar = Math.max(0, bingkai.lebar - DIAMETER_FAB - MARGIN_NAV * 2);
+  const jalanTinggi = Math.max(0, bingkai.tinggi - DIAMETER_FAB - MARGIN_NAV * 2);
+  const kiriPx = bingkai.dx + MARGIN_NAV + pos.fx * jalanLebar;
+  const atasPx = bingkai.dy + MARGIN_NAV + pos.fy * jalanTinggi;
+  const keBawah = atasPx < 260;
+  // Dekat tepi kiri: label pindah ke kanan tombol biar tak kepotong box.
+  const labelKanan = pos.fx < 0.35;
+  const labelGaya = {
+    ...labelPil,
+    marginRight: labelKanan ? 0 : '8px',
+    marginLeft: labelKanan ? '8px' : 0,
+  };
+
+  const barisAksi = aksi.map((a, i) => {
+    const tombol = (
       <button
-        onClick={() => setBuka((v) => !v)}
-        title={buka ? 'Tutup navigasi peta' : 'Buka navigasi peta'}
-        aria-label={buka ? 'Tutup navigasi peta' : 'Buka navigasi peta'}
-        aria-expanded={buka}
+        onClick={() => { a.jalan(); if (a.tutup) setBuka(false); }}
+        title={a.label}
+        aria-label={a.label}
+        tabIndex={buka ? 0 : -1}
+        style={{ ...lingkaran, color: a.warna || 'var(--text-main)' }}
+      >
+        <a.Ikon size={17} />
+      </button>
+    );
+    const label = <span style={labelGaya}>{a.label}</span>;
+    return (
+      <div
+        key={a.id}
         style={{
-          ...lingkaran,
-          width: '46px',
-          height: '46px',
-          backgroundColor: PALET_JAGAKOTA.pinKotaAktif,
-          borderColor: PALET_JAGAKOTA.pinKotaAktif,
-          color: '#fff',
-          boxShadow: '0 6px 18px rgba(13,148,136,0.4)',
+          display: 'flex', alignItems: 'center', justifyContent: labelKanan ? 'flex-start' : 'flex-end',
+          opacity: buka ? 1 : 0,
+          transform: buka ? 'translateY(0) scale(1)' : `translateY(${keBawah ? '-' : ''}10px) scale(0.85)`,
+          transition: 'opacity 160ms ease, transform 160ms ease',
+          transitionDelay: buka ? `${i * 35}ms` : '0ms',
+          pointerEvents: buka ? 'auto' : 'none',
         }}
       >
-        <span style={{ display: 'flex', transform: buka ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 180ms ease' }}>
-          {buka ? <IkonTutup size={20} /> : <IkonKompas size={20} />}
-        </span>
-      </button>
+        {labelKanan ? (<>{tombol}{label}</>) : (<>{label}{tombol}</>)}
+      </div>
+    );
+  });
+
+  const tombolFab = (
+    <button
+      type="button"
+      onPointerDown={mulaiSeret}
+      onPointerMove={jalanSeret}
+      onPointerUp={lepasSeret}
+      onPointerCancel={lepasSeret}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setBuka((v) => !v); } }}
+      title="Geser untuk pindah, ketuk untuk buka navigasi peta"
+      aria-label={buka ? 'Tutup navigasi peta' : 'Buka navigasi peta'}
+      aria-expanded={buka}
+      style={{
+        ...lingkaran,
+        width: `${DIAMETER_FAB}px`,
+        height: `${DIAMETER_FAB}px`,
+        backgroundColor: PALET_JAGAKOTA.pinKotaAktif,
+        borderColor: PALET_JAGAKOTA.pinKotaAktif,
+        color: '#fff',
+        boxShadow: '0 6px 18px rgba(13,148,136,0.4)',
+        touchAction: 'none',
+        cursor: 'grab',
+      }}
+    >
+      <span style={{ display: 'flex', transform: buka ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 180ms ease' }}>
+        {buka ? <IkonTutup size={20} /> : <IkonKompas size={20} />}
+      </span>
+    </button>
+  );
+
+  // Lapisan aksi melayang di luar kotak FAB (absolute) supaya ukuran wadah
+  // tetap 46px dan jepitan batas selalu tepat pada tombol yang terlihat.
+  const lapisanAksi = (
+    <div
+      aria-hidden={!buka}
+      style={{
+        position: 'absolute',
+        ...(keBawah ? { top: `${DIAMETER_FAB + 8}px`, bottom: 'auto' } : { bottom: `${DIAMETER_FAB + 8}px`, top: 'auto' }),
+        ...(labelKanan ? { left: 0, right: 'auto' } : { right: 0, left: 'auto' }),
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: labelKanan ? 'flex-start' : 'flex-end',
+        gap: '8px',
+      }}
+    >
+      {barisAksi}
+    </div>
+  );
+
+  return (
+    <div ref={wadahRef} style={{ position: 'absolute', left: `${kiriPx}px`, top: `${atasPx}px`, zIndex: 1000, width: `${DIAMETER_FAB}px`, height: `${DIAMETER_FAB}px` }}>
+      {tombolFab}
+      {lapisanAksi}
     </div>
   );
 }
