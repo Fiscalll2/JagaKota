@@ -91,9 +91,13 @@ export function AqiCard({ data, loading, locationName, updatedAt }) {
             return (
               <li
                 key={t.label}
-                className="flex items-center gap-3 px-3 py-1.5"
+                className="flex items-center gap-2.5 px-3 py-1.5"
                 style={on ? { backgroundColor: t.bg } : undefined}
               >
+                <span
+                  className="h-2.5 w-2.5 shrink-0 rounded-full"
+                  style={{ backgroundColor: t.color, outline: on ? `2px solid ${t.color}` : 'none', outlineOffset: '1px' }}
+                />
                 <span className={`text-[12px] font-extrabold ${on ? 'text-slate-900' : 'text-slate-400'}`}>
                   {t.label}
                 </span>

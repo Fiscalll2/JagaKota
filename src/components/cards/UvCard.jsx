@@ -123,7 +123,7 @@ export function UvCard({ uvIndex, hourly, loading }) {
           {[
             { ikon: Glasses, teks: 'Kacamata', perlu: nilai >= 3 },
             { ikon: Umbrella, teks: 'Topi/payung', perlu: nilai >= 6 },
-            { ikon: SunMedium, teks: 'Sunscreen', perlu: nilai >= 3 },
+            { ikon: SunMedium, teks: 'Sunscreen SPF30', perlu: nilai >= 3 },
           ].map((k) => (
             <span
               key={k.teks}
