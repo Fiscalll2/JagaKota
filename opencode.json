@@ -1,0 +1,14 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "servers": {
+      "camofox": {
+        "type": "local",
+        "command": ["npx", "-y", "@askjo/camofox-browser-mcp"],
+        "environment": {
+          "CAMOFOX_BASE_URL": "http://localhost:9377"
+        }
+      }
+    }
+  }
+}

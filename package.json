@@ -1,0 +1,44 @@
+{
+  "name": "jagakota",
+  "description": "JagaKota — Jaga Kota Bersama: skor KotaSiaga, udara versi warga, dan panduan siaga bencana real-time.",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "keywords": [
+    "jagakota",
+    "kota-siaga",
+    "bmkg",
+    "aqi",
+    "pwa",
+    "indonesia"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "cek-build": "vite build",
+    "rapikan": "echo \"rapikan manual dulu, bos\""
+  },
+  "dependencies": {
+    "@radix-ui/react-slot": "^1.3.3",
+    "@supabase/supabase-js": "^2.117.2",
+    "@vercel/analytics": "^2.0.1",
+    "@vercel/og": "^1.0.2",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "leaflet": "^1.9.4",
+    "lucide-react": "^1.43.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-leaflet": "^5.0.0",
+    "recharts": "^3.10.1",
+    "tailwind-merge": "^3.7.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@vitejs/plugin-react": "^6.1.1",
+    "tailwindcss": "^4.3.3",
+    "typescript": "~6.0.2",
+    "vite": "^8.2.2"
+  }
+}
