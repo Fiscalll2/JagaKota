@@ -9,7 +9,7 @@ function warnaSegar(aqi) {
   if (aqi > 300) return '#7f1d1d';
   if (aqi > 200) return '#7c3aed';
   if (aqi > 150) return '#dc2626';
-  if (aqi > 100) return '#ea580c';
+  if (aqi > 100) return '#c2410c';
   if (aqi > 50) return '#b45309';
   return '#059669';
 }
@@ -18,7 +18,7 @@ function labelWarga(aqi) {
   if (aqi > 300) return 'Darurat Asap';
   if (aqi > 200) return 'Pekat';
   if (aqi > 150) return 'Pengap';
-  if (aqi > 100) return 'Pengap Ringan';
+  if (aqi > 100) return 'Pengap Sensitif';
   if (aqi > 50) return 'Lumayan';
   return 'Segar';
 }

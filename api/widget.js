@@ -9,7 +9,7 @@ function statusUdara(aqi) {
   if (aqi > 300) return ['Darurat Asap', '#7f1d1d'];
   if (aqi > 200) return ['Pekat', '#7c3aed'];
   if (aqi > 150) return ['Pengap', '#dc2626'];
-  if (aqi > 100) return ['Pengap Ringan', '#ea580c'];
+  if (aqi > 100) return ['Pengap Sensitif', '#c2410c'];
   if (aqi > 50) return ['Lumayan', '#b45309'];
   return ['Segar', '#059669'];
 }
@@ -50,6 +50,7 @@ export default async function handler(req) {
       aplikasi: 'JagaKota', versi: 2, kota: kota,
       suhu, suhuTeks: `${suhu}°C`, kelembapan: `${lembap}%`, angin: `${angin} km/h`,
       aqi, statusUdara: label, warnaUdara: warna, pm25,
+      city: kota, tempLabel: `${suhu}°C`, aqiStatus: label,
       sumber: 'JagaKota • Open-Meteo', updatedAt: new Date().toISOString(),
     });
   } catch {
@@ -57,6 +58,7 @@ export default async function handler(req) {
       aplikasi: 'JagaKota', versi: 2, kota, suhu: 30, suhuTeks: '30°C',
       kelembapan: '72%', angin: '10 km/h', aqi: 42, statusUdara: 'Segar',
       warnaUdara: '#059669', pm25: 12, sumber: 'cache-lokal',
+      city: kota, tempLabel: '30°C', aqiStatus: 'Segar',
       updatedAt: new Date().toISOString(),
     }, 30);
   }

@@ -1,4 +1,4 @@
-import { hitungJarakKm as ukurJarakDarurat } from './geo.js';
+import { hitungJarakPresisiKm as ukurJarakDarurat } from './geo.js';
 
 function rakitJenjangFdrs(kode, judul, uraian, warna, latar) {
   return { code: kode, label: judul, desc: uraian, color: warna, bg: latar };

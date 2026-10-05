@@ -1,5 +1,5 @@
 import { INDONESIA_VOLCANOES, VOLCANO_STATUS_LEVELS } from '../utils/volcanoes.js';
-import { hitungJarakKm } from '../utils/geo.js';
+import { hitungJarakPresisiKm } from '../utils/geo.js';
 import { apiCache } from '../utils/apiCache.js';
 
 const JATUH_LAT = -6.2088;
@@ -13,7 +13,7 @@ export function getNearbyVolcanoes(lat, lon, maxRadiusKm = 250) {
   if (cepat) return cepat;
 
   const berJarak = INDONESIA_VOLCANOES.map((g) => {
-    const km = Math.round(hitungJarakKm(la, lo, g.lat, g.lon) * 10) / 10;
+    const km = Math.round(hitungJarakPresisiKm(la, lo, g.lat, g.lon) * 10) / 10;
     const status = VOLCANO_STATUS_LEVELS[g.statusLevel] || VOLCANO_STATUS_LEVELS[1];
     return {
       ...g, distanceKm: km, status,
