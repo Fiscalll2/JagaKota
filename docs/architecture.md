@@ -187,3 +187,49 @@ flowchart LR
 4. Komputasi berat dibuat lokal dan sinkron: skor, FDRS, jarak gunung, hotspot kurasi. Hanya FIRMS live yang opsional dan butuh `MAP_KEY`.
 5. Kegagalan diisolasi per sumber: `statusSinyal` cuaca/udara/gempa/karhutla di footer; tiap service punya `getDefault*` + `try/catch` + `AbortController`.
 6. Batasan diketahui: katalog gunung dan hotspot adalah kurasi statis + radius haversine, bukan streaming PVMBG/FIRMS penuh; notifikasi Web hanya polusi AQI > 150; peta butuh jaringan untuk tiles OSM.
+
+## 8. Pipa Lapor Warga (local-first + sinkron opsional)
+
+Lapor Warga jalan 100% lokal secara default. Cloud Supabase hanya aktif bila `VITE_LAPOR_CLOUD=true`.
+
+```mermaid
+sequenceDiagram
+    participant W as Warga: LaporModal
+    participant L as lapor.js + localStorage
+    participant P as Petugas: PetugasModal PIN 1234
+    participant M as Peta: IndonesiaMap
+    W->>L: tambahLaporan kategori + bbox ID + deskripsi + telepon + foto
+    L->>L: validasi + anti-spam 5mnt + kuota 10/hari + dedup 100m/1jam
+    L->>W: status pending + event lapor-baru
+    P->>L: antreanPetugas + cekPinPetugas
+    P->>L: ubahStatus pending ke verified/rejected
+    L->>M: laporanPublik verified/in_progress/resolved
+    M->>M: pin peta + cluster + deep-link ?lapor=kode
+```
+
+```mermaid
+sequenceDiagram
+    participant A as App.jsx boot/event
+    participant S as sinkron.js putaran
+    participant C as Supabase reports + storage
+    A->>S: sinkronAwal + event lapor-baru/status + visible/online + polling 20dt
+    S->>C: tarikMasuk reports_publik 200 + reports_antrean 100
+    S->>C: dorong max 20 via insert pending / rpc moderasi_laporan
+    S->>C: upload foto report-photos/reports/kode/ts.jpg max 5MB
+    S->>C: hapus max 5 via rpc hapus_laporan
+    C-->>S: gabungCloud last-write-wins + tandaiTersinkron
+    S->>A: event lapor-status sinkron:true + broadcast berubah ke peer
+```
+
+Detail implementasi:
+
+| Bagian | File | Peran |
+|---|---|---|
+| Store lokal | `src/utils/lapor.js` | `jagakota-lapor-v1`, kode `JK-YYYYMMDD-XXXX`, foto JPEG ≤200KB, rate-limit + dedup |
+| Sinkron | `src/utils/sinkron.js` | dorong/tarik/foto/hapus, realtime broadcast + polling, serial eksklusif |
+| Gate cloud | `src/lib/supabase.js` | aktif hanya `VITE_LAPOR_CLOUD=true` + URL + anon key, lazy import |
+| Skema | `supabase/schema.sql` | tabel `reports`, view `reports_publik` tanpa telepon + `reports_antrean` khusus pending, RPC `moderasi_laporan`/`hapus_laporan`, bucket `report-photos` 5MB, RLS demo |
+| UI | `LaporModal/DaftarLaporModal/PetugasModal.jsx` | 3 langkah + daftar + antrean PIN, deep-link `?lapor=` |
+| Peta | `src/components/map/IndonesiaMap.jsx` | pin publik + cluster + terbang ke laporan |
+
+Batasan jujur: PIN `1234` demo di klien, mode petugas flag lokal, RLS demo — bukan auth produksi.

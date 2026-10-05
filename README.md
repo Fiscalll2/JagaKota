@@ -58,6 +58,22 @@ flowchart LR
 
 Alurnya: service ambil data → masuk `jagaStore` → dihitung `kotaScore.js` → disebar ke kartu, peta, grafik, share, dan widget.
 
+### Alur Lapor Warga (local-first, cloud opsional)
+
+```mermaid
+sequenceDiagram
+    participant W as Warga: LaporModal
+    participant L as lapor.js lokal
+    participant P as Petugas PIN 1234
+    participant M as Peta Leaflet
+    W->>L: lapor + foto + telepon
+    L->>L: validasi + anti-spam + dedup
+    P->>L: verifikasi antrean
+    L->>M: pin publik + deep-link ?lapor=
+```
+
+Sinkron Supabase (`VITE_LAPOR_CLOUD=true`): tarik `reports_publik`/`antrean` → dorong max 20 → foto `report-photos` → hapus via RPC → broadcast realtime + polling 20dt. Detail: [docs/architecture.md](./docs/architecture.md#8-pipa-lapor-warga-local-first--sinkron-opsional).
+
 ---
 
 ## Cara baca skor KotaSiaga
