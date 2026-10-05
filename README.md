@@ -38,7 +38,23 @@ Seluruh logika tinggal di satu hook data, label memakai bahasa warga, dan daftar
 | Cache | **`jagaStore`** alias `apiCache.js` — RAM + localStorage, TTL per jenis data + statistik hit/miss |
 | Panduan | **Satu modal 4 tab**: Kontak · Gempa · Udara · Tsunami & UV |
 
-![Arsitektur JagaKota](./docs/architecture.svg)
+Alur lengkap (bisa di-zoom di GitHub): [docs/architecture.md](./docs/architecture.md)
+
+```mermaid
+flowchart LR
+    BMKG[BMKG InaTEWS\n gempa terkini + riwayat] --> HOOK[useDataJaga\n 1 hook semua layar]
+    OM1[Open-Meteo Forecast\n cuaca + UV 7 hari] --> HOOK
+    OM2[Open-Meteo Air Quality\n AQI US + 6 polutan] --> HOOK
+    HOOK <--> CACHE[jagaStore\n RAM + localStorage\n cuaca 5mnt / udara 5mnt / gempa 2mnt]
+    HOOK --> SKOR[KotaSiaga 0-100\n 40/20/25/15 + bonus hujan]
+    HOOK --> FDRS[FDRS lokal + hotspot kurasi]
+    HOOK --> GUNUNG[Katalog gunung +\n jarak presisi]
+    SKOR --> UI[5 tab: Ringkasan - Udara - Siaga - Peta - Panduan]
+    FDRS --> UI
+    GUNUNG --> UI
+    UI --> SHARE[Kartu 9:16 + /api/og + /api/badge]
+    UI --> WIDGET[iframe ?embed + /api/widget]
+```
 
 Alurnya: service ambil data → masuk `jagaStore` → dihitung `kotaScore.js` → disebar ke kartu, peta, grafik, share, dan widget.
 

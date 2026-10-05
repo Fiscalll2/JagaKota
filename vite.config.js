@@ -7,7 +7,9 @@ export default defineConfig({
   server: {
     host: true,
     port: 3000,
-    allowedHosts: true
+    allowedHosts: true,
+    // Abaikan folder non-kode agar watcher tak crash EBUSY di OneDrive.
+    watch: { ignored: ['**/docs/**', '**/*.md'] },
   },
   build: {
     target: 'esnext',
